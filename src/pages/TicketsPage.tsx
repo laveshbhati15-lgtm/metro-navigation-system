@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { AuthNavControl } from '@/components/auth/AuthNavControl';
 import { useTicketStore } from '@/features/tickets/ticketStore';
 import { DemoTicketCard } from '@/features/tickets/DemoTicketCard';
 import { BookingModal } from '@/features/tickets/BookingModal';
@@ -50,23 +51,26 @@ export function TicketsPage() {
             </div>
           </Link>
 
-          <nav className="flex items-center gap-2 text-xs font-mono">
-            <Link
-              to="/"
-              className="text-gray-400 hover:text-white transition-colors px-2.5 py-1.5 rounded-lg hover:bg-white/5"
-            >
-              Home
-            </Link>
-            <Link
-              to="/planner"
-              className="text-gray-400 hover:text-white transition-colors px-2.5 py-1.5 rounded-lg hover:bg-white/5"
-            >
-              Planner
-            </Link>
-            <span className="text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 px-3 py-1.5 rounded-lg font-semibold">
-              Demo Tickets ({tickets.length})
-            </span>
-          </nav>
+          <div className="flex items-center gap-3">
+            <nav className="flex items-center gap-2 text-xs font-mono">
+              <Link
+                to="/"
+                className="text-gray-400 hover:text-white transition-colors px-2.5 py-1.5 rounded-lg hover:bg-white/5"
+              >
+                Home
+              </Link>
+              <Link
+                to="/planner"
+                className="text-gray-400 hover:text-white transition-colors px-2.5 py-1.5 rounded-lg hover:bg-white/5"
+              >
+                Planner
+              </Link>
+              <span className="text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 px-3 py-1.5 rounded-lg font-semibold">
+                Demo Tickets ({tickets.length})
+              </span>
+            </nav>
+            <AuthNavControl />
+          </div>
         </div>
       </header>
 

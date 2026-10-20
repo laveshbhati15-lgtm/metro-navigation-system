@@ -20,6 +20,7 @@ import { useJourneyStore } from '@/store/journeyStore';
 import { MetroverseRailway } from '@/features/landing/MetroverseRailway';
 import type { MetroRoute, Station } from '@/core/graph/types';
 import { LINE_COLORS, LINE_DISPLAY_NAMES } from '@/utils/lineColors';
+import { AuthNavControl } from '@/components/auth/AuthNavControl';
 
 /* ─── Hook: Accessible Reduced Motion ───────────────────────────── */
 function useReducedMotion() {
@@ -130,6 +131,7 @@ function MetroverseNav() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
           </Link>
+          <AuthNavControl />
         </div>
       </div>
     </header>

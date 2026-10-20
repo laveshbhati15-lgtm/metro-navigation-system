@@ -16,6 +16,7 @@ export default defineConfig({
         manualChunks(id: string) {
           if (id.includes('node_modules/leaflet') || id.includes('node_modules/react-leaflet')) return 'leaflet';
           if (id.includes('node_modules/gsap')) return 'gsap';
+          if (id.includes('node_modules/firebase') || id.includes('node_modules/@firebase')) return 'firebase';
           if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router-dom') || id.includes('node_modules/zustand')) return 'vendor';
         },
       },

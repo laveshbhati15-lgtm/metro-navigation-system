@@ -8,6 +8,7 @@ import { useJourneyStore } from '@/store/journeyStore';
 import { useTicketStore } from '@/features/tickets/ticketStore';
 import { metroGraph } from '@/core/graph/MetroGraph';
 import { Link } from 'react-router-dom';
+import { AuthNavControl } from '@/components/auth/AuthNavControl';
 
 import { useEffect } from 'react';
 
@@ -82,7 +83,7 @@ export function PlannerPage() {
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-gray-300 hover:text-white transition-colors"
               >
                 <span>🎟️</span>
-                <span>Demo Tickets</span>
+                <span className="hidden sm:inline">Demo Tickets</span>
                 {tickets.length > 0 && (
                   <span className="w-4 h-4 rounded-full bg-cyan-500 text-navy-950 font-bold text-[10px] flex items-center justify-center">
                     {tickets.length}
@@ -90,6 +91,7 @@ export function PlannerPage() {
                 )}
               </button>
             </nav>
+            <AuthNavControl />
           </div>
         </div>
       </header>
