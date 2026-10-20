@@ -1,0 +1,3155 @@
+{
+  "_meta": {
+    "description": "Delhi Metro station data — Verified 7 Lines: Yellow, Blue, Violet, Red, Green, Magenta, Pink",
+    "source": "DMRC Official Network Map — https://www.delhimetrorail.com",
+    "coordinateSource": "OpenStreetMap metro relations + cross-referenced Google Maps",
+    "lastVerified": "2026-10",
+    "travelTimeNote": "Travel times are estimated (~120 s per segment). Not official DMRC segment-level data.",
+    "stationCount": 223
+  },
+  "stations": [
+    {
+      "id": "SAMAYPUR_BADLI",
+      "name": "Samaypur Badli",
+      "nameHindi": "समयपुर बादली",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.728,
+        "lng": 77.1418
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "ROHINI_SECTOR_18_19",
+      "name": "Rohini Sector 18, 19",
+      "nameHindi": "रोहिणी सेक्टर 18, 19",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.7226,
+        "lng": 77.1392
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "HAIDERPUR_BADLI_MOR",
+      "name": "Haiderpur Badli Mor",
+      "nameHindi": "हैदरपुर बादली मोड़",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.7157,
+        "lng": 77.1478
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "JAHANGIRPURI",
+      "name": "Jahangirpuri",
+      "nameHindi": "जहाँगीरपुरी",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.7284,
+        "lng": 77.1657
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "ADARSH_NAGAR",
+      "name": "Adarsh Nagar",
+      "nameHindi": "आदर्श नगर",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.7197,
+        "lng": 77.1671
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "AZADPUR",
+      "name": "Azadpur",
+      "nameHindi": "आज़ादपुर",
+      "lines": [
+        "YELLOW",
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.7105,
+        "lng": 77.1741
+      },
+      "isInterchange": true,
+      "zone": 1
+    },
+    {
+      "id": "MODEL_TOWN",
+      "name": "Model Town",
+      "nameHindi": "मॉडल टाउन",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.7043,
+        "lng": 77.1898
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "GTB_NAGAR",
+      "name": "GTB Nagar",
+      "nameHindi": "जीटीबी नगर",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.6969,
+        "lng": 77.2021
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "VISHWA_VIDYALAYA",
+      "name": "Vishwa Vidyalaya",
+      "nameHindi": "विश्वविद्यालय",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.6887,
+        "lng": 77.2078
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "VIDHAN_SABHA",
+      "name": "Vidhan Sabha",
+      "nameHindi": "विधान सभा",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.6834,
+        "lng": 77.2054
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "CIVIL_LINES",
+      "name": "Civil Lines",
+      "nameHindi": "सिविल लाइन्स",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.6779,
+        "lng": 77.2203
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "KASHMERE_GATE",
+      "name": "Kashmere Gate",
+      "nameHindi": "कश्मीरी गेट",
+      "lines": [
+        "YELLOW",
+        "VIOLET",
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.6672,
+        "lng": 77.2279
+      },
+      "isInterchange": true,
+      "zone": 1
+    },
+    {
+      "id": "CHANDNI_CHOWK",
+      "name": "Chandni Chowk",
+      "nameHindi": "चाँदनी चौक",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.6568,
+        "lng": 77.2297
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "CHAWRI_BAZAR",
+      "name": "Chawri Bazar",
+      "nameHindi": "चावड़ी बाज़ार",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.6497,
+        "lng": 77.228
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "NEW_DELHI",
+      "name": "New Delhi",
+      "nameHindi": "नई दिल्ली",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.6429,
+        "lng": 77.2193
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "RAJIV_CHOWK",
+      "name": "Rajiv Chowk",
+      "nameHindi": "राजीव चौक",
+      "lines": [
+        "YELLOW",
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6328,
+        "lng": 77.2197
+      },
+      "isInterchange": true,
+      "zone": 1
+    },
+    {
+      "id": "PATEL_CHOWK",
+      "name": "Patel Chowk",
+      "nameHindi": "पटेल चौक",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.6251,
+        "lng": 77.2099
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "CENTRAL_SECRETARIAT",
+      "name": "Central Secretariat",
+      "nameHindi": "केंद्रीय सचिवालय",
+      "lines": [
+        "YELLOW",
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.6147,
+        "lng": 77.2121
+      },
+      "isInterchange": true,
+      "zone": 1
+    },
+    {
+      "id": "UDYOG_BHAWAN",
+      "name": "Udyog Bhawan",
+      "nameHindi": "उद्योग भवन",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.61,
+        "lng": 77.2117
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "RACE_COURSE",
+      "name": "Lok Kalyan Marg",
+      "nameHindi": "लोक कल्याण मार्ग",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.5989,
+        "lng": 77.2067
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "JORBAGH",
+      "name": "Jor Bagh",
+      "nameHindi": "जोर बाग",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.5892,
+        "lng": 77.2022
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "INA",
+      "name": "Dilli Haat - INA",
+      "nameHindi": "दिल्ली हाट - आईएनए",
+      "lines": [
+        "YELLOW",
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.5784,
+        "lng": 77.2049
+      },
+      "isInterchange": true,
+      "zone": 1
+    },
+    {
+      "id": "AIIMS",
+      "name": "AIIMS",
+      "nameHindi": "एम्स",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.5684,
+        "lng": 77.2097
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "GREEN_PARK",
+      "name": "Green Park",
+      "nameHindi": "ग्रीन पार्क",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.5595,
+        "lng": 77.2066
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "HAUZ_KHAS",
+      "name": "Hauz Khas",
+      "nameHindi": "हौज खास",
+      "lines": [
+        "YELLOW",
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.5436,
+        "lng": 77.2062
+      },
+      "isInterchange": true,
+      "zone": 1
+    },
+    {
+      "id": "MALVIYA_NAGAR",
+      "name": "Malviya Nagar",
+      "nameHindi": "मालवीय नगर",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.5298,
+        "lng": 77.2074
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "SAKET",
+      "name": "Saket",
+      "nameHindi": "साकेत",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.5204,
+        "lng": 77.2099
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "QUTAB_MINAR",
+      "name": "Qutab Minar",
+      "nameHindi": "कुतुब मीनार",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.5129,
+        "lng": 77.1858
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "CHHATTARPUR",
+      "name": "Chhattarpur",
+      "nameHindi": "छतरपुर",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.4991,
+        "lng": 77.1674
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "SULTANPUR",
+      "name": "Sultanpur",
+      "nameHindi": "सुल्तानपुर",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.4929,
+        "lng": 77.1537
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "GHITORNI",
+      "name": "Ghitorni",
+      "nameHindi": "घिटोरनी",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.4834,
+        "lng": 77.1441
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "ARJAN_GARH",
+      "name": "Arjan Garh",
+      "nameHindi": "अर्जन गढ़",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.4732,
+        "lng": 77.1294
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "GURU_DRONACHARYA",
+      "name": "Guru Dronacharya",
+      "nameHindi": "गुरु द्रोणाचार्य",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.466,
+        "lng": 77.1068
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "SIKANDARPUR",
+      "name": "Sikandarpur",
+      "nameHindi": "सिकंदरपुर",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.4624,
+        "lng": 77.0956
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "MG_ROAD",
+      "name": "MG Road",
+      "nameHindi": "एमजी रोड",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.4707,
+        "lng": 77.08
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "IFFCO_CHOWK",
+      "name": "IFFCO Chowk",
+      "nameHindi": "इफको चौक",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.472,
+        "lng": 77.0714
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "HUDA_CITY_CENTRE",
+      "name": "Millennium City Centre Gurugram",
+      "nameHindi": "मिलेनियम सिटी सेंटर गुरुग्राम",
+      "lines": [
+        "YELLOW"
+      ],
+      "coordinates": {
+        "lat": 28.4594,
+        "lng": 77.0731
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "DWARKA_SEC_21",
+      "name": "Dwarka Sector 21",
+      "nameHindi": "द्वारका सेक्टर 21",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.553,
+        "lng": 77.0588
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "DWARKA_SEC_8",
+      "name": "Dwarka Sector 8",
+      "nameHindi": "द्वारका सेक्टर 8",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.5739,
+        "lng": 77.0596
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "DWARKA_SEC_9",
+      "name": "Dwarka Sector 9",
+      "nameHindi": "द्वारका सेक्टर 9",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.5832,
+        "lng": 77.062
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "DWARKA_SEC_10",
+      "name": "Dwarka Sector 10",
+      "nameHindi": "द्वारका सेक्टर 10",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.5921,
+        "lng": 77.0652
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "DWARKA_SEC_11",
+      "name": "Dwarka Sector 11",
+      "nameHindi": "द्वारका सेक्टर 11",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.5994,
+        "lng": 77.0693
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "DWARKA_SEC_12",
+      "name": "Dwarka Sector 12",
+      "nameHindi": "द्वारका सेक्टर 12",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.606,
+        "lng": 77.0726
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "DWARKA_SEC_13",
+      "name": "Dwarka Sector 13",
+      "nameHindi": "द्वारका सेक्टर 13",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6123,
+        "lng": 77.0786
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "DWARKA_SEC_14",
+      "name": "Dwarka Sector 14",
+      "nameHindi": "द्वारका सेक्टर 14",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6168,
+        "lng": 77.0872
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "DWARKA",
+      "name": "Dwarka",
+      "nameHindi": "द्वारका",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6223,
+        "lng": 77.0543
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "DWARKA_MOR",
+      "name": "Dwarka Mor",
+      "nameHindi": "द्वारका मोड़",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6193,
+        "lng": 77.0334
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "NAWADA",
+      "name": "Nawada",
+      "nameHindi": "नवादा",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6317,
+        "lng": 77.0585
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "UTTAM_NAGAR_WEST",
+      "name": "Uttam Nagar West",
+      "nameHindi": "उत्तम नगर पश्चिम",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6189,
+        "lng": 77.0578
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "UTTAM_NAGAR_EAST",
+      "name": "Uttam Nagar East",
+      "nameHindi": "उत्तम नगर पूर्व",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6231,
+        "lng": 77.0685
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "JANAKPURI_WEST",
+      "name": "Janakpuri West",
+      "nameHindi": "जनकपुरी पश्चिम",
+      "lines": [
+        "BLUE",
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.63,
+        "lng": 77.0815
+      },
+      "isInterchange": true,
+      "zone": 1
+    },
+    {
+      "id": "JANAKPURI_EAST",
+      "name": "Janakpuri East",
+      "nameHindi": "जनकपुरी पूर्व",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6307,
+        "lng": 77.0938
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "TILAK_NAGAR",
+      "name": "Tilak Nagar",
+      "nameHindi": "तिलक नगर",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6332,
+        "lng": 77.1054
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "SUBHASH_NAGAR",
+      "name": "Subhash Nagar",
+      "nameHindi": "सुभाष नगर",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6354,
+        "lng": 77.115
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "TAGORE_GARDEN",
+      "name": "Tagore Garden",
+      "nameHindi": "टैगोर गार्डन",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6369,
+        "lng": 77.1279
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "RAJOURI_GARDEN",
+      "name": "Rajouri Garden",
+      "nameHindi": "राजोरी गार्डन",
+      "lines": [
+        "BLUE",
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.6415,
+        "lng": 77.1297
+      },
+      "isInterchange": true,
+      "zone": 1
+    },
+    {
+      "id": "RAMESH_NAGAR",
+      "name": "Ramesh Nagar",
+      "nameHindi": "रमेश नगर",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6459,
+        "lng": 77.1396
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "MOTI_NAGAR",
+      "name": "Moti Nagar",
+      "nameHindi": "मोती नगर",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6498,
+        "lng": 77.1477
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "KIRTI_NAGAR",
+      "name": "Kirti Nagar",
+      "nameHindi": "कीर्ति नगर",
+      "lines": [
+        "BLUE",
+        "GREEN"
+      ],
+      "coordinates": {
+        "lat": 28.6527,
+        "lng": 77.1567
+      },
+      "isInterchange": true,
+      "zone": 1
+    },
+    {
+      "id": "SHADIPUR",
+      "name": "Shadipur",
+      "nameHindi": "शादीपुर",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6551,
+        "lng": 77.1644
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "PATEL_NAGAR",
+      "name": "Patel Nagar",
+      "nameHindi": "पटेल नगर",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6576,
+        "lng": 77.1736
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "RAJENDRA_PLACE",
+      "name": "Rajendra Place",
+      "nameHindi": "राजेंद्र प्लेस",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6617,
+        "lng": 77.182
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "KAROL_BAGH",
+      "name": "Karol Bagh",
+      "nameHindi": "करोल बाग",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6512,
+        "lng": 77.1903
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "JHANDEWALAN",
+      "name": "Jhandewalan",
+      "nameHindi": "झंडेवालान",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6462,
+        "lng": 77.202
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "RAMAKRISHNA_ASHRAM_MARG",
+      "name": "Ramakrishna Ashram Marg",
+      "nameHindi": "रामकृष्ण आश्रम मार्ग",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6405,
+        "lng": 77.2102
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "BARAKHAMBA_ROAD",
+      "name": "Barakhamba Road",
+      "nameHindi": "बाराखम्बा रोड",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.63,
+        "lng": 77.2245
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "MANDI_HOUSE",
+      "name": "Mandi House",
+      "nameHindi": "मंडी हाउस",
+      "lines": [
+        "BLUE",
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.6278,
+        "lng": 77.2345
+      },
+      "isInterchange": true,
+      "zone": 1
+    },
+    {
+      "id": "SUPREME_COURT",
+      "name": "Supreme Court",
+      "nameHindi": "सर्वोच्च न्यायालय",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6233,
+        "lng": 77.24
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "INDRAPRASTHA",
+      "name": "Indraprastha",
+      "nameHindi": "इंद्रप्रस्थ",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6197,
+        "lng": 77.2479
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "YAMUNA_BANK",
+      "name": "Yamuna Bank",
+      "nameHindi": "यमुना बैंक",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6166,
+        "lng": 77.2607
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "LAXMI_NAGAR",
+      "name": "Laxmi Nagar",
+      "nameHindi": "लक्ष्मी नगर",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6271,
+        "lng": 77.2761
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "NIRMAN_VIHAR",
+      "name": "Nirman Vihar",
+      "nameHindi": "निर्माण विहार",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6268,
+        "lng": 77.2887
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "PREET_VIHAR",
+      "name": "Preet Vihar",
+      "nameHindi": "प्रीत विहार",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6275,
+        "lng": 77.2971
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "KARKARDUMA",
+      "name": "Karkarduma",
+      "nameHindi": "कड़कड़डूमा",
+      "lines": [
+        "BLUE",
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.6284,
+        "lng": 77.306
+      },
+      "isInterchange": true,
+      "zone": 1
+    },
+    {
+      "id": "ANAND_VIHAR",
+      "name": "Anand Vihar ISBT",
+      "nameHindi": "आनंद विहार आईएसबीटी",
+      "lines": [
+        "BLUE",
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.6457,
+        "lng": 77.3154
+      },
+      "isInterchange": true,
+      "zone": 1
+    },
+    {
+      "id": "KAUSHAMBI",
+      "name": "Kaushambi",
+      "nameHindi": "कौशाम्बी",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6425,
+        "lng": 77.3283
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "VAISHALI",
+      "name": "Vaishali",
+      "nameHindi": "वैशाली",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6454,
+        "lng": 77.3392
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "AKSHARDHAM",
+      "name": "Akshardham",
+      "nameHindi": "अक्षरधाम",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6156,
+        "lng": 77.2756
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "MAYUR_VIHAR_1",
+      "name": "Mayur Vihar Phase-1",
+      "nameHindi": "मयूर विहार फेज-1",
+      "lines": [
+        "BLUE",
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.6063,
+        "lng": 77.2944
+      },
+      "isInterchange": true,
+      "zone": 1
+    },
+    {
+      "id": "MAYUR_VIHAR_EXTENSION",
+      "name": "Mayur Vihar Extension",
+      "nameHindi": "मयूर विहार एक्सटेंशन",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.5942,
+        "lng": 77.2947
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "NEW_ASHOK_NAGAR",
+      "name": "New Ashok Nagar",
+      "nameHindi": "न्यू अशोक नगर",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.5892,
+        "lng": 77.3021
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "NOIDA_SEC_15",
+      "name": "Noida Sector 15",
+      "nameHindi": "नोएडा सेक्टर 15",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.5894,
+        "lng": 77.3183
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "NOIDA_SEC_16",
+      "name": "Noida Sector 16",
+      "nameHindi": "नोएडा सेक्टर 16",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.583,
+        "lng": 77.3248
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "NOIDA_SEC_18",
+      "name": "Noida Sector 18",
+      "nameHindi": "नोएडा सेक्टर 18",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.572,
+        "lng": 77.3256
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "BOTANICAL_GARDEN",
+      "name": "Botanical Garden",
+      "nameHindi": "बॉटनिकल गार्डन",
+      "lines": [
+        "BLUE",
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.5632,
+        "lng": 77.329
+      },
+      "isInterchange": true,
+      "zone": 2
+    },
+    {
+      "id": "GOLF_COURSE",
+      "name": "Golf Course",
+      "nameHindi": "गोल्फ कोर्स",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.5568,
+        "lng": 77.3343
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "NOIDA_CITY_CENTRE",
+      "name": "Noida City Centre",
+      "nameHindi": "नोएडा सिटी सेंटर",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.5506,
+        "lng": 77.3404
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "NOIDA_SEC_34",
+      "name": "Noida Sector 34",
+      "nameHindi": "नोएडा सेक्टर 34",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.569,
+        "lng": 77.3487
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "NOIDA_SEC_52",
+      "name": "Noida Sector 52",
+      "nameHindi": "नोएडा सेक्टर 52",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.5772,
+        "lng": 77.3576
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "NOIDA_SEC_61",
+      "name": "Noida Sector 61",
+      "nameHindi": "नोएडा सेक्टर 61",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.5845,
+        "lng": 77.3648
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "NOIDA_SEC_59",
+      "name": "Noida Sector 59",
+      "nameHindi": "नोएडा सेक्टर 59",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.5909,
+        "lng": 77.3697
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "NOIDA_SEC_62",
+      "name": "Noida Sector 62",
+      "nameHindi": "नोएडा सेक्टर 62",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6003,
+        "lng": 77.3745
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "NOIDA_ELECTRONIC_CITY",
+      "name": "Noida Electronic City",
+      "nameHindi": "नोएडा इलेक्ट्रॉनिक सिटी",
+      "lines": [
+        "BLUE"
+      ],
+      "coordinates": {
+        "lat": 28.6071,
+        "lng": 77.3816
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "LAL_QILA",
+      "name": "Lal Qila",
+      "nameHindi": "लाल किला",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.6562,
+        "lng": 77.241
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "JAMA_MASJID",
+      "name": "Jama Masjid",
+      "nameHindi": "जामा मस्जिद",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.65,
+        "lng": 77.2375
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "DELHI_GATE",
+      "name": "Delhi Gate",
+      "nameHindi": "दिल्ली गेट",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.6387,
+        "lng": 77.2405
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "ITO",
+      "name": "ITO",
+      "nameHindi": "आईटीओ",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.628,
+        "lng": 77.2435
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "JANPATH",
+      "name": "Janpath",
+      "nameHindi": "जनपथ",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.6215,
+        "lng": 77.2185
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "KHAN_MARKET",
+      "name": "Khan Market",
+      "nameHindi": "खान मार्केट",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.6025,
+        "lng": 77.2242
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "JLN_STADIUM",
+      "name": "Jawaharlal Nehru Stadium",
+      "nameHindi": "जवाहरलाल नेहरू स्टेडियम",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.5894,
+        "lng": 77.231
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "JANGPURA",
+      "name": "Jangpura",
+      "nameHindi": "जंगपुरा",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.5815,
+        "lng": 77.2378
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "LAJPAT_NAGAR",
+      "name": "Lajpat Nagar",
+      "nameHindi": "लाजपत नगर",
+      "lines": [
+        "VIOLET",
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.5705,
+        "lng": 77.2428
+      },
+      "isInterchange": true,
+      "zone": 1
+    },
+    {
+      "id": "MOOLCHAND",
+      "name": "Moolchand",
+      "nameHindi": "मूलचंद",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.5658,
+        "lng": 77.2395
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "KAILASH_COLONY",
+      "name": "Kailash Colony",
+      "nameHindi": "कैलाश कॉलोनी",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.557,
+        "lng": 77.2442
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "NEHRU_PLACE",
+      "name": "Nehru Place",
+      "nameHindi": "नेहरू प्लेस",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.5492,
+        "lng": 77.2512
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "KALKAJI_MANDIR",
+      "name": "Kalkaji Mandir",
+      "nameHindi": "कालकाजी मंदिर",
+      "lines": [
+        "VIOLET",
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.5494,
+        "lng": 77.2592
+      },
+      "isInterchange": true,
+      "zone": 1
+    },
+    {
+      "id": "GOVIND_PURI",
+      "name": "Govind Puri",
+      "nameHindi": "गोविंदपुरी",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.5395,
+        "lng": 77.2625
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "HARKESH_NAGAR_OKHLA",
+      "name": "Harkesh Nagar Okhla",
+      "nameHindi": "हरकेश नगर ओखला",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.5322,
+        "lng": 77.2708
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "JASOLA_APOLLO",
+      "name": "Jasola Apollo",
+      "nameHindi": "जसोला अपोलो",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.5285,
+        "lng": 77.2805
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "SARITA_VIHAR",
+      "name": "Sarita Vihar",
+      "nameHindi": "सरिता विहार",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.5255,
+        "lng": 77.2905
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "MOHAN_ESTATE",
+      "name": "Mohan Estate",
+      "nameHindi": "मोहन एस्टेट",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.5135,
+        "lng": 77.2975
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "TUGHLAKABAD_STATION",
+      "name": "Tughlakabad Station",
+      "nameHindi": "तुगलकाबाद स्टेशन",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.5032,
+        "lng": 77.3025
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "BADARPUR_BORDER",
+      "name": "Badarpur Border",
+      "nameHindi": "बदरपुर बॉर्डर",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.4932,
+        "lng": 77.3075
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "SARAI",
+      "name": "Sarai",
+      "nameHindi": "सराय",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.48,
+        "lng": 77.315
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "NHPC_CHOWK",
+      "name": "NHPC Chowk",
+      "nameHindi": "एनएचपीसी चौक",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.4635,
+        "lng": 77.3105
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "MEWALA_MAHARAJPUR",
+      "name": "Mewala Maharajpur",
+      "nameHindi": "मेवला महाराजपुर",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.4485,
+        "lng": 77.3125
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "SECTOR_28",
+      "name": "Sector 28",
+      "nameHindi": "सेक्टर 28",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.4342,
+        "lng": 77.3135
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "BADKAL_MOR",
+      "name": "Badkal Mor",
+      "nameHindi": "बड़कल मोड़",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.4215,
+        "lng": 77.313
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "OLD_FARIDABAD",
+      "name": "Old Faridabad",
+      "nameHindi": "ओल्ड फरीदाबाद",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.4065,
+        "lng": 77.3105
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "NEELAM_CHOWK_AJRONDA",
+      "name": "Neelam Chowk Ajronda",
+      "nameHindi": "नीलम चौक अजरौंदा",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.3975,
+        "lng": 77.3085
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "BATA_CHOWK",
+      "name": "Bata Chowk",
+      "nameHindi": "बाटा चौक",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.39,
+        "lng": 77.305
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "ESCORTS_MUJESAR",
+      "name": "Escorts Mujesar",
+      "nameHindi": "एस्कॉर्ट्स मुजेसर",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.3752,
+        "lng": 77.3058
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "SANT_SURDAS",
+      "name": "Sant Surdas (Sihi)",
+      "nameHindi": "संत सूरदास (सीही)",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.3565,
+        "lng": 77.3125
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "RAJA_NAHAR_SINGH",
+      "name": "Raja Nahar Singh (Ballabhgarh)",
+      "nameHindi": "राजा नाहर सिंह (बल्लभगढ़)",
+      "lines": [
+        "VIOLET"
+      ],
+      "coordinates": {
+        "lat": 28.3375,
+        "lng": 77.3185
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "RITHALA",
+      "name": "Rithala",
+      "nameHindi": "रिठाला",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.7209,
+        "lng": 77.1071
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "ROHINI_WEST",
+      "name": "Rohini West",
+      "nameHindi": "रोहिणी वेस्ट",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.7163,
+        "lng": 77.1147
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "ROHINI_EAST",
+      "name": "Rohini East",
+      "nameHindi": "रोहिणी ईस्ट",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.7112,
+        "lng": 77.1249
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "PITAMPURA",
+      "name": "Pitampura",
+      "nameHindi": "पीतमपुरा",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.7036,
+        "lng": 77.1329
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "KOHAT_ENCLAVE",
+      "name": "Kohat Enclave",
+      "nameHindi": "कोहाट एन्क्लेव",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.6962,
+        "lng": 77.1385
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "NETAJI_SUBHASH_PLACE",
+      "name": "Netaji Subhash Place",
+      "nameHindi": "नेताजी सुभाष प्लेस",
+      "lines": [
+        "RED",
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.6959,
+        "lng": 77.1525
+      },
+      "isInterchange": true,
+      "zone": 1
+    },
+    {
+      "id": "KESHAV_PURAM",
+      "name": "Keshav Puram",
+      "nameHindi": "केशव पुरम",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.6897,
+        "lng": 77.1624
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "KANHAIYA_NAGAR",
+      "name": "Kanhaiya Nagar",
+      "nameHindi": "कन्हैया नगर",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.6823,
+        "lng": 77.1726
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "INDERLOK",
+      "name": "Inderlok",
+      "nameHindi": "इंदरलोक",
+      "lines": [
+        "RED",
+        "GREEN"
+      ],
+      "coordinates": {
+        "lat": 28.673,
+        "lng": 77.1786
+      },
+      "isInterchange": true,
+      "zone": 1
+    },
+    {
+      "id": "SHASTRI_NAGAR",
+      "name": "Shastri Nagar",
+      "nameHindi": "शास्त्री नगर",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.6673,
+        "lng": 77.1895
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "PRATAP_NAGAR",
+      "name": "Pratap Nagar",
+      "nameHindi": "प्रताप नगर",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.6617,
+        "lng": 77.1989
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "PUL_BANGASH",
+      "name": "Pul Bangash",
+      "nameHindi": "पुल बंगश",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.6618,
+        "lng": 77.208
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "TIS_HAZARI",
+      "name": "Tis Hazari",
+      "nameHindi": "तीस हजारी",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.6649,
+        "lng": 77.2172
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "SHASTRI_PARK",
+      "name": "Shastri Park",
+      "nameHindi": "शास्त्री पार्क",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.6736,
+        "lng": 77.2432
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "SEELAMPUR",
+      "name": "Seelampur",
+      "nameHindi": "सीलमपुर",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.6772,
+        "lng": 77.2565
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "WELCOME",
+      "name": "Welcome",
+      "nameHindi": "वेलकम",
+      "lines": [
+        "RED",
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.6788,
+        "lng": 77.2727
+      },
+      "isInterchange": true,
+      "zone": 1
+    },
+    {
+      "id": "SHAHDARA",
+      "name": "Shahdara",
+      "nameHindi": "शाहदरा",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.6725,
+        "lng": 77.2816
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "MANSAROVAR_PARK",
+      "name": "Mansarovar Park",
+      "nameHindi": "मानसरोवर पार्क",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.6685,
+        "lng": 77.2923
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "JHILMIL",
+      "name": "Jhilmil",
+      "nameHindi": "झिलमिल",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.6638,
+        "lng": 77.3049
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "DILSHAD_GARDEN",
+      "name": "Dilshad Garden",
+      "nameHindi": "दिलशाद गार्डन",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.6604,
+        "lng": 77.3155
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "SHAHEED_NAGAR",
+      "name": "Shaheed Nagar",
+      "nameHindi": "शहीद नगर",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.667,
+        "lng": 77.3285
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "RAJ_BAGH",
+      "name": "Raj Bagh",
+      "nameHindi": "राज बाग",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.6693,
+        "lng": 77.338
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "MAJOR_MOHIT_SHARMA",
+      "name": "Major Mohit Sharma Rajendra Nagar",
+      "nameHindi": "मेजर मोहित शर्मा राजेंद्र नगर",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.6697,
+        "lng": 77.3474
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "SHYAM_PARK",
+      "name": "Shyam Park",
+      "nameHindi": "श्याम पार्क",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.6703,
+        "lng": 77.3567
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "MOHAN_NAGAR",
+      "name": "Mohan Nagar",
+      "nameHindi": "मोहन नगर",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.6774,
+        "lng": 77.37
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "ARTHALA",
+      "name": "Arthala",
+      "nameHindi": "अर्थला",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.6838,
+        "lng": 77.387
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "HINDON_RIVER",
+      "name": "Hindon River",
+      "nameHindi": "हिंडन रिवर",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.6822,
+        "lng": 77.4015
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "SHAHEED_STHAL",
+      "name": "Shaheed Sthal (New Bus Adda)",
+      "nameHindi": "शहीद स्थल (नया बस अड्डा)",
+      "lines": [
+        "RED"
+      ],
+      "coordinates": {
+        "lat": 28.6781,
+        "lng": 77.4145
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "SATGURU_RAM_SINGH_MARG",
+      "name": "Satguru Ram Singh Marg",
+      "nameHindi": "सतगुरु राम सिंह मार्ग",
+      "lines": [
+        "GREEN"
+      ],
+      "coordinates": {
+        "lat": 28.6556,
+        "lng": 77.1589
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "ASHOK_PARK_MAIN",
+      "name": "Ashok Park Main",
+      "nameHindi": "अशोक पार्क मेन",
+      "lines": [
+        "GREEN"
+      ],
+      "coordinates": {
+        "lat": 28.664,
+        "lng": 77.1672
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "PUNJABI_BAGH",
+      "name": "Punjabi Bagh",
+      "nameHindi": "पंजाबी बाग",
+      "lines": [
+        "GREEN"
+      ],
+      "coordinates": {
+        "lat": 28.668,
+        "lng": 77.152
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "PUNJABI_BAGH_WEST",
+      "name": "Punjabi Bagh West",
+      "nameHindi": "पंजाबी बाग वेस्ट",
+      "lines": [
+        "GREEN",
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.6627,
+        "lng": 77.1378
+      },
+      "isInterchange": true,
+      "zone": 1
+    },
+    {
+      "id": "SHIVAJI_PARK",
+      "name": "Shivaji Park",
+      "nameHindi": "शिवाजी पार्क",
+      "lines": [
+        "GREEN"
+      ],
+      "coordinates": {
+        "lat": 28.6607,
+        "lng": 77.127
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "MADIPUR",
+      "name": "Madipur",
+      "nameHindi": "मादीपुर",
+      "lines": [
+        "GREEN"
+      ],
+      "coordinates": {
+        "lat": 28.6617,
+        "lng": 77.1153
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "PASCHIM_VIHAR_EAST",
+      "name": "Paschim Vihar East",
+      "nameHindi": "पश्चिम विहार ईस्ट",
+      "lines": [
+        "GREEN"
+      ],
+      "coordinates": {
+        "lat": 28.6629,
+        "lng": 77.1031
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "PASCHIM_VIHAR_WEST",
+      "name": "Paschim Vihar West",
+      "nameHindi": "पश्चिम विहार वेस्ट",
+      "lines": [
+        "GREEN"
+      ],
+      "coordinates": {
+        "lat": 28.6652,
+        "lng": 77.092
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "PEERAGARHI",
+      "name": "Peeragarhi",
+      "nameHindi": "पीरागढ़ी",
+      "lines": [
+        "GREEN"
+      ],
+      "coordinates": {
+        "lat": 28.6672,
+        "lng": 77.0806
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "UDYOG_NAGAR",
+      "name": "Udyog Nagar",
+      "nameHindi": "उद्योग नगर",
+      "lines": [
+        "GREEN"
+      ],
+      "coordinates": {
+        "lat": 28.6642,
+        "lng": 77.0691
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "MAHARAJA_SURAJMAL_STADIUM",
+      "name": "Maharaja Surajmal Stadium",
+      "nameHindi": "महाराजा सूरजमल स्टेडियम",
+      "lines": [
+        "GREEN"
+      ],
+      "coordinates": {
+        "lat": 28.6648,
+        "lng": 77.0566
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "NANGLOI",
+      "name": "Nangloi",
+      "nameHindi": "नांगलोई",
+      "lines": [
+        "GREEN"
+      ],
+      "coordinates": {
+        "lat": 28.6657,
+        "lng": 77.0446
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "NANGLOI_RAILWAY_STATION",
+      "name": "Nangloi Railway Station",
+      "nameHindi": "नांगलोई रेलवे स्टेशन",
+      "lines": [
+        "GREEN"
+      ],
+      "coordinates": {
+        "lat": 28.666,
+        "lng": 77.0339
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "RAJDHANI_PARK",
+      "name": "Rajdhani Park",
+      "nameHindi": "राजधानी पार्क",
+      "lines": [
+        "GREEN"
+      ],
+      "coordinates": {
+        "lat": 28.6682,
+        "lng": 77.0223
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "MUNDKA",
+      "name": "Mundka",
+      "nameHindi": "मुंडका",
+      "lines": [
+        "GREEN"
+      ],
+      "coordinates": {
+        "lat": 28.6701,
+        "lng": 77.0105
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "MUNDKA_INDUSTRIAL_AREA",
+      "name": "Mundka Industrial Area",
+      "nameHindi": "मुंडका इंडस्ट्रियल एरिया",
+      "lines": [
+        "GREEN"
+      ],
+      "coordinates": {
+        "lat": 28.6771,
+        "lng": 76.9986
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "GHEVRA",
+      "name": "Ghevra",
+      "nameHindi": "घेवड़ा",
+      "lines": [
+        "GREEN"
+      ],
+      "coordinates": {
+        "lat": 28.6874,
+        "lng": 76.9923
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "TIKRI_KALAN",
+      "name": "Tikri Kalan",
+      "nameHindi": "टिकरी कलां",
+      "lines": [
+        "GREEN"
+      ],
+      "coordinates": {
+        "lat": 28.687,
+        "lng": 76.9821
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "TIKRI_BORDER",
+      "name": "Tikri Border",
+      "nameHindi": "टिकरी बॉर्डर",
+      "lines": [
+        "GREEN"
+      ],
+      "coordinates": {
+        "lat": 28.6861,
+        "lng": 76.9717
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "PANDIT_SHREE_RAM_SHARMA",
+      "name": "Pandit Shree Ram Sharma",
+      "nameHindi": "पंडित श्री राम शर्मा",
+      "lines": [
+        "GREEN"
+      ],
+      "coordinates": {
+        "lat": 28.686,
+        "lng": 76.958
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "BAHADURGARH_CITY",
+      "name": "Bahadurgarh City",
+      "nameHindi": "बहादुरगढ़ सिटी",
+      "lines": [
+        "GREEN"
+      ],
+      "coordinates": {
+        "lat": 28.6859,
+        "lng": 76.9415
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "BRIGADIER_HOSHIYAR_SINGH",
+      "name": "Brigadier Hoshiyar Singh",
+      "nameHindi": "ब्रिगेडियर होशियार सिंह",
+      "lines": [
+        "GREEN"
+      ],
+      "coordinates": {
+        "lat": 28.6861,
+        "lng": 76.9275
+      },
+      "isInterchange": false,
+      "zone": 2
+    },
+    {
+      "id": "DABRI_MOR",
+      "name": "Dabri Mor - Janakpuri South",
+      "nameHindi": "डाबरी मोड़ - जनकपुरी साउथ",
+      "lines": [
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.6189,
+        "lng": 77.08
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "DASHRATHPURI",
+      "name": "Dashrathpuri",
+      "nameHindi": "दशरथपुरी",
+      "lines": [
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.6087,
+        "lng": 77.085
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "PALAM",
+      "name": "Palam",
+      "nameHindi": "पालम",
+      "lines": [
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.5978,
+        "lng": 77.084
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "SADAR_BAZAR_CANTONMENT",
+      "name": "Sadar Bazar Cantonment",
+      "nameHindi": "सदर बाजार कैंटोनमेंट",
+      "lines": [
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.5877,
+        "lng": 77.0945
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "TERMINAL_1_IGI",
+      "name": "Terminal 1-IGI Airport",
+      "nameHindi": "टर्मिनल 1-IGI एयरपोर्ट",
+      "lines": [
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.5767,
+        "lng": 77.0975
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "SHANKAR_VIHAR",
+      "name": "Shankar Vihar",
+      "nameHindi": "शंकर विहार",
+      "lines": [
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.5681,
+        "lng": 77.1065
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "VASANT_VIHAR",
+      "name": "Vasant Vihar",
+      "nameHindi": "वसंत विहार",
+      "lines": [
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.5607,
+        "lng": 77.1191
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "MUNIRKA",
+      "name": "Munirka",
+      "nameHindi": "मुनीरका",
+      "lines": [
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.556,
+        "lng": 77.1325
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "RK_PURAM",
+      "name": "R.K. Puram",
+      "nameHindi": "आर.के. पुरम",
+      "lines": [
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.5543,
+        "lng": 77.1494
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "IIT_DELHI",
+      "name": "IIT Delhi",
+      "nameHindi": "आईआईटी दिल्ली",
+      "lines": [
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.5456,
+        "lng": 77.1921
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "PANCHSHEEL_PARK",
+      "name": "Panchsheel Park",
+      "nameHindi": "पंचशील पार्क",
+      "lines": [
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.5393,
+        "lng": 77.2077
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "CHIRAG_DELHI",
+      "name": "Chirag Delhi",
+      "nameHindi": "चिराग दिल्ली",
+      "lines": [
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.5327,
+        "lng": 77.2185
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "GREATER_KAILASH",
+      "name": "Greater Kailash",
+      "nameHindi": "ग्रेटर कैलाश",
+      "lines": [
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.5317,
+        "lng": 77.2312
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "NEHRU_ENCLAVE",
+      "name": "Nehru Enclave",
+      "nameHindi": "नेहरू एन्क्लेव",
+      "lines": [
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.5345,
+        "lng": 77.2462
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "OKHLA_NSIC",
+      "name": "Okhla NSIC",
+      "nameHindi": "ओखला एनएसआईसी",
+      "lines": [
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.5462,
+        "lng": 77.2694
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "SUKHDEV_VIHAR",
+      "name": "Sukhdev Vihar",
+      "nameHindi": "सुखदेव विहार",
+      "lines": [
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.55,
+        "lng": 77.2821
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "JAMIA_MILLIA_ISLAMIA",
+      "name": "Jamia Millia Islamia",
+      "nameHindi": "जामिया मिलिया इस्लामिया",
+      "lines": [
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.5543,
+        "lng": 77.2939
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "OKHLA_VIHAR",
+      "name": "Okhla Vihar",
+      "nameHindi": "ओखला विहार",
+      "lines": [
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.5593,
+        "lng": 77.3062
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "JASOLA_VIHAR_SHAHEEN_BAGH",
+      "name": "Jasola Vihar Shaheen Bagh",
+      "nameHindi": "जसोला विहार शाहीन बाग",
+      "lines": [
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.5581,
+        "lng": 77.3162
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "KALINDI_KUNJ",
+      "name": "Kalindi Kunj",
+      "nameHindi": "कालिंदी कुंज",
+      "lines": [
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.5576,
+        "lng": 77.3248
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "OKHLA_BIRD_SANCTUARY",
+      "name": "Okhla Bird Sanctuary",
+      "nameHindi": "ओखला पक्षी विहार",
+      "lines": [
+        "MAGENTA"
+      ],
+      "coordinates": {
+        "lat": 28.5617,
+        "lng": 77.3308
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "MAJLIS_PARK",
+      "name": "Majlis Park",
+      "nameHindi": "मजलिस पार्क",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.7245,
+        "lng": 77.1598
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "SHALIMAR_BAGH",
+      "name": "Shalimar Bagh",
+      "nameHindi": "शालीमार बाग",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.713,
+        "lng": 77.1665
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "SHAKURPUR",
+      "name": "Shakurpur",
+      "nameHindi": "शकूरपुर",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.6858,
+        "lng": 77.1493
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "ESI_HOSPITAL",
+      "name": "ESI Hospital",
+      "nameHindi": "ईएसआई अस्पताल",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.6584,
+        "lng": 77.1353
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "MAYAPURI",
+      "name": "Mayapuri",
+      "nameHindi": "मायापुरी",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.6356,
+        "lng": 77.1242
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "NARAINA_VIHAR",
+      "name": "Naraina Vihar",
+      "nameHindi": "नारायणा विहार",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.6242,
+        "lng": 77.121
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "DELHI_CANTT",
+      "name": "Delhi Cantt.",
+      "nameHindi": "दिल्ली कैंट.",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.6098,
+        "lng": 77.1219
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "DURGABAI_DESHMUKH",
+      "name": "Durgabai Deshmukh South Campus",
+      "nameHindi": "दुर्गाबाई देशमुख साउथ कैंपस",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.5986,
+        "lng": 77.136
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "SIR_VISHWESHWARAIAH",
+      "name": "Sir Vishweshwaraiah Moti Bagh",
+      "nameHindi": "सर विश्वेश्वरैया मोती बाग",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.592,
+        "lng": 77.1503
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "BHIKAJI_CAMA_PLACE",
+      "name": "Bhikaji Cama Place",
+      "nameHindi": "भीकाजी कामा प्लेस",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.5844,
+        "lng": 77.1635
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "SAROJINI_NAGAR",
+      "name": "Sarojini Nagar",
+      "nameHindi": "सरोजिनी नगर",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.5778,
+        "lng": 77.1778
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "SOUTH_EXTENSION",
+      "name": "South Extension",
+      "nameHindi": "साउथ एक्सटेंशन",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.5693,
+        "lng": 77.2262
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "VINOBAPURI",
+      "name": "Vinobapuri",
+      "nameHindi": "विनोबापुरी",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.559,
+        "lng": 77.2484
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "ASHRAM",
+      "name": "Ashram",
+      "nameHindi": "आश्रम",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.5682,
+        "lng": 77.2544
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "SARAI_KALE_KHAN",
+      "name": "Sarai Kale Khan - Hazrat Nizamuddin",
+      "nameHindi": "सराय काले खाँ - हजरत निजामुद्दीन",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.5833,
+        "lng": 77.2578
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "MAYUR_VIHAR_POCKET_1",
+      "name": "Mayur Vihar Pocket-1",
+      "nameHindi": "मयूर विहार पॉकेट-1",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.6097,
+        "lng": 77.2985
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "TRILOKPURI_SANJAY_LAKE",
+      "name": "Trilokpuri - Sanjay Lake",
+      "nameHindi": "त्रिलोकपुरी - संजय लेक",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.6137,
+        "lng": 77.3085
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "EAST_VINOD_NAGAR",
+      "name": "East Vinod Nagar - Mayur Vihar-II",
+      "nameHindi": "ईस्ट विनोद नगर - मयूर विहार-II",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.618,
+        "lng": 77.316
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "MANDAWALI",
+      "name": "Mandawali - West Vinod Nagar",
+      "nameHindi": "मंडावली - वेस्ट विनोद नगर",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.6233,
+        "lng": 77.3213
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "IP_EXTENSION",
+      "name": "IP Extension",
+      "nameHindi": "आईपी एक्सटेंशन",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.6296,
+        "lng": 77.3208
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "KARKARDUMA_COURT",
+      "name": "Karkarduma Court",
+      "nameHindi": "कड़कड़डूमा कोर्ट",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.635,
+        "lng": 77.3
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "KRISHNA_NAGAR",
+      "name": "Krishna Nagar",
+      "nameHindi": "कृष्णा नगर",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.6527,
+        "lng": 77.29
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "EAST_AZAD_NAGAR",
+      "name": "East Azad Nagar",
+      "nameHindi": "ईस्ट आजाद नगर",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.662,
+        "lng": 77.2817
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "JAFFRABAD",
+      "name": "Jaffrabad",
+      "nameHindi": "जाफराबाद",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.689,
+        "lng": 77.2757
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "MAUJPUR_BABARPUR",
+      "name": "Maujpur - Babarpur",
+      "nameHindi": "मौजपुर - बाबरपुर",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.6978,
+        "lng": 77.2724
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "GOKULPURI",
+      "name": "Gokulpuri",
+      "nameHindi": "गोकुलपुरी",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.7058,
+        "lng": 77.2695
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "JOHRI_ENCLAVE",
+      "name": "Johri Enclave",
+      "nameHindi": "जोहरी एन्क्लेव",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.7115,
+        "lng": 77.2764
+      },
+      "isInterchange": false,
+      "zone": 1
+    },
+    {
+      "id": "SHIV_VIHAR",
+      "name": "Shiv Vihar",
+      "nameHindi": "शिव विहार",
+      "lines": [
+        "PINK"
+      ],
+      "coordinates": {
+        "lat": 28.7151,
+        "lng": 77.2827
+      },
+      "isInterchange": false,
+      "zone": 1
+    }
+  ]
+}

@@ -1,0 +1,217 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import 'leaflet/dist/leaflet.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── CSS Custom Properties ──────────────────────────────────────────────── */
+:root {
+  --font-display: 'Outfit', sans-serif;
+  --font-body:    'Inter', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+
+  /* Metro line colors */
+  --line-red:     #e63946;
+  --line-yellow:  #f4c430;
+  --line-blue:    #2176ae;
+  --line-green:   #2dc653;
+  --line-violet:  #7b2d8b;
+  --line-orange:  #f77f00;
+  --line-magenta: #c2185b;
+  --line-pink:    #e91e8c;
+  --line-grey:    #8d9db6;
+  --line-aqua:    #00b4d8;
+}
+
+/* ─── Base Styles ──────────────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after {
+    @apply box-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+    font-family: var(--font-body);
+    background-color: #030712;
+  }
+
+  body {
+    @apply bg-navy-950 text-gray-100 antialiased leading-relaxed;
+    font-family: var(--font-body);
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    @apply font-bold leading-tight tracking-tight;
+  }
+
+  /* Dark mode scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #030712; }
+  ::-webkit-scrollbar-thumb { background: #1a2b58; border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: #2563eb; }
+}
+
+/* ─── Component Utilities ──────────────────────────────────────────────────── */
+@layer components {
+  /* Midnight glass card */
+  .glass-card {
+    @apply bg-navy-900/85 backdrop-blur-md border border-white/[0.08] rounded-2xl shadow-card
+           transition-all duration-300;
+  }
+
+  .glass-card-interactive {
+    @apply glass-card hover:border-cyan-500/30 hover:shadow-card-hover hover:-translate-y-0.5;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-blue-400 via-cyan-300 to-yellow-300 bg-clip-text text-transparent;
+  }
+
+  .gradient-text-gold {
+    @apply bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 bg-clip-text text-transparent;
+  }
+
+  .gradient-text-cyan {
+    @apply bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent;
+  }
+
+  /* Metro line dot */
+  .line-dot {
+    @apply w-3 h-3 rounded-full flex-shrink-0;
+  }
+
+  /* Station connector line */
+  .station-connector {
+    @apply w-0.5 bg-white/20 flex-grow;
+  }
+
+  /* Input field style */
+  .metro-input {
+    @apply w-full bg-navy-850/90 border border-white/10 rounded-xl px-4 py-3
+           text-gray-100 placeholder-gray-500 font-sans text-sm
+           focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/25
+           hover:border-white/20 transition-all duration-200;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-cyan-500
+           active:from-blue-700 active:to-blue-600
+           text-white font-semibold px-6 py-3 rounded-xl
+           transition-all duration-200 shadow-glow-blue hover:shadow-glow-cyan
+           focus:outline-none focus:ring-2 focus:ring-cyan-400/50
+           disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none;
+  }
+
+  /* Electric yellow button */
+  .btn-yellow {
+    @apply bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400
+           active:from-yellow-600 active:to-amber-600
+           text-gray-950 font-bold px-6 py-3 rounded-xl
+           transition-all duration-200 shadow-glow-yellow
+           focus:outline-none focus:ring-2 focus:ring-yellow-400/50;
+  }
+
+  /* Ghost button */
+  .btn-ghost {
+    @apply bg-white/[0.04] hover:bg-white/[0.08] text-gray-300 hover:text-white
+           border border-white/10 hover:border-white/20
+           font-medium px-4 py-2.5 rounded-xl
+           transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-cyan-400/30;
+  }
+
+  /* Route card */
+  .route-card {
+    @apply glass-card p-5 cursor-pointer
+           hover:border-cyan-500/40 hover:bg-navy-850/90
+           transition-all duration-300;
+  }
+
+  .route-card.active {
+    @apply border-cyan-400/70 bg-navy-800/90 shadow-glow-cyan;
+  }
+}
+
+/* ─── Leaflet Map Overrides ────────────────────────────────────────────────── */
+.leaflet-container {
+  background: #0a0f1e !important;
+  font-family: var(--font-body) !important;
+}
+
+.leaflet-tile {
+  filter: brightness(0.7) saturate(0.8) hue-rotate(200deg) !important;
+}
+
+.leaflet-control-zoom {
+  @apply border-white/10 !important;
+}
+
+.leaflet-control-zoom a {
+  @apply bg-navy-800 text-gray-300 border-white/10 hover:bg-navy-700 !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: #111a36 !important;
+  color: #f3f4f6 !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
+  padding: 0 !important;
+}
+
+.leaflet-popup-content {
+  margin: 12px 14px !important;
+  line-height: 1.4 !important;
+}
+
+.leaflet-popup-tip {
+  background: #111a36 !important;
+}
+
+.leaflet-popup-close-button {
+  color: #94a3b8 !important;
+  padding: 6px 8px 0 0 !important;
+}
+
+.leaflet-tooltip {
+  background: #0b1329 !important;
+  color: #f1f5f9 !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 6px !important;
+  padding: 4px 8px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+.leaflet-tooltip-top:before {
+  border-top-color: #0b1329 !important;
+}
+
+.leaflet-tooltip-bottom:before {
+  border-bottom-color: #0b1329 !important;
+}
+
+/* ─── Animations ───────────────────────────────────────────────────────────── */
+@keyframes routeDraw {
+  from { stroke-dashoffset: var(--path-length, 1000); }
+  to   { stroke-dashoffset: 0; }
+}
+
+.route-path-animate {
+  animation: routeDraw 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes stationPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.15); }
+}
+
+.station-pulse {
+  animation: stationPulse 2s ease-in-out infinite;
+}

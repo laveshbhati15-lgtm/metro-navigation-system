@@ -1,0 +1,104 @@
+{
+  "_meta": {
+    "description": "Delhi Metro line definitions",
+    "source": "DMRC Official Network Map — https://www.delhimetrorail.com",
+    "lastVerified": "2026-10",
+    "phase": "Verified 7 Lines: Yellow, Blue, Violet, Red, Green, Magenta, Pink"
+  },
+  "lines": [
+    {
+      "code": "RED",
+      "number": 1,
+      "name": "Red Line",
+      "nameFull": "Line 1: Rithala – Shaheed Sthal (New Bus Adda)",
+      "color": "#e63946",
+      "textColor": "#ffffff",
+      "terminalA": "RITHALA",
+      "terminalB": "SHAHEED_STHAL",
+      "stationCount": 29,
+      "openYear": 2002
+    },
+    {
+      "code": "YELLOW",
+      "number": 2,
+      "name": "Yellow Line",
+      "nameFull": "Line 2: Samaypur Badli – HUDA City Centre",
+      "color": "#f4c430",
+      "textColor": "#1a1a1a",
+      "terminalA": "SAMAYPUR_BADLI",
+      "terminalB": "HUDA_CITY_CENTRE",
+      "stationCount": 37,
+      "openYear": 2004
+    },
+    {
+      "code": "BLUE",
+      "number": 3,
+      "name": "Blue Line",
+      "nameFull": "Line 3/4: Dwarka Sector 21 – Vaishali / Noida Electronic City",
+      "color": "#2176ae",
+      "textColor": "#ffffff",
+      "terminalA": "DWARKA_SEC_21",
+      "terminalB_1": "VAISHALI",
+      "terminalB_2": "NOIDA_ELECTRONIC_CITY",
+      "stationCount": 57,
+      "mainLineStationCount": 50,
+      "branchStationCount": 8,
+      "openYear": 2005,
+      "hasBranch": true,
+      "branchPoint": "YAMUNA_BANK"
+    },
+    {
+      "code": "GREEN",
+      "number": 5,
+      "name": "Green Line",
+      "nameFull": "Line 5: Inderlok / Kirti Nagar – Brigadier Hoshiyar Singh",
+      "color": "#2dc653",
+      "textColor": "#ffffff",
+      "terminalA_1": "INDERLOK",
+      "terminalA_2": "KIRTI_NAGAR",
+      "terminalB": "BRIGADIER_HOSHIYAR_SINGH",
+      "stationCount": 24,
+      "mainLineStationCount": 22,
+      "branchStationCount": 3,
+      "openYear": 2010,
+      "hasBranch": true,
+      "branchPoint": "ASHOK_PARK_MAIN"
+    },
+    {
+      "code": "VIOLET",
+      "number": 6,
+      "name": "Violet Line",
+      "nameFull": "Line 6: Kashmere Gate – Raja Nahar Singh (Ballabhgarh)",
+      "color": "#7b2d8b",
+      "textColor": "#ffffff",
+      "terminalA": "KASHMERE_GATE",
+      "terminalB": "RAJA_NAHAR_SINGH",
+      "stationCount": 34,
+      "openYear": 2010
+    },
+    {
+      "code": "PINK",
+      "number": 7,
+      "name": "Pink Line",
+      "nameFull": "Line 7: Majlis Park – Shiv Vihar",
+      "color": "#e91e8c",
+      "textColor": "#ffffff",
+      "terminalA": "MAJLIS_PARK",
+      "terminalB": "SHIV_VIHAR",
+      "stationCount": 38,
+      "openYear": 2018
+    },
+    {
+      "code": "MAGENTA",
+      "number": 8,
+      "name": "Magenta Line",
+      "nameFull": "Line 8: Janakpuri West – Botanical Garden",
+      "color": "#c2185b",
+      "textColor": "#ffffff",
+      "terminalA": "JANAKPURI_WEST",
+      "terminalB": "BOTANICAL_GARDEN",
+      "stationCount": 25,
+      "openYear": 2017
+    }
+  ]
+}
