@@ -5,6 +5,7 @@ import { getAuth } from 'firebase-admin/auth';
 let dbInstance: FirebaseFirestore.Firestore | null = null;
 let authInstance: ReturnType<typeof getAuth> | null = null;
 let isConfigured = false;
+let lastInitError: string | null = null;
 
 /**
  * Initializes Firebase Admin SDK on Vercel using server-only FIREBASE_SERVICE_ACCOUNT_KEY.
@@ -14,9 +15,10 @@ export function getFirebaseAdmin(): {
   db: FirebaseFirestore.Firestore;
   auth: ReturnType<typeof getAuth>;
   isConfigured: boolean;
+  initError: string | null;
 } {
   if (getApps().length > 0 && dbInstance && authInstance) {
-    return { db: dbInstance, auth: authInstance, isConfigured: true };
+    return { db: dbInstance, auth: authInstance, isConfigured: true, initError: null };
   }
 
   const rawServiceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
@@ -27,9 +29,33 @@ export function getFirebaseAdmin(): {
 
   try {
     if (rawServiceAccount) {
-      const parsed = JSON.parse(rawServiceAccount);
+      let jsonString = rawServiceAccount.trim();
+      if (
+        (jsonString.startsWith('"') && jsonString.endsWith('"')) ||
+        (jsonString.startsWith("'") && jsonString.endsWith("'"))
+      ) {
+        jsonString = jsonString.slice(1, -1).trim();
+      }
+      // Handle potential base64 encoding
+      if (!jsonString.startsWith('{')) {
+        try {
+          const decoded = Buffer.from(jsonString, 'base64').toString('utf8');
+          if (decoded.trim().startsWith('{')) {
+            jsonString = decoded.trim();
+          }
+        } catch {
+          // Keep original string if base64 decoding fails
+        }
+      }
+
+      const parsed = JSON.parse(jsonString);
       if (!parsed.project_id || !parsed.client_email || !parsed.private_key) {
-        throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY is missing required service account fields.');
+        throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY is missing required service account fields (project_id, client_email, or private_key).');
+      }
+
+      // Handle escaped newlines in PEM private key
+      if (typeof parsed.private_key === 'string' && parsed.private_key.includes('\\n')) {
+        parsed.private_key = parsed.private_key.replace(/\\n/g, '\n');
       }
 
       initializeApp({
@@ -37,15 +63,19 @@ export function getFirebaseAdmin(): {
         projectId: parsed.project_id || projectId,
       });
       isConfigured = true;
+      lastInitError = null;
     } else if (process.env.FIRESTORE_EMULATOR_HOST) {
       initializeApp({ projectId });
       isConfigured = true;
+      lastInitError = null;
     } else {
       isConfigured = false;
+      lastInitError = 'FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set.';
     }
   } catch (err: any) {
     isConfigured = false;
-    console.error('Firebase Admin initialization error:', err.message);
+    lastInitError = err.message || 'Failed to initialize Firebase Admin credential.';
+    console.error('Firebase Admin initialization error:', lastInitError);
   }
 
   if (getApps().length > 0) {
@@ -57,6 +87,7 @@ export function getFirebaseAdmin(): {
     db: dbInstance as FirebaseFirestore.Firestore,
     auth: authInstance as ReturnType<typeof getAuth>,
     isConfigured,
+    initError: lastInitError,
   };
 }
 

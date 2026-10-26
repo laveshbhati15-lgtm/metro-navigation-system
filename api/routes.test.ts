@@ -133,15 +133,18 @@ vi.mock('./_lib/razorpay.js', async (importOriginal) => {
 
 function createMockReqRes({
   method = 'POST',
+  url = '/',
   headers = {},
   body = {},
 }: {
   method?: string;
+  url?: string;
   headers?: Record<string, string>;
   body?: any;
 }) {
   const req: any = {
     method,
+    url,
     headers: { ...headers },
     body,
   };
@@ -307,6 +310,47 @@ describe('Vercel API Routes: createRazorpayOrder', () => {
     expect(stored).toBeDefined();
     expect(stored.userId).toBeNull();
     expect(stored.userEmail).toBeNull();
+  });
+
+  it('serves safe diagnostics on GET with ?diagnostics=1 without exposing secrets', async () => {
+    const { req, res, getStatusCode, getResponseData } = createMockReqRes({
+      method: 'GET',
+      url: '/api/createRazorpayOrder?diagnostics=1',
+    });
+
+    await createOrderHandler(req, res);
+    expect(getStatusCode()).toBe(200);
+
+    const data = getResponseData();
+    expect(data.status).toBe('ok');
+    expect(data.disclaimer).toBe('DEMO — NOT VALID FOR METRO TRAVEL');
+    expect(data.diagnostics).toBeDefined();
+    expect(data.diagnostics.razorpay.hasKeyId).toBe(true);
+    expect(data.diagnostics.razorpay.keyType).toBe('TEST');
+    expect(data.diagnostics.razorpay.hasKeySecret).toBe(true);
+    expect(data.requestId).toBeDefined();
+
+    // Verify secrets are strictly NOT present in the response
+    const jsonStr = JSON.stringify(data);
+    expect(jsonStr).not.toContain(TEST_KEY_SECRET);
+    expect(jsonStr).not.toContain(TEST_WEBHOOK_SECRET);
+  });
+
+  it('returns structured 503 CONFIG_MISSING when Razorpay credentials are missing', async () => {
+    delete process.env.RAZORPAY_KEY_ID;
+    const { req, res, getStatusCode, getResponseData } = createMockReqRes({
+      method: 'POST',
+      body: {
+        sourceId: 'RAJIV_CHOWK',
+        destinationId: 'HAUZ_KHAS',
+      },
+    });
+
+    await createOrderHandler(req, res);
+    expect(getStatusCode()).toBe(503);
+    expect(getResponseData().code).toBe('CONFIG_MISSING');
+    expect(getResponseData().stage).toBe('CONFIG_VALIDATION');
+    expect(getResponseData().requestId).toBeDefined();
   });
 });
 

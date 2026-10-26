@@ -72,6 +72,74 @@ export function loadRazorpayCheckoutScript(): Promise<boolean> {
   });
 }
 
+async function parseErrorResponse(
+  response: Response,
+  defaultPrefix: string
+): Promise<Error> {
+  let errorData: any = {};
+  let rawText = '';
+
+  if (typeof response.json === 'function') {
+    try {
+      errorData = await response.json();
+    } catch {
+      // Body may not be JSON
+    }
+  }
+
+  if (!errorData?.error && typeof response.text === 'function') {
+    try {
+      rawText = await response.text();
+      if (rawText && !rawText.includes('<html') && rawText.length < 200) {
+        try {
+          const parsed = JSON.parse(rawText);
+          if (parsed && typeof parsed === 'object') errorData = parsed;
+        } catch {
+          // Plain text message
+        }
+      }
+    } catch {
+      // Ignore
+    }
+  }
+
+  let message = errorData?.error;
+  if (!message) {
+    if (rawText && rawText.length < 150 && !rawText.includes('<html')) {
+      message = rawText.trim();
+    } else {
+      message = `${defaultPrefix} (HTTP ${response.status})`;
+    }
+  }
+
+  if (errorData?.code) {
+    message += ` [${errorData.code}${errorData.stage ? ` @ ${errorData.stage}` : ''}]`;
+  }
+
+  const err: any = new Error(message);
+  err.status = response.status;
+  err.code = errorData?.code;
+  err.stage = errorData?.stage;
+  err.requestId = errorData?.requestId;
+  return err;
+}
+
+/**
+ * Checks server-side payment configuration diagnostics (safe, without secrets).
+ */
+export async function fetchPaymentBackendDiagnostics(): Promise<any> {
+  const response = await fetch(
+    `${FUNCTIONS_BASE_URL}/createRazorpayOrder?diagnostics=1`,
+    {
+      method: 'GET',
+    }
+  );
+  if (!response.ok) {
+    throw await parseErrorResponse(response, 'Failed to fetch backend diagnostics');
+  }
+  return response.json();
+}
+
 /**
  * Calls backend Firebase Cloud Function to create an authenticated Razorpay order.
  * Never supplies or trusts client-side fare amounts.
@@ -99,10 +167,7 @@ export async function createPaymentOrder(
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(
-      errorData.error || `Order creation failed with HTTP status ${response.status}`
-    );
+    throw await parseErrorResponse(response, 'Order creation failed');
   }
 
   return response.json();
@@ -123,10 +188,7 @@ export async function verifyServerPayment(
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(
-      errorData.error || `Payment verification failed with HTTP status ${response.status}`
-    );
+    throw await parseErrorResponse(response, 'Payment verification failed');
   }
 
   return response.json();

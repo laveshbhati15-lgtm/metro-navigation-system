@@ -13,14 +13,24 @@ export interface EdgeData {
   line: string;
 }
 
+const stationsObj = (stationsData as any)?.default || stationsData || {};
+const connectionsObj = (connectionsData as any)?.default || connectionsData || {};
+
+const rawStations: StationData[] = Array.isArray(stationsObj.stations)
+  ? stationsObj.stations
+  : [];
+const rawEdges: EdgeData[] = Array.isArray(connectionsObj.edges)
+  ? connectionsObj.edges
+  : [];
+
 const stationsMap = new Map<string, StationData>();
-for (const s of (stationsData as { stations: StationData[] }).stations) {
+for (const s of rawStations) {
   stationsMap.set(s.id, s);
 }
 
 // Build adjacency for shortest path verification
 const adjacency = new Map<string, string[]>();
-for (const e of (connectionsData as { edges: EdgeData[] }).edges) {
+for (const e of rawEdges) {
   if (!adjacency.has(e.from)) adjacency.set(e.from, []);
   if (!adjacency.has(e.to)) adjacency.set(e.to, []);
   adjacency.get(e.from)!.push(e.to);

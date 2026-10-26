@@ -37,19 +37,33 @@ export async function createOrderOnRazorpay(
   notes: Record<string, string> = {}
 ): Promise<RazorpayOrderResult> {
   const client = getRazorpayClient();
-  const order = await client.orders.create({
-    amount: amountInPaise,
-    currency: 'INR',
-    receipt,
-    notes,
-  });
+  try {
+    const order = await client.orders.create({
+      amount: amountInPaise,
+      currency: 'INR',
+      receipt,
+      notes,
+    });
 
-  return {
-    id: order.id,
-    amount: Number(order.amount),
-    currency: order.currency,
-    receipt: String(order.receipt || receipt),
-  };
+    return {
+      id: order.id,
+      amount: Number(order.amount),
+      currency: order.currency,
+      receipt: String(order.receipt || receipt),
+    };
+  } catch (err: any) {
+    const description =
+      err?.error?.description ||
+      err?.message ||
+      'Failed to create order on Razorpay servers.';
+    const code = err?.error?.code || 'RAZORPAY_API_ERROR';
+    const statusCode = err?.statusCode || 502;
+    const enhancedError: any = new Error(description);
+    enhancedError.code = code;
+    enhancedError.statusCode = statusCode;
+    enhancedError.rawError = err?.error;
+    throw enhancedError;
+  }
 }
 
 /**
@@ -123,5 +137,19 @@ export function verifyWebhookSignature(
  */
 export async function fetchRazorpayPayment(paymentId: string): Promise<any> {
   const client = getRazorpayClient();
-  return client.payments.fetch(paymentId);
+  try {
+    return await client.payments.fetch(paymentId);
+  } catch (err: any) {
+    const description =
+      err?.error?.description ||
+      err?.message ||
+      'Failed to fetch payment from Razorpay servers.';
+    const code = err?.error?.code || 'RAZORPAY_FETCH_ERROR';
+    const statusCode = err?.statusCode || 502;
+    const enhancedError: any = new Error(description);
+    enhancedError.code = code;
+    enhancedError.statusCode = statusCode;
+    enhancedError.rawError = err?.error;
+    throw enhancedError;
+  }
 }
