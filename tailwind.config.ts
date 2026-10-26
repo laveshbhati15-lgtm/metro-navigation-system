@@ -44,8 +44,8 @@ export default {
         },
       },
       fontFamily: {
-        display: ['Outfit', 'sans-serif'],
-        body:    ['Inter', 'sans-serif'],
+        display: ['Outfit', 'Noto Sans Devanagari', 'sans-serif'],
+        body:    ['Inter', 'Noto Sans Devanagari', 'sans-serif'],
         mono:    ['JetBrains Mono', 'monospace'],
       },
       animation: {

@@ -1,8 +1,9 @@
 import { useMemo, useState, useCallback, Fragment } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MapContainer, TileLayer, Polyline, CircleMarker, Tooltip, Popup } from 'react-leaflet';
 import { useJourneyStore } from '@/store/journeyStore';
 import { metroGraph } from '@/core/graph/MetroGraph';
-import { LINE_COLORS, LINE_DISPLAY_NAMES } from '@/utils/lineColors';
+import { LINE_COLORS } from '@/utils/lineColors';
 import {
   buildLineTracks,
   getRouteCoordinates,
@@ -11,8 +12,10 @@ import {
   isValidCoordinate,
 } from './mapUtils';
 import { MapOverlayControls, MapBoundsHandler, type LineFilter } from './MapControls';
+import { getStationDisplayName, getStationSecondaryName, getLocalizedLineName } from '@/i18n';
 
 export function MetroMap() {
+  const { t, i18n } = useTranslation();
   const source           = useJourneyStore((s) => s.source);
   const destination      = useJourneyStore((s) => s.destination);
   const setSource        = useJourneyStore((s) => s.setSource);
@@ -74,7 +77,7 @@ export function MetroMap() {
 
   return (
     <div
-      className="relative w-full rounded-2xl border border-white/10 shadow-2xl bg-navy-950 overflow-hidden h-[420px] sm:h-[520px] lg:h-[620px] isolate"
+      className="relative w-full rounded-2xl border border-slate-800 shadow-xl bg-[#02050c] overflow-hidden h-[460px] sm:h-[560px] lg:h-[640px] isolate"
     >
       {/* Tile-unavailable banner */}
       {tileError && basemapMode === 'streets' && (
@@ -83,7 +86,7 @@ export function MetroMap() {
             <svg className="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
             </svg>
-            Street tiles unavailable. Vector transit schematic remains 100% active.
+            {t('map.tilesUnavailable')}
           </div>
         </div>
       )}
@@ -245,6 +248,9 @@ export function MetroMap() {
             fillOpacity = 0.45;
           }
 
+          const displayName = getStationDisplayName(station, i18n.language);
+          const secondaryName = getStationSecondaryName(station, i18n.language);
+
           return (
             <Fragment key={station.id}>
               {/* Outer beacon halo for Origin and Destination */}
@@ -286,12 +292,12 @@ export function MetroMap() {
               {/* Tooltip on hover */}
               <Tooltip direction="top" offset={[0, -6]} opacity={0.97}>
                 <div className="font-sans text-xs">
-                  <span className="font-semibold text-white">{station.name}</span>
-                  {station.nameHindi && (
-                    <span className="text-gray-400 ml-1 font-normal">({station.nameHindi})</span>
+                  <span className="font-semibold text-white">{displayName}</span>
+                  {secondaryName && (
+                    <span className="text-gray-400 ml-1 font-normal">({secondaryName})</span>
                   )}
                   {isInterchange && (
-                    <span className="ml-1 text-[10px] text-amber-400 font-semibold"> [Interchange]</span>
+                    <span className="ml-1 text-[10px] text-amber-400 font-semibold"> [{t('map.interchange')}]</span>
                   )}
                 </div>
               </Tooltip>
@@ -300,9 +306,9 @@ export function MetroMap() {
               <Popup className="station-popup">
                 <div className="p-1 space-y-2.5 min-w-[190px]">
                   <div>
-                    <h4 className="text-sm font-bold text-white leading-snug">{station.name}</h4>
-                    {station.nameHindi && (
-                      <p className="text-xs text-gray-400">{station.nameHindi}</p>
+                    <h4 className="text-sm font-bold text-white leading-snug">{displayName}</h4>
+                    {secondaryName && (
+                      <p className="text-xs text-gray-400">{secondaryName}</p>
                     )}
                   </div>
 
@@ -318,12 +324,12 @@ export function MetroMap() {
                         }}
                       >
                         <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: LINE_COLORS[l] }} />
-                        {LINE_DISPLAY_NAMES[l]}
+                        {getLocalizedLineName(l, i18n.language)}
                       </span>
                     ))}
                     {isInterchange && (
                       <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40">
-                        Interchange
+                        {t('map.interchange')}
                       </span>
                     )}
                   </div>
@@ -344,7 +350,7 @@ export function MetroMap() {
                           : 'bg-white/10 hover:bg-emerald-600/30 text-gray-200 hover:text-emerald-300 hover:border-emerald-500/40 border border-white/10'
                       }`}
                     >
-                      {isSource ? '✓ Start' : destination && destination.id !== station.id ? 'Set & Plan' : 'Set as From'}
+                      {isSource ? t('map.startChecked') : destination && destination.id !== station.id ? t('map.setAndPlan') : t('map.setAsFrom')}
                     </button>
                     <button
                       type="button"
@@ -361,7 +367,7 @@ export function MetroMap() {
                           : 'bg-white/10 hover:bg-red-600/30 text-gray-200 hover:text-red-300 hover:border-red-500/40 border border-white/10'
                       }`}
                     >
-                      {isDestination ? '✓ End' : source && source.id !== station.id ? 'Set & Plan' : 'Set as To'}
+                      {isDestination ? t('map.endChecked') : source && source.id !== station.id ? t('map.setAndPlan') : t('map.setAsTo')}
                     </button>
                   </div>
 
@@ -371,7 +377,7 @@ export function MetroMap() {
                     className="w-full text-[11px] py-1.5 px-2.5 rounded-lg font-medium bg-blue-600/20 hover:bg-blue-600/30 text-cyan-300 border border-cyan-500/30 flex items-center justify-center gap-1.5 transition-colors"
                   >
                     <span>♿</span>
-                    <span>Indoor & Accessibility Guide</span>
+                    <span>{t('map.indoorGuide')}</span>
                   </button>
                 </div>
               </Popup>
@@ -380,6 +386,55 @@ export function MetroMap() {
         );
       })}
       </MapContainer>
+      {/* Bottom Persistent Map Legend Strip */}
+      <div className="absolute bottom-3 left-3 right-3 z-[400] pointer-events-none">
+        <div className="max-w-max mx-auto px-3.5 py-1.5 rounded-xl bg-slate-900/90 backdrop-blur-md border border-slate-800/90 text-xs shadow-lg flex items-center gap-3 flex-wrap justify-center pointer-events-auto">
+          {activeRoute ? (
+            <>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-emerald-500/30" />
+                <span className="text-[11px] font-medium text-white">{getStationDisplayName(activeRoute.stations[0], i18n.language)}</span>
+              </div>
+              <span className="text-gray-500 text-xs">➔</span>
+              <div className="flex items-center gap-1.5">
+                {activeRoute.lineSegments.map((seg, sIdx) => (
+                  <span
+                    key={sIdx}
+                    className="text-[10px] font-mono px-2 py-0.5 rounded font-bold"
+                    style={{ backgroundColor: `${LINE_COLORS[seg.line]}25`, color: LINE_COLORS[seg.line] }}
+                  >
+                    {getLocalizedLineName(seg.line, i18n.language)}
+                  </span>
+                ))}
+              </div>
+              <span className="text-gray-500 text-xs">➔</span>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-400 ring-2 ring-rose-500/30" />
+                <span className="text-[11px] font-medium text-white">{getStationDisplayName(activeRoute.stations[activeRoute.stations.length - 1], i18n.language)}</span>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center gap-4 text-[11px] font-sans text-gray-300">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-yellow-400" />
+                <span>{getLocalizedLineName('YELLOW', i18n.language)}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-blue-500" />
+                <span>{getLocalizedLineName('BLUE', i18n.language)}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-purple-500" />
+                <span>{getLocalizedLineName('VIOLET', i18n.language)}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full ring-2 ring-purple-400/80 bg-slate-900" />
+                <span>{t('search.interchangeBadge')}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

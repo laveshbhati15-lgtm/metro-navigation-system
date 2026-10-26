@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTicketStore } from './ticketStore';
 import { DemoTicketCard } from './DemoTicketCard';
 import type { DemoTicket } from './types';
 import { formatDuration } from '@/utils/formatters';
 import { LINE_COLORS } from '@/utils/lineColors';
+import { getStationDisplayName } from '@/i18n';
 
 export const TicketHistoryModal: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const isHistoryModalOpen = useTicketStore((s) => s.isHistoryModalOpen);
   const closeHistoryModal = useTicketStore((s) => s.closeHistoryModal);
   const tickets = useTicketStore((s) => s.tickets);
@@ -35,7 +38,7 @@ export const TicketHistoryModal: React.FC = () => {
             }
           }}
           className="absolute -top-3 -right-3 z-20 w-8 h-8 rounded-full bg-navy-800 border border-white/20 text-gray-300 hover:text-white hover:bg-navy-700 flex items-center justify-center shadow-lg transition-colors"
-          aria-label="Close ticket history"
+          aria-label={t('common.close')}
         >
           ✕
         </button>
@@ -60,10 +63,10 @@ export const TicketHistoryModal: React.FC = () => {
                   className="text-lg sm:text-xl font-bold font-display text-white tracking-tight flex items-center gap-2"
                 >
                   <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
-                  Demo Ticket History
+                  {t('tickets.historyModalTitle')}
                 </h3>
                 <p className="text-xs text-gray-400 font-mono mt-0.5">
-                  Saved demo e-tokens stored in your browser session
+                  {t('tickets.vaultSubtitle')}
                 </p>
               </div>
 
@@ -73,7 +76,7 @@ export const TicketHistoryModal: React.FC = () => {
                   onClick={clearHistory}
                   className="text-xs font-mono text-red-400 hover:text-red-300 transition-colors px-3 py-1 rounded-lg bg-red-500/10 border border-red-500/20"
                 >
-                  Clear History
+                  {t('tickets.clearHistory')}
                 </button>
               )}
             </div>
@@ -84,9 +87,9 @@ export const TicketHistoryModal: React.FC = () => {
                 <div className="w-12 h-12 mx-auto rounded-2xl bg-white/[0.05] flex items-center justify-center text-2xl">
                   🎟️
                 </div>
-                <p className="text-sm font-semibold text-white">No Demo Bookings Yet</p>
+                <p className="text-sm font-semibold text-white">{t('tickets.noTicketsTitle')}</p>
                 <p className="text-xs text-gray-400 max-w-xs mx-auto font-mono">
-                  Plan a journey in the navigator and generate your first demo QR metro pass.
+                  {t('tickets.noTicketsDesc')}
                 </p>
                 <button
                   type="button"
@@ -96,49 +99,49 @@ export const TicketHistoryModal: React.FC = () => {
                   }}
                   className="btn-primary mt-3 text-xs py-2 px-4 rounded-xl"
                 >
-                  + Book a Demo Ticket
+                  + {t('tickets.bookNewTicket')}
                 </button>
               </div>
             ) : (
               <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
-                {tickets.map((t) => (
+                {tickets.map((tkt) => (
                   <div
-                    key={t.id}
-                    onClick={() => setSelectedTicket(t)}
+                    key={tkt.id}
+                    onClick={() => setSelectedTicket(tkt)}
                     className="p-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] hover:border-cyan-500/30 transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 group"
                   >
                     <div className="space-y-1.5 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-mono font-bold text-cyan-300">
-                          {t.id}
+                          {tkt.id}
                         </span>
                         <span
                           className={`text-[9px] font-mono px-2 py-0.5 rounded-full uppercase font-bold border ${
-                            t.status === 'CANCELLED'
+                            tkt.status === 'CANCELLED'
                               ? 'bg-red-500/10 text-red-400 border-red-500/20'
                               : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                           }`}
                         >
-                          {t.status}
+                          {tkt.status === 'CANCELLED' ? t('tickets.cancelledNotice') : t('tickets.activeNotice')}
                         </span>
                         <span className="text-[10px] text-gray-400 font-mono">
-                          {t.ticketType === 'RETURN' ? 'Return' : 'Single'} • {t.passengerCount} {t.passengerCount === 1 ? 'Pax' : 'Pax'}
+                          {tkt.ticketType === 'RETURN' ? t('booking.returnOption') : t('booking.singleOption')} • {t('tickets.passengers', { count: tkt.passengerCount })}
                         </span>
                       </div>
 
                       <div className="flex items-center gap-2 text-sm font-bold text-white">
-                        <span>{t.source.name}</span>
+                        <span>{getStationDisplayName(tkt.source, i18n.language)}</span>
                         <span className="text-cyan-400 text-xs">→</span>
-                        <span>{t.destination.name}</span>
+                        <span>{getStationDisplayName(tkt.destination, i18n.language)}</span>
                       </div>
 
                       <div className="flex items-center gap-2 text-[10px] font-mono text-gray-400">
-                        <span>{t.routeSummary.totalStations - 1} stops</span>
+                        <span>{t('tickets.stationStops', { count: tkt.routeSummary.totalStations - 1 })}</span>
                         <span>•</span>
-                        <span>{formatDuration(t.routeSummary.totalTimeSeconds)}</span>
+                        <span>{formatDuration(tkt.routeSummary.totalTimeSeconds)}</span>
                         <span>•</span>
                         <div className="flex items-center gap-1">
-                          {t.routeSummary.lines.map((l) => (
+                          {tkt.routeSummary.lines.map((l) => (
                             <span
                               key={l}
                               className="w-2 h-2 rounded-full inline-block"
@@ -151,10 +154,10 @@ export const TicketHistoryModal: React.FC = () => {
 
                     <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 pt-2 sm:pt-0 border-white/[0.05]">
                       <span className="text-sm font-black font-display text-emerald-400">
-                        ₹{t.totalFare}
+                        ₹{tkt.totalFare}
                       </span>
                       <span className="text-[11px] font-mono text-cyan-400 group-hover:translate-x-1 transition-transform flex items-center gap-1">
-                        View Pass →
+                        {t('tickets.viewDetails')} →
                       </span>
                     </div>
                   </div>

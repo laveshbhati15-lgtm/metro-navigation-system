@@ -2,6 +2,7 @@ import type { Station, LineCode, MetroRoute } from '@/core/graph/types';
 
 export type TicketType = 'SINGLE' | 'RETURN';
 export type TicketStatus = 'ACTIVE' | 'USED' | 'CANCELLED';
+export type PaymentStatus = 'PAID' | 'UNVERIFIED_DEMO' | 'PENDING' | 'FAILED';
 
 export interface DemoTicket {
   /** Unique booking reference, e.g. "DMRC-DEMO-202610-A9F3X2" */
@@ -44,6 +45,18 @@ export interface DemoTicket {
   /** Demo status */
   status: TicketStatus;
 
+  /** Payment verification status */
+  paymentStatus: PaymentStatus;
+
+  /** True only if server-side HMAC cryptographic signature verification succeeded */
+  isVerifiedPayment: boolean;
+
+  /** Razorpay order identifier in Test Mode */
+  razorpayOrderId?: string;
+
+  /** Razorpay payment identifier in Test Mode */
+  razorpayPaymentId?: string;
+
   /** Strict disclaimer string embedded into ticket */
   disclaimer: string;
 
@@ -57,4 +70,8 @@ export interface CreateTicketParams {
   route: MetroRoute;
   passengerCount?: number;
   ticketType?: TicketType;
+  paymentStatus?: PaymentStatus;
+  isVerifiedPayment?: boolean;
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
 }

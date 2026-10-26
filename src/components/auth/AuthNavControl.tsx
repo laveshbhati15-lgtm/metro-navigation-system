@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
 
 export function AuthNavControl() {
+  const { t } = useTranslation();
   const { user, loading, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -61,7 +63,7 @@ export function AuthNavControl() {
             d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
           />
         </svg>
-        <span>Sign In</span>
+        <span>{t('nav.signIn')}</span>
       </Link>
     );
   }
@@ -142,7 +144,7 @@ export function AuthNavControl() {
           {/* User Details Header */}
           <div className="px-4 py-3 border-b border-white/[0.08]">
             <p className="text-white font-semibold font-display truncate">
-              {user.displayName || 'Metroverse Traveler'}
+              {user.displayName || t('nav.traveler')}
             </p>
             <p className="text-gray-400 font-mono text-[11px] truncate mt-0.5" title={user.email || ''}>
               {user.email}
@@ -150,11 +152,11 @@ export function AuthNavControl() {
             <div className="mt-2 flex items-center gap-1.5">
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                Auth Active
+                {t('nav.authActive')}
               </span>
               {user.emailVerified && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                  Verified
+                  {t('nav.verified')}
                 </span>
               )}
             </div>
@@ -176,7 +178,7 @@ export function AuthNavControl() {
                   d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <span>Account & Profile</span>
+              <span>{t('nav.accountProfile')}</span>
             </Link>
 
             <Link
@@ -193,7 +195,7 @@ export function AuthNavControl() {
                   d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
                 />
               </svg>
-              <span>Route Planner</span>
+              <span>{t('nav.planner')}</span>
             </Link>
 
             <Link
@@ -203,7 +205,7 @@ export function AuthNavControl() {
               role="menuitem"
             >
               <span className="text-sm">🎟️</span>
-              <span>Demo Tickets</span>
+              <span>{t('nav.demoTickets')}</span>
             </Link>
           </div>
 
@@ -224,7 +226,7 @@ export function AuthNavControl() {
                   d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                 />
               </svg>
-              <span>{isLoggingOut ? 'Signing out...' : 'Sign Out'}</span>
+              <span>{isLoggingOut ? t('nav.signingOut') : t('nav.signOut')}</span>
             </button>
           </div>
         </div>

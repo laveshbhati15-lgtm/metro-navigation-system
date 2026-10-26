@@ -1,8 +1,10 @@
+import { useTranslation } from 'react-i18next';
 import type { MetroRoute, LineSegment } from '@/core/graph/types';
-import { LINE_COLORS, LINE_DISPLAY_NAMES } from '@/utils/lineColors';
+import { LINE_COLORS } from '@/utils/lineColors';
 import { formatDuration, formatInterchangeCount, estimateFare } from '@/utils/formatters';
 import { cn } from '@/utils/cn';
 import { useTicketStore } from '@/features/tickets/ticketStore';
+import { getStationDisplayName, getLocalizedLineName } from '@/i18n';
 
 interface RouteCardProps {
   route: MetroRoute;
@@ -12,6 +14,7 @@ interface RouteCardProps {
 }
 
 export function RouteCard({ route, isActive, onClick, index }: RouteCardProps) {
+  const { t, i18n } = useTranslation();
   const fare = estimateFare(route.totalStations);
 
   return (
@@ -21,75 +24,136 @@ export function RouteCard({ route, isActive, onClick, index }: RouteCardProps) {
       tabIndex={0}
       aria-pressed={isActive}
       aria-label={`${route.label} route: ${formatDuration(route.totalTimeSeconds)}, ${route.totalStations} stations`}
-      className={cn('route-card', isActive && 'active', 'animate-slide-up')}
-      style={{ animationDelay: `${index * 80}ms` }}
+      className={cn(
+        'rounded-2xl p-4 sm:p-5 cursor-pointer transition-all duration-200 border',
+        'bg-slate-900/90 backdrop-blur-md',
+        isActive
+          ? 'border-cyan-400/80 bg-slate-900 shadow-lg shadow-cyan-950/40 ring-1 ring-cyan-400/40'
+          : 'border-slate-800 hover:border-slate-700 hover:bg-slate-850',
+      )}
       onClick={onClick}
       onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && onClick()}
     >
-      {/* Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className={cn(
-              'text-xs font-semibold px-2 py-0.5 rounded-full',
-              index === 0
-                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                : 'bg-white/5 text-gray-400 border border-white/10',
-            )}>
-              {route.label}
+      {/* 5. Route Type & Recommended Badge */}
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={cn(
+            'text-xs font-mono font-semibold px-2.5 py-0.5 rounded-md border',
+            isActive
+              ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30'
+              : 'bg-white/5 text-gray-300 border-white/10',
+          )}>
+            {route.label}
+          </span>
+          {index === 0 && (
+            <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md flex items-center gap-1 font-sans">
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              {t('routeCard.recommended')}
             </span>
-            {index === 0 && (
-              <span className="text-xs font-medium text-emerald-400 flex items-center gap-1">
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                Recommended
-              </span>
-            )}
-          </div>
-
-          {/* Time display */}
-          <p className="text-3xl font-bold font-display text-white">
-            {formatDuration(route.totalTimeSeconds)}
-          </p>
-          {route.hasEstimatedTimes && (
-            <p className="text-xs text-amber-400/70 mt-0.5">
-              ⚠ Based on estimated timings
-            </p>
           )}
         </div>
 
-        {/* Stats column */}
-        <div className="text-right text-sm text-gray-400 space-y-1">
-          <p><span className="text-white font-medium">{route.totalStations}</span> stations</p>
+        <span className="text-[11px] font-mono">
+          {isActive ? (
+            <span className="text-cyan-400 font-semibold flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+              {t('routeCard.selectedVariant', 'Selected Route')}
+            </span>
+          ) : (
+            <span className="text-gray-400 hover:text-white transition-colors">
+              {t('search.oneClickSelect', 'Select Route')} →
+            </span>
+          )}
+        </span>
+      </div>
+
+      {/* 1, 2, 3, 4: Essential Information Grid (Time, Fare, Stations, Interchanges) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 rounded-xl bg-slate-950/80 border border-slate-800/90 mb-3.5">
+        {/* 1. Estimated Travel Time */}
+        <div className="p-2 rounded-lg bg-slate-900/60 border border-white/[0.04]">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-gray-400 block">
+            {t('planner.travelTime')}
+          </span>
+          <p className="text-lg sm:text-xl font-bold font-display text-white mt-0.5 leading-tight">
+            {formatDuration(route.totalTimeSeconds)}
+          </p>
+          {route.hasEstimatedTimes && (
+            <span className="text-[9px] text-amber-400/80 font-mono block mt-0.5">
+              ~2 min/station
+            </span>
+          )}
+        </div>
+
+        {/* 2. Estimated Fare */}
+        <div className="p-2 rounded-lg bg-slate-900/60 border border-white/[0.04]">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-gray-400 block">
+            {t('planner.fare')}
+          </span>
+          <p className="text-lg sm:text-xl font-bold font-display text-emerald-400 mt-0.5 leading-tight">
+            ₹{fare.amount}
+          </p>
+          <span className="text-[9px] text-gray-400 font-mono block mt-0.5">
+            DMRC Fare Chart
+          </span>
+        </div>
+
+        {/* 3. Number of Stations */}
+        <div className="p-2 rounded-lg bg-slate-900/60 border border-white/[0.04]">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-gray-400 block">
+            {t('planner.stations')}
+          </span>
+          <p className="text-lg sm:text-xl font-bold font-display text-white mt-0.5 leading-tight">
+            {route.totalStations}
+          </p>
+          <span className="text-[9px] text-gray-400 font-mono block mt-0.5">
+            {t('common.stations')}
+          </span>
+        </div>
+
+        {/* 4. Interchanges and Line Changes */}
+        <div className="p-2 rounded-lg bg-slate-900/60 border border-white/[0.04]">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-gray-400 block">
+            {t('planner.transfers')}
+          </span>
           <p className={cn(
-            'font-medium',
+            'text-lg sm:text-xl font-bold font-display mt-0.5 leading-tight',
             route.interchangeCount === 0 ? 'text-emerald-400' : 'text-amber-400',
           )}>
-            {formatInterchangeCount(route.interchangeCount)}
+            {route.interchangeCount === 0
+              ? t('common.direct')
+              : route.interchangeCount}
           </p>
-          <p className="text-gray-400 text-xs">
-            Fare: <span className="text-white font-medium">₹{fare.amount}</span>{' '}
-            <span className="text-amber-400/80">(est.)</span>
-          </p>
+          <span className="text-[9px] text-gray-400 font-mono block mt-0.5">
+            {route.interchangeCount === 0
+              ? t('common.direct')
+              : formatInterchangeCount(route.interchangeCount)}
+          </span>
         </div>
       </div>
 
-      {/* Line segments visual */}
-      <div className="flex items-center gap-1 mb-4 flex-wrap">
+      {/* Line segments visual progression */}
+      <div className="flex items-center gap-1.5 mb-3 flex-wrap">
         {route.lineSegments.map((seg, i) => (
-          <LineSegmentBadge key={i} segment={seg} isLast={i === route.lineSegments.length - 1} />
+          <LineSegmentBadge
+            key={i}
+            segment={seg}
+            isLast={i === route.lineSegments.length - 1}
+            currentLang={i18n.language}
+          />
         ))}
       </div>
 
-      {/* Station path preview */}
-      <StationPath route={route} />
+      {/* 6. Station Path Preview */}
+      <StationPath route={route} currentLang={i18n.language} />
 
-      {/* Book Demo Ticket CTA for this specific route variant */}
+      {/* 7. Route Action / Ticket Booking Flow */}
       {isActive && (
-        <div className="mt-4 pt-3 border-t border-white/[0.08] flex items-center justify-between">
+        <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between gap-3">
           <span className="text-xs font-mono text-gray-400">
-            Selected variant: <strong className="text-white">{route.label}</strong>
+            {t('routeCard.selectedVariant')}{' '}
+            <strong className="text-white font-medium">{route.label}</strong>
           </span>
           <button
             type="button"
@@ -102,10 +166,10 @@ export function RouteCard({ route, isActive, onClick, index }: RouteCardProps) {
                 route,
               });
             }}
-            className="px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 hover:text-white text-xs font-mono font-semibold flex items-center gap-1.5 transition-all shadow-glow-cyan/10"
+            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white text-xs font-semibold flex items-center gap-2 transition-all shadow-md active:translate-y-0.5"
           >
             <span>🎟️</span>
-            <span>Book This Route (₹{fare.amount})</span>
+            <span>{t('routeCard.bookVariant')} (₹{fare.amount})</span>
           </button>
         </div>
       )}
@@ -115,10 +179,21 @@ export function RouteCard({ route, isActive, onClick, index }: RouteCardProps) {
 
 // ─── Line Segment Badge ───────────────────────────────────────────────────────
 
-function LineSegmentBadge({ segment, isLast }: { segment: LineSegment; isLast: boolean }) {
+function LineSegmentBadge({
+  segment,
+  isLast,
+  currentLang,
+}: {
+  segment: LineSegment;
+  isLast: boolean;
+  currentLang: string;
+}) {
   const color = LINE_COLORS[segment.line];
-  const name = LINE_DISPLAY_NAMES[segment.line];
+  const name = getLocalizedLineName(segment.line, currentLang);
   const stops = segment.stations.length - 1;
+  const stopsLabel = currentLang === 'hi'
+    ? `${stops} स्टॉप`
+    : `${stops} stop${stops !== 1 ? 's' : ''}`;
 
   return (
     <div className="flex items-center gap-1">
@@ -131,7 +206,7 @@ function LineSegmentBadge({ segment, isLast }: { segment: LineSegment; isLast: b
           style={{ backgroundColor: color }}
         />
         {name}
-        <span className="opacity-70">{stops} stop{stops !== 1 ? 's' : ''}</span>
+        <span className="opacity-70">{stopsLabel}</span>
       </div>
       {!isLast && (
         <svg className="w-4 h-4 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -144,7 +219,8 @@ function LineSegmentBadge({ segment, isLast }: { segment: LineSegment; isLast: b
 
 // ─── Station Path (collapsible) ───────────────────────────────────────────────
 
-function StationPath({ route }: { route: MetroRoute }) {
+function StationPath({ route, currentLang }: { route: MetroRoute; currentLang: string }) {
+  const { t } = useTranslation();
   const MAX_VISIBLE = 4;
   const stations = route.stations;
   const hasMore = stations.length > MAX_VISIBLE * 2;
@@ -158,7 +234,9 @@ function StationPath({ route }: { route: MetroRoute }) {
 
   return (
     <div className="border-t border-white/8 pt-4 mt-2">
-      <p className="text-xs text-gray-500 mb-3 uppercase tracking-wide font-medium">Route</p>
+      <p className="text-xs text-gray-500 mb-3 uppercase tracking-wide font-medium">
+        {t('booking.routeLabel')}
+      </p>
       <div className="flex flex-col gap-0">
         {visibleStart.map((station, i) => {
           const edgeBeforeNext = route.edges[i];
@@ -170,12 +248,13 @@ function StationPath({ route }: { route: MetroRoute }) {
           return (
             <StationRow
               key={station.id}
-              name={station.name}
+              name={getStationDisplayName(station, currentLang)}
               isFirst={i === 0}
               isLast={!hasMore && i === visibleStart.length - 1}
               isInterchange={isInterchange}
               lineColor={lineColor}
               showConnector={i < visibleStart.length - 1 || hasMore}
+              interchangeLabel={t('search.interchangeBadge')}
             />
           );
         })}
@@ -186,7 +265,7 @@ function StationPath({ route }: { route: MetroRoute }) {
               <div className="w-0.5 h-full bg-white/15 flex-grow" style={{ minHeight: '24px' }} />
             </div>
             <span className="text-xs text-gray-500 py-1 italic">
-              · · · {hiddenCount} more station{hiddenCount !== 1 ? 's' : ''} · · ·
+              · · · {hiddenCount} {currentLang === 'hi' ? 'अन्य स्टेशन' : `more station${hiddenCount !== 1 ? 's' : ''}`} · · ·
             </span>
           </div>
         )}
@@ -199,12 +278,13 @@ function StationPath({ route }: { route: MetroRoute }) {
           return (
             <StationRow
               key={station.id}
-              name={station.name}
+              name={getStationDisplayName(station, currentLang)}
               isFirst={false}
               isLast={isLast}
               isInterchange={isInterchange}
               lineColor={lineColor}
               showConnector={!isLast}
+              interchangeLabel={t('search.interchangeBadge')}
             />
           );
         })}
@@ -220,9 +300,18 @@ interface StationRowProps {
   isInterchange: boolean;
   lineColor: string;
   showConnector: boolean;
+  interchangeLabel: string;
 }
 
-function StationRow({ name, isFirst, isLast, isInterchange, lineColor, showConnector }: StationRowProps) {
+function StationRow({
+  name,
+  isFirst,
+  isLast,
+  isInterchange,
+  lineColor,
+  showConnector,
+  interchangeLabel,
+}: StationRowProps) {
   return (
     <div className="flex items-start gap-3">
       {/* Timeline column */}
@@ -251,7 +340,7 @@ function StationRow({ name, isFirst, isLast, isInterchange, lineColor, showConne
       )}>
         {name}
         {isInterchange && !isFirst && !isLast && (
-          <span className="ml-2 text-xs opacity-60">(Interchange)</span>
+          <span className="ml-2 text-xs opacity-60">({interchangeLabel})</span>
         )}
       </span>
     </div>

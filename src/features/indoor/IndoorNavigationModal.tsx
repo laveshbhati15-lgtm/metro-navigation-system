@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Station } from '@/core/graph/types';
 import {
   getStationIndoorLayout,
   type StationIndoorLayout,
   type IndoorWayfindingPath,
 } from '@/core/data/indoorData';
-import { LINE_COLORS, LINE_DISPLAY_NAMES } from '@/utils/lineColors';
+import { LINE_COLORS } from '@/utils/lineColors';
+import { getStationDisplayName, getStationSecondaryName, getLocalizedLineName } from '@/i18n';
 
 interface IndoorNavigationModalProps {
   station: Station | null;
@@ -14,6 +16,7 @@ interface IndoorNavigationModalProps {
 }
 
 export function IndoorNavigationModal({ station, onClose, isOpen }: IndoorNavigationModalProps) {
+  const { t, i18n } = useTranslation();
   const layout: StationIndoorLayout | null = station
     ? getStationIndoorLayout(station.id, station.name, station.lines, station.isInterchange)
     : null;
@@ -48,6 +51,9 @@ export function IndoorNavigationModal({ station, onClose, isOpen }: IndoorNaviga
   const currentLevel = layout.levels.find((l) => l.id === selectedLevelId) ?? layout.levels[0];
   const activePath: IndoorWayfindingPath | null = layout.paths[selectedPathIndex] ?? layout.paths[0] ?? null;
 
+  const stationDisplayName = getStationDisplayName(station, i18n.language);
+  const stationSecondaryName = getStationSecondaryName(station, i18n.language);
+
   return (
     <div
       role="dialog"
@@ -67,10 +73,15 @@ export function IndoorNavigationModal({ station, onClose, isOpen }: IndoorNaviga
             <div>
               <div className="flex items-center gap-2">
                 <h3 id="indoor-nav-title" className="text-base sm:text-lg font-bold font-display text-white">
-                  {layout.stationName}
+                  {stationDisplayName}
+                  {stationSecondaryName && (
+                    <span className="text-sm font-normal text-gray-400 ml-1.5 font-sans">
+                      ({stationSecondaryName})
+                    </span>
+                  )}
                 </h3>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/20 text-cyan-300 border border-blue-500/30">
-                  Indoor & Accessibility Guide
+                  {t('indoor.guideBadge')}
                 </span>
               </div>
               <div className="flex items-center gap-2 mt-0.5">
@@ -84,12 +95,12 @@ export function IndoorNavigationModal({ station, onClose, isOpen }: IndoorNaviga
                       border: `1px solid ${LINE_COLORS[l]}40`,
                     }}
                   >
-                    {LINE_DISPLAY_NAMES[l]}
+                    {getLocalizedLineName(l, i18n.language)}
                   </span>
                 ))}
                 {station.isInterchange && (
                   <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                    Interchange Hub
+                    {t('indoor.hubBadge')}
                   </span>
                 )}
               </div>
@@ -99,7 +110,7 @@ export function IndoorNavigationModal({ station, onClose, isOpen }: IndoorNaviga
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close indoor navigation modal"
+            aria-label={t('indoor.closeAria')}
             className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -122,19 +133,19 @@ export function IndoorNavigationModal({ station, onClose, isOpen }: IndoorNaviga
         {/* Accessibility Features Strip */}
         <div className="bg-navy-900/60 px-5 py-2.5 border-b border-white/[0.06] flex flex-wrap items-center gap-4 text-xs">
           <span className="text-[11px] font-mono uppercase text-gray-400 font-semibold">
-            Station Facilities:
+            {t('indoor.amenities')}:
           </span>
           <div className="flex items-center gap-1.5 text-emerald-400">
             <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            <span>Elevators to all platforms</span>
+            <span>{t('indoor.elevator')}</span>
           </div>
           <div className="flex items-center gap-1.5 text-cyan-400">
             <span className="w-2 h-2 rounded-full bg-cyan-400" />
-            <span>Tactile paving for visually impaired</span>
+            <span>{t('indoor.tactilePaving')}</span>
           </div>
           <div className="flex items-center gap-1.5 text-purple-400">
             <span className="w-2 h-2 rounded-full bg-purple-400" />
-            <span>Wheelchair accessible AFC smart gates</span>
+            <span>{t('indoor.wheelchairAssistance')}</span>
           </div>
         </div>
 
@@ -149,7 +160,7 @@ export function IndoorNavigationModal({ station, onClose, isOpen }: IndoorNaviga
                 : 'text-gray-400 border-transparent hover:text-white'
             }`}
           >
-            Turn-by-Turn Wayfinding
+            {t('indoor.tabs.wayfinding')}
           </button>
           <button
             type="button"
@@ -160,7 +171,7 @@ export function IndoorNavigationModal({ station, onClose, isOpen }: IndoorNaviga
                 : 'text-gray-400 border-transparent hover:text-white'
             }`}
           >
-            Vertical Levels & Cross-Section
+            {t('indoor.tabs.levels')}
           </button>
           <button
             type="button"
@@ -171,7 +182,7 @@ export function IndoorNavigationModal({ station, onClose, isOpen }: IndoorNaviga
                 : 'text-gray-400 border-transparent hover:text-white'
             }`}
           >
-            Entrance Gates & Landmarks ({layout.gates.length})
+            {t('indoor.tabs.gates')} ({layout.gates.length})
           </button>
         </div>
 
@@ -216,10 +227,10 @@ export function IndoorNavigationModal({ station, onClose, isOpen }: IndoorNaviga
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-mono px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold flex items-center gap-1.5">
                         <span>♿</span>
-                        <span>Step-Free (Simulated Model)</span>
+                        <span>{t('planner.stepFreeSimulated')}</span>
                       </span>
                       <span className="text-xs font-mono px-2.5 py-1 rounded-lg bg-white/5 text-gray-300 border border-white/10">
-                        ~{activePath.estimatedWalkMinutes} min walk
+                        {t('indoor.estimatedWalk', { time: activePath.estimatedWalkMinutes })}
                       </span>
                     </div>
                   </div>
@@ -443,7 +454,7 @@ export function IndoorNavigationModal({ station, onClose, isOpen }: IndoorNaviga
             onClick={onClose}
             className="px-4 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-white font-medium text-xs transition-colors"
           >
-            Close Guide
+            {t('common.close')}
           </button>
         </div>
       </div>

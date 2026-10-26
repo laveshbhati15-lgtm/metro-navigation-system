@@ -19,8 +19,11 @@ import { estimateFare, formatDuration } from '@/utils/formatters';
 import { useJourneyStore } from '@/store/journeyStore';
 import { MetroverseRailway } from '@/features/landing/MetroverseRailway';
 import type { MetroRoute, Station } from '@/core/graph/types';
-import { LINE_COLORS, LINE_DISPLAY_NAMES } from '@/utils/lineColors';
+import { LINE_COLORS } from '@/utils/lineColors';
 import { AuthNavControl } from '@/components/auth/AuthNavControl';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
+import { getStationDisplayName, getStationSecondaryName, getLocalizedLineName } from '@/i18n';
 
 /* ─── Hook: Accessible Reduced Motion ───────────────────────────── */
 function useReducedMotion() {
@@ -77,11 +80,13 @@ export function LandingPage() {
 
 /* ─── Navigation Header ─────────────────────────────────────────── */
 function MetroverseNav() {
+  const { t } = useTranslation();
+
   return (
     <header className="sticky top-0 z-50 bg-[#020409]/85 backdrop-blur-md border-b border-white/[0.07] h-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-8 h-full flex items-center justify-between">
         {/* Brand identity */}
-        <a href="/" className="flex items-center gap-3 group" aria-label="Delhi Metro Navigator Home">
+        <a href="/" className="flex items-center gap-3 group" aria-label={t('nav.brand')}>
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-400 via-cyan-400 to-blue-600 p-[1.5px] transition-transform duration-200 group-hover:scale-105">
             <div className="w-full h-full bg-[#03050c] rounded-[6px] flex items-center justify-center">
               <svg className="w-4 h-4 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -95,42 +100,43 @@ function MetroverseNav() {
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <span className="font-bold font-display text-white text-sm sm:text-base tracking-tight">
-                Delhi Metro
+                {t('nav.brand')}
               </span>
               <span className="text-[9px] font-semibold font-mono uppercase px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/25">
-                Metroverse
+                {t('nav.edition')}
               </span>
             </div>
             <span className="text-[10px] text-slate-400 font-mono tracking-wider -mt-0.5">
-              Rapid Transit Intelligence
+              {t('nav.tagline')}
             </span>
           </div>
         </a>
 
         {/* Desktop Anchor Links */}
         <nav className="hidden md:flex items-center gap-7 text-xs font-medium text-slate-300">
-          <a href="#hero-stage" className="hover:text-cyan-300 transition-colors">Route Finder</a>
-          <a href="#rajiv-chowk" className="hover:text-cyan-300 transition-colors">Rajiv Chowk Nexus</a>
-          <a href="#architecture" className="hover:text-cyan-300 transition-colors">Graph Engine</a>
-          <a href="#cartography" className="hover:text-cyan-300 transition-colors">Cartography</a>
+          <a href="#hero-stage" className="hover:text-cyan-300 transition-colors">{t('nav.routeFinder')}</a>
+          <a href="#rajiv-chowk" className="hover:text-cyan-300 transition-colors">{t('nav.rajivChowkNexus')}</a>
+          <a href="#architecture" className="hover:text-cyan-300 transition-colors">{t('nav.graphEngine')}</a>
+          <a href="#cartography" className="hover:text-cyan-300 transition-colors">{t('nav.cartography')}</a>
         </nav>
 
         {/* Right Status & Launch CTA */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-3.5">
           <span className="hidden lg:inline-flex items-center gap-2 text-[11px] text-emerald-400 font-mono bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Yellow, Blue & Violet Lines · 124 Stations
+            {t('nav.systemStatus')}
           </span>
           <Link
             to="/planner"
             id="nav-launch-planner-btn"
-            className="text-xs px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium shadow-glow-cyan/20 border border-cyan-400/30 transition-all flex items-center gap-1.5"
+            className="text-xs px-3 sm:px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium shadow-glow-cyan/20 border border-cyan-400/30 transition-all flex items-center gap-1.5 whitespace-nowrap"
           >
-            <span>Open Planner</span>
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <span>{t('nav.openPlanner')}</span>
+            <svg className="w-3.5 h-3.5 hidden xs:inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
           </Link>
+          <LanguageSwitcher />
           <AuthNavControl />
         </div>
       </div>
@@ -145,6 +151,8 @@ interface MetroverseHeroProps {
 }
 
 function MetroverseHero({ selectedRoute, onRouteCalculated }: MetroverseHeroProps) {
+  const { t } = useTranslation();
+
   return (
     <section
       id="hero-stage"
@@ -160,22 +168,20 @@ function MetroverseHero({ selectedRoute, onRouteCalculated }: MetroverseHeroProp
             {/* System Micro-Label */}
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-cyan-400/30 text-cyan-300 text-[11px] font-mono tracking-wider uppercase mb-3.5 w-fit">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
-              <span>DIGITAL TRANSIT TWIN · DELHI NCR</span>
+              <span>{t('hero.digitalTwin')}</span>
             </div>
 
             {/* Bold Editorial Headline */}
             <h1 className="text-3xl sm:text-5xl xl:text-5.5xl font-extrabold font-display text-white tracking-tight leading-[1.08] mb-3">
-              Navigate Delhi Metro{' '}
+              {t('hero.headlinePart1')}{' '}
               <span className="block bg-gradient-to-r from-yellow-300 via-cyan-300 to-blue-400 bg-clip-text text-transparent">
-                with Algorithmic Precision
+                {t('hero.headlinePart2')}
               </span>
             </h1>
 
             {/* Concise Supporting Copy */}
             <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed mb-6 font-normal">
-              A cinematic 3D digital twin of Delhi at night. Algorithmic Dijkstra shortest-path
-              optimization across 124 stations on the Yellow, Blue, and Violet lines with calibrated
-              concourse walking friction.
+              {t('hero.subtitle')}
             </p>
 
             {/* ── FROM/TO JOURNEY SELECTOR PLACED DIRECTLY BELOW HEADLINE ── */}
@@ -187,14 +193,14 @@ function MetroverseHero({ selectedRoute, onRouteCalculated }: MetroverseHeroProp
             {/* Metric Pills Strip */}
             <div className="grid grid-cols-4 gap-2.5 w-full mt-4">
               {[
-                { v: '124', l: 'Stations' },
-                { v: '3', l: 'Arteries' },
+                { v: '124', l: t('planner.stations') },
+                { v: '3', l: t('hero.stops') },
                 { v: '<1ms', l: 'Dijkstra' },
-                { v: '180s', l: 'Transfer Friction' },
+                { v: '180s', l: t('rajivChowk.concourseFriction') },
               ].map(item => (
                 <div key={item.l} className="bg-[#050914]/60 backdrop-blur-sm rounded-xl p-2.5 text-center border border-white/[0.06]">
                   <p className="text-sm font-bold font-display text-white">{item.v}</p>
-                  <p className="text-[10px] text-slate-400 font-mono">{item.l}</p>
+                  <p className="text-[10px] text-slate-400 font-mono truncate">{item.l}</p>
                 </div>
               ))}
             </div>
@@ -224,11 +230,12 @@ function HeroStationCombobox({
   id,
   label,
   valueId,
-  placeholder = 'Search station name…',
+  placeholder,
   onChange,
   excludeId,
   allStations,
 }: HeroStationComboboxProps) {
+  const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -242,11 +249,11 @@ function HeroStationCombobox({
 
   useEffect(() => {
     if (selectedStation) {
-      setQuery(selectedStation.name);
+      setQuery(getStationDisplayName(selectedStation, i18n.language));
     } else {
       setQuery('');
     }
-  }, [selectedStation]);
+  }, [selectedStation, i18n.language]);
 
   const filteredStations = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -255,6 +262,7 @@ function HeroStationCombobox({
       .filter(s => {
         if (!q) return true;
         if (s.name.toLowerCase().includes(q)) return true;
+        if (s.nameHindi && s.nameHindi.toLowerCase().includes(q)) return true;
         if (s.lines.some(l => l.toLowerCase().includes(q))) return true;
         return false;
       })
@@ -273,7 +281,7 @@ function HeroStationCombobox({
 
   const handleSelect = (station: Station) => {
     onChange(station.id);
-    setQuery(station.name);
+    setQuery(getStationDisplayName(station, i18n.language));
     setIsOpen(false);
     setHighlightedIndex(-1);
   };
@@ -340,7 +348,7 @@ function HeroStationCombobox({
           aria-controls={`${id}-listbox`}
           autoComplete="off"
           value={query}
-          placeholder={placeholder}
+          placeholder={placeholder || t('hero.searchPlaceholder')}
           onChange={e => {
             setQuery(e.target.value);
             setIsOpen(true);
@@ -373,45 +381,55 @@ function HeroStationCombobox({
           aria-label={`${label} suggestions`}
           className="absolute z-50 mt-1 w-full max-h-56 overflow-y-auto bg-[#070c1c] border border-white/15 rounded-xl shadow-2xl divide-y divide-white/[0.05]"
         >
-          {filteredStations.map((station, idx) => (
-            <li
-              key={station.id}
-              role="option"
-              aria-selected={idx === highlightedIndex}
-              onMouseEnter={() => setHighlightedIndex(idx)}
-              onMouseDown={e => {
-                e.preventDefault();
-                handleSelect(station);
-              }}
-              className={`flex items-center justify-between px-3 py-2 text-xs cursor-pointer transition-colors ${
-                idx === highlightedIndex ? 'bg-blue-600/30 text-white' : 'text-slate-200 hover:bg-white/5'
-              }`}
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="flex gap-1 shrink-0">
-                  {station.lines.map(line => (
-                    <span
-                      key={line}
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: LINE_COLORS[line] || '#0284c7' }}
-                      title={LINE_DISPLAY_NAMES[line]}
-                    />
-                  ))}
-                </span>
-                <span className="font-medium truncate">{station.name}</span>
-              </div>
-              <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                {station.isInterchange && (
-                  <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                    Interchange
+          {filteredStations.map((station, idx) => {
+            const secondary = getStationSecondaryName(station, i18n.language);
+            return (
+              <li
+                key={station.id}
+                role="option"
+                aria-selected={idx === highlightedIndex}
+                onMouseEnter={() => setHighlightedIndex(idx)}
+                onMouseDown={e => {
+                  e.preventDefault();
+                  handleSelect(station);
+                }}
+                className={`flex items-center justify-between px-3 py-2 text-xs cursor-pointer transition-colors ${
+                  idx === highlightedIndex ? 'bg-blue-600/30 text-white' : 'text-slate-200 hover:bg-white/5'
+                }`}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="flex gap-1 shrink-0">
+                    {station.lines.map(line => (
+                      <span
+                        key={line}
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: LINE_COLORS[line] || '#0284c7' }}
+                        title={getLocalizedLineName(line, i18n.language)}
+                      />
+                    ))}
                   </span>
-                )}
-                <span className="text-[10px] text-slate-500 hidden sm:inline">
-                  {station.lines.join('/')}
-                </span>
-              </div>
-            </li>
-          ))}
+                  <span className="font-medium truncate">
+                    {getStationDisplayName(station, i18n.language)}
+                  </span>
+                  {secondary && (
+                    <span className="text-[10px] text-slate-500 font-normal truncate hidden sm:inline">
+                      ({secondary})
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                  {station.isInterchange && (
+                    <span className="text-[9px] font-mono px-1 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                      {t('search.interchangeBadge')}
+                    </span>
+                  )}
+                  <span className="text-[10px] text-slate-500 hidden sm:inline">
+                    {station.lines.map(l => getLocalizedLineName(l, i18n.language)).join(' / ')}
+                  </span>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
@@ -425,12 +443,13 @@ interface HeroJourneySelectorProps {
 }
 
 function HeroJourneySelector({ onRouteCalculated }: HeroJourneySelectorProps) {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const setSource = useJourneyStore(s => s.setSource);
   const setDestination = useJourneyStore(s => s.setDestination);
   const calculateRoutes = useJourneyStore(s => s.calculateRoutes);
 
-  // All 93 verified stations sorted alphabetically
+  // All verified stations sorted alphabetically
   const allStations = useMemo(() => {
     return metroGraph.getAllStations().sort((a, b) => a.name.localeCompare(b.name));
   }, []);
@@ -487,11 +506,11 @@ function HeroJourneySelector({ onRouteCalculated }: HeroJourneySelectorProps) {
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
           <h3 className="text-xs font-mono font-bold text-white uppercase tracking-wider">
-            Quick Route Finder
+            {t('hero.quickRouteFinder')}
           </h3>
         </div>
         <span className="text-[10px] font-mono text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
-          Dijkstra Graph Solver
+          {t('hero.dijkstraSolver')}
         </span>
       </div>
 
@@ -501,7 +520,7 @@ function HeroJourneySelector({ onRouteCalculated }: HeroJourneySelectorProps) {
         <div className="sm:col-span-5">
           <HeroStationCombobox
             id="hero-from-combobox"
-            label="Origin (From)"
+            label={t('hero.fromLabel')}
             valueId={fromId}
             onChange={setFromId}
             excludeId={toId}
@@ -514,7 +533,7 @@ function HeroJourneySelector({ onRouteCalculated }: HeroJourneySelectorProps) {
           <button
             type="button"
             onClick={handleSwap}
-            aria-label="Swap origin and destination"
+            aria-label={t('hero.swapAria')}
             className="p-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-slate-400 hover:text-cyan-300 border border-white/10 transition-colors group"
           >
             <svg className="w-3.5 h-3.5 transition-transform duration-300 group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -527,7 +546,7 @@ function HeroJourneySelector({ onRouteCalculated }: HeroJourneySelectorProps) {
         <div className="sm:col-span-5">
           <HeroStationCombobox
             id="hero-to-combobox"
-            label="Destination (To)"
+            label={t('hero.toLabel')}
             valueId={toId}
             onChange={setToId}
             excludeId={fromId}
@@ -539,38 +558,40 @@ function HeroJourneySelector({ onRouteCalculated }: HeroJourneySelectorProps) {
       {/* Calculated Results / States */}
       {fromId && toId && fromId === toId ? (
         <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs text-center font-mono mb-3">
-          ⚠️ Origin and destination cannot be identical. Please pick a different destination.
+          {t('hero.identicalError')}
         </div>
       ) : !fromId || !toId ? (
         <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05] text-slate-400 text-xs text-center font-mono mb-3">
-          Search or select origin and destination stations above to calculate the route.
+          {t('hero.selectPrompt')}
         </div>
       ) : calculatedRoute ? (
         <div className="bg-[#030610]/85 rounded-xl p-3 border border-white/[0.08] mb-3">
           {/* Summary Stat Grid */}
           <div className="grid grid-cols-4 gap-2 text-center text-xs pb-2 border-b border-white/[0.06]">
             <div>
-              <span className="text-[10px] text-slate-400 font-mono block">Estimated Time</span>
+              <span className="text-[10px] text-slate-400 font-mono block">{t('hero.estimatedTime')}</span>
               <span className="font-bold text-white font-display mt-0.5 block">
-                {formatDuration(calculatedRoute.totalTimeSeconds)} <span className="text-[9px] text-slate-400 font-normal font-sans">(est.)</span>
+                {formatDuration(calculatedRoute.totalTimeSeconds)} <span className="text-[9px] text-slate-400 font-normal font-sans">{t('hero.est')}</span>
               </span>
             </div>
             <div>
-              <span className="text-[10px] text-slate-400 font-mono block">Stops</span>
+              <span className="text-[10px] text-slate-400 font-mono block">{t('hero.stops')}</span>
               <span className="font-bold text-white font-display mt-0.5 block">
-                {calculatedRoute.totalStations} stations
+                {t('hero.stationsCount', { count: calculatedRoute.totalStations })}
               </span>
             </div>
             <div>
-              <span className="text-[10px] text-slate-400 font-mono block">Line Changes</span>
+              <span className="text-[10px] text-slate-400 font-mono block">{t('hero.lineChanges')}</span>
               <span className="font-bold text-amber-300 font-display mt-0.5 block truncate">
-                {calculatedRoute.interchangeCount === 0 ? 'Direct' : `${calculatedRoute.interchangeCount} transfer`}
+                {calculatedRoute.interchangeCount === 0
+                  ? t('hero.direct')
+                  : t('hero.transferCount', { count: calculatedRoute.interchangeCount })}
               </span>
             </div>
             <div>
-              <span className="text-[10px] text-slate-400 font-mono block">Est. Fare</span>
+              <span className="text-[10px] text-slate-400 font-mono block">{t('hero.estimatedFare')}</span>
               <span className="font-bold text-emerald-400 font-display mt-0.5 block">
-                ₹{estimateFare(calculatedRoute.totalStations).amount} <span className="text-[9px] text-slate-400 font-normal font-sans">(est.)</span>
+                ₹{estimateFare(calculatedRoute.totalStations).amount} <span className="text-[9px] text-slate-400 font-normal font-sans">{t('hero.est')}</span>
               </span>
             </div>
           </div>
@@ -591,9 +612,9 @@ function HeroJourneySelector({ onRouteCalculated }: HeroJourneySelectorProps) {
                   className="w-1.5 h-1.5 rounded-full"
                   style={{ backgroundColor: LINE_COLORS[seg.line] || '#0284c7' }}
                 />
-                <span>{LINE_DISPLAY_NAMES[seg.line] || `${seg.line} Line`}</span>
+                <span>{getLocalizedLineName(seg.line, i18n.language)}</span>
                 <span className="opacity-75 font-mono text-[10px]">
-                  ({seg.stations.length - 1} stops)
+                  ({t('hero.stopsInSegment', { count: seg.stations.length - 1 })})
                 </span>
                 {idx < calculatedRoute.lineSegments.length - 1 && (
                   <span className="text-slate-400 ml-1">➔</span>
@@ -609,7 +630,7 @@ function HeroJourneySelector({ onRouteCalculated }: HeroJourneySelectorProps) {
               onClick={() => setShowBreakdown(!showBreakdown)}
               className="w-full flex items-center justify-between text-[11px] font-mono text-cyan-300 hover:text-white transition-colors py-1"
             >
-              <span>{showBreakdown ? 'Hide Step-by-Step Directions' : 'View Step-by-Step Itinerary'}</span>
+              <span>{showBreakdown ? t('hero.hideDirections') : t('hero.viewDirections')}</span>
               <span>{showBreakdown ? '▲' : '▼'}</span>
             </button>
 
@@ -621,10 +642,15 @@ function HeroJourneySelector({ onRouteCalculated }: HeroJourneySelectorProps) {
                     <span className="text-base shrink-0">🔄</span>
                     <div>
                       <p className="font-semibold text-white">
-                        Transfer at {calculatedRoute.interchanges[0].name}
+                        {t('hero.transferAt', {
+                          station: getStationDisplayName(calculatedRoute.interchanges[0], i18n.language),
+                        })}
                       </p>
                       <p className="text-[11px] text-purple-200 mt-0.5">
-                        Change from {calculatedRoute.lineSegments[0]?.line} Line to {calculatedRoute.lineSegments[1]?.line} Line. Calibrated concourse walking friction: ~5 min.
+                        {t('hero.transferDesc', {
+                          line1: getLocalizedLineName(calculatedRoute.lineSegments[0]?.line, i18n.language),
+                          line2: getLocalizedLineName(calculatedRoute.lineSegments[1]?.line, i18n.language),
+                        })}
                       </p>
                     </div>
                   </div>
@@ -634,22 +660,40 @@ function HeroJourneySelector({ onRouteCalculated }: HeroJourneySelectorProps) {
                 <ol className="space-y-1.5 font-sans pl-1">
                   <li className="flex items-center gap-2 text-slate-300">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
-                    <span>Board at <strong className="text-white">{calculatedRoute.stations[0].name}</strong></span>
+                    <span>
+                      {t('hero.boardAt')}{' '}
+                      <strong className="text-white">
+                        {getStationDisplayName(calculatedRoute.stations[0], i18n.language)}
+                      </strong>
+                    </span>
                   </li>
                   {calculatedRoute.totalStations > 2 && (
                     <li className="pl-4 text-[11px] text-slate-400 border-l border-white/10 ml-1 py-0.5">
-                      Traverse {calculatedRoute.totalStations - 2} intermediate station{calculatedRoute.totalStations - 2 !== 1 ? 's' : ''}
+                      {t('hero.intermediateStopsCount', { count: calculatedRoute.totalStations - 2 })}
                     </li>
                   )}
                   {calculatedRoute.interchanges.map(ic => (
                     <li key={ic.id} className="flex items-center gap-2 text-purple-300">
                       <span className="w-2 h-2 rounded-full bg-purple-400 shrink-0" />
-                      <span>Interchange at <strong className="text-white">{ic.name}</strong></span>
+                      <span>
+                        {t('hero.interchangeAt')}{' '}
+                        <strong className="text-white">
+                          {getStationDisplayName(ic, i18n.language)}
+                        </strong>
+                      </span>
                     </li>
                   ))}
                   <li className="flex items-center gap-2 text-slate-300">
                     <span className="w-2 h-2 rounded-full bg-cyan-400 shrink-0" />
-                    <span>Alight at <strong className="text-white">{calculatedRoute.stations[calculatedRoute.stations.length - 1].name}</strong></span>
+                    <span>
+                      {t('hero.alightAt')}{' '}
+                      <strong className="text-white">
+                        {getStationDisplayName(
+                          calculatedRoute.stations[calculatedRoute.stations.length - 1],
+                          i18n.language
+                        )}
+                      </strong>
+                    </span>
                   </li>
                 </ol>
               </div>
@@ -658,7 +702,7 @@ function HeroJourneySelector({ onRouteCalculated }: HeroJourneySelectorProps) {
         </div>
       ) : (
         <div className="p-2.5 rounded-xl bg-white/[0.02] text-center text-xs text-slate-500 mb-3 font-mono">
-          No direct or transfer route found between the selected points.
+          {t('hero.noRouteFound')}
         </div>
       )}
 
@@ -671,7 +715,7 @@ function HeroJourneySelector({ onRouteCalculated }: HeroJourneySelectorProps) {
           disabled={!calculatedRoute}
           className="btn-primary text-xs w-full sm:flex-1 py-2.5 flex items-center justify-center gap-2 font-semibold shadow-glow-cyan/25"
         >
-          <span>Open Full Interactive Map</span>
+          <span>{t('hero.openFullMap')}</span>
           <svg className="w-3.5 h-3.5 text-cyan-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
           </svg>
@@ -681,7 +725,7 @@ function HeroJourneySelector({ onRouteCalculated }: HeroJourneySelectorProps) {
           href="#rajiv-chowk"
           className="btn-ghost text-xs w-full sm:w-auto px-4 py-2.5 flex items-center justify-center gap-1.5 font-medium text-slate-300 hover:text-white"
         >
-          <span>Inspect Rajiv Chowk ↓</span>
+          <span>{t('hero.inspectRajivChowk')}</span>
         </a>
       </div>
     </div>
@@ -694,6 +738,7 @@ interface RajivChowkSectionProps {
 }
 
 function RajivChowkSection({ activeRoute }: RajivChowkSectionProps) {
+  const { t, i18n } = useTranslation();
   const passesRajivChowk = useMemo(() => {
     if (!activeRoute) return false;
     return activeRoute.stations.some(s => s.id === 'RAJIV_CHOWK');
@@ -705,7 +750,7 @@ function RajivChowkSection({ activeRoute }: RajivChowkSectionProps) {
     <section
       id="rajiv-chowk"
       className="py-20 sm:py-28 border-b border-white/[0.06] scroll-mt-16 relative"
-      aria-label="Rajiv Chowk Interchange"
+      aria-label={t('rajivChowk.title')}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
@@ -714,15 +759,13 @@ function RajivChowkSection({ activeRoute }: RajivChowkSectionProps) {
           <div className="lg:col-span-7 text-left">
             <div className="inline-flex items-center gap-2 text-[11px] font-mono tracking-widest uppercase text-purple-400 mb-3 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/25">
               <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
-              <span>INTERCHANGE NEXUS · RAJIV CHOWK</span>
+              <span>{t('rajivChowk.badge')}</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold font-display text-white tracking-tight">
-              Where Yellow & Blue Lines Converge
+              {t('rajivChowk.title')}
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 mt-2.5 mb-6 leading-relaxed max-w-xl">
-              Delhi's central rapid transit crossroads. The elevated Yellow Line crosses the horizontal
-              Blue Line corridor here, accompanied by an illuminated violet interchange beacon and
-              a 5-minute passenger concourse walking model.
+              {t('rajivChowk.description')}
             </p>
 
             {/* Translucent Corridor Specs Card */}
@@ -730,30 +773,30 @@ function RajivChowkSection({ activeRoute }: RajivChowkSectionProps) {
               <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/[0.06]">
                 <h3 className="text-xs font-mono font-bold text-white uppercase tracking-wider flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-purple-400" />
-                  Intersecting Corridors
+                  {t('rajivChowk.intersectingCorridors')}
                 </h3>
                 <span className="text-[10px] font-mono text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
-                  Transfer Node
+                  {t('rajivChowk.transferNode')}
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <div className="p-3 rounded-xl bg-[#030610]/80 border border-yellow-500/25">
-                  <span className="text-xs font-bold text-white block">Yellow Line Corridor</span>
-                  <span className="text-[11px] text-slate-400 block mt-0.5">Samaypur Badli ↔ Millennium City</span>
-                  <span className="text-[10px] font-mono text-yellow-400 font-semibold mt-1 block">37 Stations</span>
+                  <span className="text-xs font-bold text-white block">{t('rajivChowk.yellowLineTitle')}</span>
+                  <span className="text-[11px] text-slate-400 block mt-0.5">{t('rajivChowk.yellowLineDesc')}</span>
+                  <span className="text-[10px] font-mono text-yellow-400 font-semibold mt-1 block">{t('rajivChowk.yellowLineStns')}</span>
                 </div>
 
                 <div className="p-3 rounded-xl bg-[#030610]/80 border border-blue-500/25">
-                  <span className="text-xs font-bold text-white block">Blue Line Corridor</span>
-                  <span className="text-[11px] text-slate-400 block mt-0.5">Dwarka Sec 21 ↔ Noida City / Vaishali</span>
-                  <span className="text-[10px] font-mono text-blue-400 font-semibold mt-1 block">57 Stations</span>
+                  <span className="text-xs font-bold text-white block">{t('rajivChowk.blueLineTitle')}</span>
+                  <span className="text-[11px] text-slate-400 block mt-0.5">{t('rajivChowk.blueLineDesc')}</span>
+                  <span className="text-[10px] font-mono text-blue-400 font-semibold mt-1 block">{t('rajivChowk.blueLineStns')}</span>
                 </div>
               </div>
 
               <div className="flex items-center justify-between text-xs font-mono text-slate-400 pt-2 border-t border-white/[0.05]">
-                <span>Transfer Concourse Friction:</span>
-                <span className="text-cyan-400 font-bold">+180 seconds (~3 min)</span>
+                <span>{t('rajivChowk.concourseFriction')}</span>
+                <span className="text-cyan-400 font-bold">{t('rajivChowk.concourseFrictionValue')}</span>
               </div>
             </div>
 
@@ -762,10 +805,10 @@ function RajivChowkSection({ activeRoute }: RajivChowkSectionProps) {
               <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-white/[0.06]">
                 <h3 className="text-xs font-mono font-bold text-white uppercase tracking-wider flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                  Route Interchange Diagnostics
+                  {t('rajivChowk.diagnostics')}
                 </h3>
                 <span className="text-[10px] font-mono text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
-                  Calculated State
+                  {t('rajivChowk.calculatedState')}
                 </span>
               </div>
 
@@ -773,13 +816,18 @@ function RajivChowkSection({ activeRoute }: RajivChowkSectionProps) {
                 <div>
                   <div className="p-3 rounded-xl bg-[#030610]/80 border border-white/[0.07] mb-3">
                     <span className="text-[10px] font-mono uppercase text-slate-500 block mb-0.5">
-                      Active Itinerary
+                      {t('rajivChowk.activeItinerary')}
                     </span>
                     <p className="text-sm font-bold text-white">
-                      {activeRoute.stations[0].name} ➔ {activeRoute.stations[activeRoute.stations.length - 1].name}
+                      {getStationDisplayName(activeRoute.stations[0], i18n.language)} ➔{' '}
+                      {getStationDisplayName(
+                        activeRoute.stations[activeRoute.stations.length - 1],
+                        i18n.language
+                      )}
                     </p>
                     <span className="text-[11px] font-mono text-cyan-300 mt-0.5 block">
-                      {activeRoute.totalStations} stops • {formatDuration(activeRoute.totalTimeSeconds)} total time
+                      {t('hero.stopsInSegment', { count: activeRoute.totalStations })} •{' '}
+                      {formatDuration(activeRoute.totalTimeSeconds)} {t('rajivChowk.totalTime')}
                     </span>
                   </div>
 
@@ -792,25 +840,25 @@ function RajivChowkSection({ activeRoute }: RajivChowkSectionProps) {
                   }`}>
                     <span className="font-semibold block mb-0.5">
                       {passesRajivChowk && hasInterchange
-                        ? '🔄 Concourse Transfer Required at Rajiv Chowk'
+                        ? t('rajivChowk.transferRequiredTitle')
                         : passesRajivChowk
-                        ? '⚡ Continuous Corridor Passage'
-                        : 'ℹ️ Single-Branch Corridor'}
+                        ? t('rajivChowk.continuousPassageTitle')
+                        : t('rajivChowk.singleBranchTitle')}
                     </span>
                     <p className="text-[11px] opacity-90">
                       {passesRajivChowk && hasInterchange
-                        ? 'This journey changes lines between Yellow and Blue corridors at Rajiv Chowk. 180s (~3 min) walking friction applied.'
+                        ? t('rajivChowk.transferRequiredDesc')
                         : passesRajivChowk
-                        ? 'This journey continues through Rajiv Chowk on a single line without requiring a platform transfer.'
-                        : 'This route operates within a dedicated line branch without concourse transfer.'}
+                        ? t('rajivChowk.continuousPassageDesc')
+                        : t('rajivChowk.singleBranchDesc')}
                     </p>
                   </div>
                 </div>
               ) : (
                 <div className="p-4 rounded-xl bg-[#030610]/80 border border-white/5 text-center">
-                  <p className="text-xs text-slate-400 mb-0.5">No journey calculated yet.</p>
+                  <p className="text-xs text-slate-400 mb-0.5">{t('rajivChowk.noJourneyCalculated')}</p>
                   <p className="text-[10px] text-slate-500 font-mono">
-                    Select origin and destination in the Route Finder above.
+                    {t('rajivChowk.selectPrompt')}
                   </p>
                 </div>
               )}
@@ -828,26 +876,28 @@ function RajivChowkSection({ activeRoute }: RajivChowkSectionProps) {
 
 /* ─── Algorithmic Architecture Section ──────────────────────────── */
 function ArchitectureSection() {
+  const { t } = useTranslation();
+
   const points = [
     {
-      num: '01',
-      title: 'Graph Topology G = (V, E)',
-      desc: 'All 124 metro stations mapped as vertices with verified Delhi GPS coordinates. Bidirectional weighted edges reflect operational railway connections.',
+      num: t('architecture.p1Num'),
+      title: t('architecture.p1Title'),
+      desc: t('architecture.p1Desc'),
     },
     {
-      num: '02',
-      title: 'Min-Heap Priority Queue',
-      desc: 'Sub-millisecond Dijkstra execution using an optimized binary min-heap frontier extractor with O((V + E) log V) asymptotic efficiency.',
+      num: t('architecture.p2Num'),
+      title: t('architecture.p2Title'),
+      desc: t('architecture.p2Desc'),
     },
     {
-      num: '03',
-      title: 'Transfer Concourse Friction',
-      desc: 'A calibrated 300-second transfer weight prevents unrealistic line hopping and mirrors real-world pedestrian walking times.',
+      num: t('architecture.p3Num'),
+      title: t('architecture.p3Title'),
+      desc: t('architecture.p3Desc'),
     },
     {
-      num: '04',
-      title: 'Pareto-Optimal Solutions',
-      desc: 'Simultaneous calculation of fastest travel time, fewest line transfers, and minimum station stops for traveler convenience.',
+      num: t('architecture.p4Num'),
+      title: t('architecture.p4Title'),
+      desc: t('architecture.p4Desc'),
     },
   ];
 
@@ -855,7 +905,7 @@ function ArchitectureSection() {
     <section
       id="architecture"
       className="py-20 sm:py-28 border-b border-white/[0.06] scroll-mt-16 relative"
-      aria-label="Algorithmic Architecture"
+      aria-label={t('architecture.title')}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
@@ -864,14 +914,13 @@ function ArchitectureSection() {
           <div className="lg:col-span-8 text-left">
             <div className="inline-flex items-center gap-2 text-[11px] font-mono tracking-widest uppercase text-cyan-400 mb-3 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/25">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-              <span>ALGORITHMIC RIGOR</span>
+              <span>{t('architecture.badge')}</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold font-display text-white tracking-tight">
-              How the Navigator Solves the Network
+              {t('architecture.title')}
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 mt-2 mb-8 leading-relaxed max-w-xl">
-              A look under the hood at graph theory, priority-queue data structures, and mathematical
-              optimization powering the routing engine.
+              {t('architecture.subtitle')}
             </p>
 
             {/* 2x2 Clean Translucent Cards Grid */}
@@ -908,11 +957,13 @@ function ArchitectureSection() {
 
 /* ─── Interactive Cartography Centerpiece Teaser ────────────────── */
 function CartographySection() {
+  const { t } = useTranslation();
+
   return (
     <section
       id="cartography"
       className="py-20 sm:py-28 border-b border-white/[0.06] scroll-mt-16 relative"
-      aria-label="Geographic Cartography"
+      aria-label={t('cartography.title')}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
@@ -921,29 +972,27 @@ function CartographySection() {
           <div className="lg:col-span-7 text-left">
             <div className="inline-flex items-center gap-2 text-[11px] font-mono tracking-widest uppercase text-blue-400 mb-3 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/25">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-              <span>GEOGRAPHIC CARTOGRAPHY</span>
+              <span>{t('cartography.badge')}</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold font-display text-white tracking-tight leading-tight mb-3">
-              Full Leaflet Map with Real Delhi Coordinates
+              {t('cartography.title')}
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed mb-5 font-normal max-w-xl">
-              Unlike static diagrams, our full Journey Planner is anchored on an interactive Leaflet
-              map. Pan across the National Capital Region, click any of the 124 stations to inspect
-              connections, and follow calculated routes highlighted across the corridors.
+              {t('cartography.subtitle')}
             </p>
 
             <ul className="space-y-2 mb-6 text-xs text-slate-300 max-w-xl">
               <li className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                <span>CARTO Dark & OpenStreetMap high-contrast basemaps with automatic fallback</span>
+                <span>{t('cartography.bullet1')}</span>
               </li>
               <li className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
-                <span>Dynamic polyline route overlays and interchange markers</span>
+                <span>{t('cartography.bullet2')}</span>
               </li>
               <li className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-                <span>Dedicated Step-by-Step Dijkstra Algorithm Visualizer</span>
+                <span>{t('cartography.bullet3')}</span>
               </li>
             </ul>
 
@@ -953,18 +1002,18 @@ function CartographySection() {
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-400" />
                   <span className="text-[10px] font-mono text-emerald-400 font-bold uppercase">
-                    Interactive Geospatial Projection
+                    {t('cartography.cardBadge')}
                   </span>
                 </div>
-                <span className="text-[10px] font-mono text-cyan-300">CARTO Dark + Leaflet</span>
+                <span className="text-[10px] font-mono text-cyan-300">{t('cartography.cardTech')}</span>
               </div>
               <p className="text-xs text-slate-300 leading-relaxed mb-3">
-                Full 124-station geospatial model across Delhi NCR. Displays route paths with transit line colors, interchange transfer nodes, and Dijkstra algorithm execution.
+                {t('cartography.cardDesc')}
               </p>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-yellow-500/15 text-yellow-300 border border-yellow-500/25">Yellow: 37 Stns</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/15 text-blue-300 border border-blue-500/25">Blue: 57 Stns</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/25">Violet: 34 Stns</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-yellow-500/15 text-yellow-300 border border-yellow-500/25">{t('cartography.cardYellow')}</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/15 text-blue-300 border border-blue-500/25">{t('cartography.cardBlue')}</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/25">{t('cartography.cardViolet')}</span>
               </div>
             </div>
 
@@ -972,7 +1021,7 @@ function CartographySection() {
               to="/planner"
               className="btn-primary text-xs sm:text-sm px-6 py-3 inline-flex items-center gap-2 shadow-glow-cyan/25 font-semibold"
             >
-              <span>Open Map in Journey Planner</span>
+              <span>{t('cartography.cta')}</span>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
@@ -990,11 +1039,13 @@ function CartographySection() {
 
 /* ─── Terminal Portal / Final Call to Action ────────────────────── */
 function TerminalSection() {
+  const { t } = useTranslation();
+
   return (
     <section
       id="terminal-portal"
       className="py-22 sm:py-30 border-b border-white/[0.06] relative"
-      aria-label="Terminal Navigation CTA"
+      aria-label={t('terminal.title')}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
@@ -1002,16 +1053,15 @@ function TerminalSection() {
           <div className="lg:col-span-7 text-left">
             <div className="inline-flex items-center gap-2 text-[11px] font-mono tracking-widest uppercase text-cyan-400 mb-3 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/25">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-              <span>TERMINAL REACHED</span>
+              <span>{t('terminal.badge')}</span>
             </div>
 
             <h2 className="text-3xl sm:text-5xl font-extrabold font-display text-white tracking-tight mb-4">
-              Experience the Full Navigator
+              {t('terminal.title')}
             </h2>
 
             <p className="text-xs sm:text-sm text-slate-300 max-w-lg leading-relaxed mb-7 font-normal">
-              Inspect all 124 verified stations, filter individual corridors, compute multi-criteria
-              routes, or step through the min-heap algorithm visualizer.
+              {t('terminal.subtitle')}
             </p>
 
             <div className="flex flex-col sm:flex-row items-center gap-3">
@@ -1019,7 +1069,7 @@ function TerminalSection() {
                 to="/planner"
                 className="btn-primary text-xs sm:text-sm px-7 py-3.5 flex items-center justify-center gap-2 font-semibold shadow-glow-cyan/25 w-full sm:w-auto"
               >
-                <span>Launch Journey Planner</span>
+                <span>{t('terminal.launchPlanner')}</span>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
@@ -1028,7 +1078,7 @@ function TerminalSection() {
                 href="#hero-stage"
                 className="btn-ghost text-xs sm:text-sm px-6 py-3.5 flex items-center justify-center gap-2 font-medium text-slate-300 hover:text-white w-full sm:w-auto"
               >
-                <span>Back to Top ↑</span>
+                <span>{t('terminal.backToTop')}</span>
               </a>
             </div>
           </div>
@@ -1043,55 +1093,55 @@ function TerminalSection() {
 
 /* ─── Footer ────────────────────────────────────────────────────── */
 function MetroverseFooter() {
+  const { t } = useTranslation();
+
   return (
     <footer className="bg-[#020409]/90 backdrop-blur-md py-12 text-xs text-slate-500 border-t border-white/[0.06]">
       <div className="max-w-7xl mx-auto px-4 sm:px-8">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-8">
           <div className="md:col-span-5">
             <span className="font-bold font-display text-white text-sm tracking-tight block mb-2">
-              Delhi Metro Navigator · Metroverse Edition
+              {t('footer.brand')}
             </span>
             <p className="text-slate-400 max-w-sm leading-relaxed mb-3 text-xs">
-              Autonomous transit intelligence and route optimization suite for Delhi NCR.
-              Engineered with React 19, TypeScript, Dijkstra's algorithm, Leaflet, and Three.js 3D WebGL.
+              {t('footer.about')}
             </p>
             <p className="text-[10px] text-slate-500">
-              * Independent portfolio engineering project. Station data modeled after official DMRC
-              published corridors. Fares and timings are algorithmic estimates.
+              {t('footer.disclaimer')}
             </p>
           </div>
 
           <div className="md:col-span-3">
             <h4 className="text-xs font-mono uppercase tracking-wider text-slate-300 font-semibold mb-3">
-              Sections
+              {t('footer.sectionsTitle')}
             </h4>
             <ul className="space-y-2 text-xs text-slate-400">
-              <li><Link to="/planner" className="hover:text-cyan-300 transition-colors">Journey Planner</Link></li>
-              <li><a href="#hero-stage" className="hover:text-cyan-300 transition-colors">Route Finder</a></li>
-              <li><a href="#rajiv-chowk" className="hover:text-cyan-300 transition-colors">Rajiv Chowk Nexus</a></li>
-              <li><a href="#architecture" className="hover:text-cyan-300 transition-colors">Graph Engine</a></li>
+              <li><Link to="/planner" className="hover:text-cyan-300 transition-colors">{t('nav.planner')}</Link></li>
+              <li><a href="#hero-stage" className="hover:text-cyan-300 transition-colors">{t('nav.routeFinder')}</a></li>
+              <li><a href="#rajiv-chowk" className="hover:text-cyan-300 transition-colors">{t('nav.rajivChowkNexus')}</a></li>
+              <li><a href="#architecture" className="hover:text-cyan-300 transition-colors">{t('nav.graphEngine')}</a></li>
             </ul>
           </div>
 
           <div className="md:col-span-4">
             <h4 className="text-xs font-mono uppercase tracking-wider text-slate-300 font-semibold mb-3">
-              Architecture & Stack
+              {t('footer.archTitle')}
             </h4>
             <ul className="space-y-1.5 text-xs font-mono text-slate-400">
               <li>React 19 + TypeScript</li>
               <li>Three.js 3D WebGL Perspective</li>
               <li>Elevated Viaduct & Articulated EMU Fleet</li>
               <li>Leaflet 1.9 Cartography</li>
-              <li>107+ Automated Tests Passing</li>
+              <li>{t('footer.testsStatus')}</li>
             </ul>
           </div>
         </div>
 
         <div className="pt-6 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500">
-          <p>© 2026 Delhi Metro Navigator • Metroverse</p>
+          <p>{t('footer.rights')}</p>
           <span className="font-mono text-cyan-400 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-            All 107+ Tests Passing
+            {t('footer.testsStatus')}
           </span>
         </div>
       </div>

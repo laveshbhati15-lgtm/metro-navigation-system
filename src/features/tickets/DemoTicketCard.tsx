@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { DemoTicket } from './types';
 import { DemoQRCode } from './DemoQRCode';
-import { LINE_COLORS, LINE_DISPLAY_NAMES } from '@/utils/lineColors';
+import { LINE_COLORS } from '@/utils/lineColors';
 import { formatDuration } from '@/utils/formatters';
+import { getStationDisplayName, getStationSecondaryName, getLocalizedLineName } from '@/i18n';
 
 interface DemoTicketCardProps {
   ticket: DemoTicket;
@@ -15,6 +17,7 @@ export const DemoTicketCard: React.FC<DemoTicketCardProps> = ({
   onCancel,
   onClose,
 }) => {
+  const { t, i18n } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   const handleCopyPayload = () => {
@@ -29,12 +32,23 @@ export const DemoTicketCard: React.FC<DemoTicketCardProps> = ({
 
   const isCancelled = ticket.status === 'CANCELLED';
 
+  const srcDisplay = getStationDisplayName(ticket.source, i18n.language);
+  const srcSecondary = getStationSecondaryName(ticket.source, i18n.language);
+  const dstDisplay = getStationDisplayName(ticket.destination, i18n.language);
+  const dstSecondary = getStationSecondaryName(ticket.destination, i18n.language);
+
   return (
     <div className="w-full max-w-md mx-auto bg-navy-950 text-white rounded-3xl overflow-hidden border border-white/10 shadow-2xl relative font-sans">
       {/* ── Strict Demo Warning Ribbon ── */}
-      <div className="bg-gradient-to-r from-red-600 via-amber-600 to-red-600 text-white text-[11px] font-black tracking-widest text-center py-2 px-4 uppercase shadow-inner flex items-center justify-center gap-2 animate-pulse">
+      <div className="bg-gradient-to-r from-red-600 via-amber-600 to-red-600 text-white text-[11px] font-black tracking-widest text-center py-2 px-4 uppercase shadow-inner flex flex-wrap items-center justify-center gap-2">
         <span>⚠️</span>
-        <span>DEMO TICKET — NOT VALID FOR METRO ENTRY</span>
+        <span>DEMO — NOT VALID FOR METRO TRAVEL</span>
+        <span className="opacity-75">·</span>
+        <span>
+          {ticket.isVerifiedPayment
+            ? '✓ TEST MODE PAYMENT VERIFIED'
+            : 'UNVERIFIED DEMO — NO PAYMENT PROCESSED'}
+        </span>
         <span>⚠️</span>
       </div>
 
@@ -53,13 +67,13 @@ export const DemoTicketCard: React.FC<DemoTicketCardProps> = ({
             </div>
             <div>
               <p className="text-sm font-extrabold font-display tracking-tight text-white flex items-center gap-2">
-                Delhi Metro
+                {t('nav.brand')}
                 <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
                   DEMO PASS
                 </span>
               </p>
               <p className="text-[11px] text-gray-400 font-mono">
-                Electronic Token Simulation
+                {t('tickets.vaultSubtitle')}
               </p>
             </div>
           </div>
@@ -69,22 +83,36 @@ export const DemoTicketCard: React.FC<DemoTicketCardProps> = ({
               className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase border ${
                 isCancelled
                   ? 'bg-red-500/20 text-red-300 border-red-500/30'
-                  : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                  : ticket.isVerifiedPayment
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                    : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
               }`}
             >
-              {ticket.status}
+              {isCancelled
+                ? t('tickets.cancelledNotice')
+                : ticket.isVerifiedPayment
+                  ? '✓ TEST PAID'
+                  : 'UNVERIFIED DEMO'}
             </span>
           </div>
         </div>
 
         {/* Reference ID */}
-        <div className="mt-4 flex items-center justify-between p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+        <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
           <div>
             <span className="text-[10px] text-gray-500 font-mono block">DEMO BOOKING ID</span>
             <span className="text-xs sm:text-sm font-mono font-bold text-cyan-300 select-all">
               {ticket.id}
             </span>
           </div>
+          {ticket.razorpayPaymentId && (
+            <div>
+              <span className="text-[10px] text-gray-500 font-mono block">RZP PAYMENT ID</span>
+              <span className="text-[11px] font-mono font-semibold text-emerald-400 select-all">
+                {ticket.razorpayPaymentId}
+              </span>
+            </div>
+          )}
           <div className="text-right">
             <span className="text-[10px] text-gray-500 font-mono block">DATE & TIME</span>
             <span className="text-xs font-mono text-gray-300">
@@ -100,14 +128,14 @@ export const DemoTicketCard: React.FC<DemoTicketCardProps> = ({
         <div className="flex items-center justify-between gap-3">
           <div className="flex-1">
             <span className="text-[10px] text-cyan-400/80 font-mono tracking-wider block uppercase font-bold">
-              ORIGIN / DEPARTURE
+              {t('booking.originLabel')}
             </span>
             <p className="text-base font-bold text-white leading-tight mt-0.5">
-              {ticket.source.name}
+              {srcDisplay}
             </p>
-            {ticket.source.nameHindi && (
-              <p className="text-xs text-gray-400 font-hindi mt-0.5">
-                {ticket.source.nameHindi}
+            {srcSecondary && (
+              <p className="text-xs text-gray-400 mt-0.5">
+                {srcSecondary}
               </p>
             )}
             <div className="flex flex-wrap gap-1 mt-1.5">
@@ -116,7 +144,7 @@ export const DemoTicketCard: React.FC<DemoTicketCardProps> = ({
                   key={l}
                   className="w-2.5 h-2.5 rounded-full inline-block border border-white/20"
                   style={{ backgroundColor: LINE_COLORS[l] }}
-                  title={LINE_DISPLAY_NAMES[l]}
+                  title={getLocalizedLineName(l, i18n.language)}
                 />
               ))}
             </div>
@@ -124,7 +152,7 @@ export const DemoTicketCard: React.FC<DemoTicketCardProps> = ({
 
           <div className="flex flex-col items-center justify-center px-2">
             <div className="text-xs text-cyan-400 font-mono font-bold">
-              {ticket.routeSummary.totalStations - 1} stops
+              {t('tickets.stationStops', { count: ticket.routeSummary.totalStations - 1 })}
             </div>
             <div className="w-16 h-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 my-1 relative">
               <span className="absolute -top-1 right-0 text-cyan-400 text-xs">→</span>
@@ -136,14 +164,14 @@ export const DemoTicketCard: React.FC<DemoTicketCardProps> = ({
 
           <div className="flex-1 text-right">
             <span className="text-[10px] text-emerald-400/80 font-mono tracking-wider block uppercase font-bold">
-              DESTINATION
+              {t('booking.destinationLabel')}
             </span>
             <p className="text-base font-bold text-white leading-tight mt-0.5">
-              {ticket.destination.name}
+              {dstDisplay}
             </p>
-            {ticket.destination.nameHindi && (
-              <p className="text-xs text-gray-400 font-hindi mt-0.5">
-                {ticket.destination.nameHindi}
+            {dstSecondary && (
+              <p className="text-xs text-gray-400 mt-0.5">
+                {dstSecondary}
               </p>
             )}
             <div className="flex flex-wrap gap-1 mt-1.5 justify-end">
@@ -152,7 +180,7 @@ export const DemoTicketCard: React.FC<DemoTicketCardProps> = ({
                   key={l}
                   className="w-2.5 h-2.5 rounded-full inline-block border border-white/20"
                   style={{ backgroundColor: LINE_COLORS[l] }}
-                  title={LINE_DISPLAY_NAMES[l]}
+                  title={getLocalizedLineName(l, i18n.language)}
                 />
               ))}
             </div>
@@ -162,7 +190,7 @@ export const DemoTicketCard: React.FC<DemoTicketCardProps> = ({
         {/* Lines Traversed & Interchanges */}
         <div className="p-3 rounded-xl bg-navy-900/80 border border-white/[0.06] flex items-center justify-between text-xs font-mono">
           <div>
-            <span className="text-gray-400 block text-[10px]">CORRIDOR / LINES</span>
+            <span className="text-gray-400 block text-[10px]">{t('booking.routeLabel')}</span>
             <div className="flex items-center gap-1.5 mt-0.5">
               {ticket.routeSummary.lines.map(line => (
                 <span
@@ -170,18 +198,18 @@ export const DemoTicketCard: React.FC<DemoTicketCardProps> = ({
                   className="px-2 py-0.5 rounded text-[10px] font-bold text-white"
                   style={{ backgroundColor: LINE_COLORS[line] }}
                 >
-                  {LINE_DISPLAY_NAMES[line]}
+                  {getLocalizedLineName(line, i18n.language)}
                 </span>
               ))}
             </div>
           </div>
 
           <div className="text-right">
-            <span className="text-gray-400 block text-[10px]">TRANSFERS</span>
+            <span className="text-gray-400 block text-[10px]">{t('planner.transfers')}</span>
             <span className="text-amber-300 font-bold block mt-0.5">
               {ticket.routeSummary.interchangeCount === 0
-                ? 'Direct Line (0)'
-                : `${ticket.routeSummary.interchangeCount} Interchange${ticket.routeSummary.interchangeCount > 1 ? 's' : ''}`}
+                ? t('common.direct')
+                : `${ticket.routeSummary.interchangeCount} ${t('common.interchange')}`}
             </span>
           </div>
         </div>
@@ -189,21 +217,30 @@ export const DemoTicketCard: React.FC<DemoTicketCardProps> = ({
         {/* Fare & Passenger Metadata Table */}
         <div className="grid grid-cols-3 gap-2 text-center pt-1 font-mono text-xs">
           <div className="bg-white/[0.03] p-2 rounded-lg border border-white/[0.05]">
-            <span className="text-[10px] text-gray-400 block">PASSENGERS</span>
+            <span className="text-[10px] text-gray-400 block">{t('booking.passengerCountLabel')}</span>
             <span className="text-sm font-bold text-white block mt-0.5">
-              {ticket.passengerCount} {ticket.passengerCount === 1 ? 'Adult' : 'Adults'}
+              {t('tickets.passengers', { count: ticket.passengerCount })}
             </span>
           </div>
           <div className="bg-white/[0.03] p-2 rounded-lg border border-white/[0.05]">
-            <span className="text-[10px] text-gray-400 block">JOURNEY TYPE</span>
+            <span className="text-[10px] text-gray-400 block">{t('booking.ticketTypeLabel')}</span>
             <span className="text-sm font-bold text-cyan-300 block mt-0.5">
-              {ticket.ticketType === 'RETURN' ? 'Return' : 'Single'}
+              {ticket.ticketType === 'RETURN' ? t('booking.returnOption') : t('booking.singleOption')}
             </span>
           </div>
           <div className="bg-white/[0.03] p-2 rounded-lg border border-white/[0.05]">
-            <span className="text-[10px] text-gray-400 block">TOTAL FARE</span>
-            <span className="text-sm font-bold text-emerald-400 block mt-0.5">
-              ₹{ticket.totalFare} <span className="text-[9px] text-gray-500 font-normal">(est.)</span>
+            <span className="text-[10px] text-gray-400 block">
+              {ticket.isVerifiedPayment ? t('tickets.farePaid') : 'DEMO FARE'}
+            </span>
+            <span
+              className={`text-sm font-bold block mt-0.5 ${
+                ticket.isVerifiedPayment ? 'text-emerald-400' : 'text-amber-300'
+              }`}
+            >
+              ₹{ticket.totalFare}{' '}
+              <span className="text-[9px] text-gray-500 font-normal">
+                {ticket.isVerifiedPayment ? '(Test Paid)' : '(Unverified)'}
+              </span>
             </span>
           </div>
         </div>
@@ -223,7 +260,7 @@ export const DemoTicketCard: React.FC<DemoTicketCardProps> = ({
           {isCancelled && (
             <div className="absolute inset-0 bg-navy-950/80 backdrop-blur-xs flex items-center justify-center rounded-xl">
               <span className="text-red-400 font-bold font-mono text-sm border-2 border-red-500 px-3 py-1 rounded-lg rotate-12">
-                VOID / CANCELLED
+                {t('tickets.cancelledNotice')}
               </span>
             </div>
           )}
@@ -231,10 +268,10 @@ export const DemoTicketCard: React.FC<DemoTicketCardProps> = ({
 
         <div>
           <p className="text-xs font-mono font-bold text-gray-300 tracking-wider uppercase">
-            SCAN AT SIMULATED DEMO TURNSTILE
+            {t('tickets.scanAtGate')}
           </p>
           <p className="text-[10px] text-gray-500 font-mono mt-0.5">
-            Valid until: {new Date(ticket.expiresAt).toLocaleDateString()} {new Date(ticket.expiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {t('tickets.validUntil')}: {new Date(ticket.expiresAt).toLocaleDateString()} {new Date(ticket.expiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </p>
         </div>
 
@@ -271,7 +308,7 @@ export const DemoTicketCard: React.FC<DemoTicketCardProps> = ({
             onClick={() => onCancel(ticket.id)}
             className="text-[11px] font-mono text-red-400/80 hover:text-red-300 transition-colors pt-1"
           >
-            Cancel Demo Ticket
+            {t('tickets.cancelTicket')}
           </button>
         )}
 
@@ -281,7 +318,7 @@ export const DemoTicketCard: React.FC<DemoTicketCardProps> = ({
             onClick={onClose}
             className="w-full mt-2 py-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] text-xs font-semibold text-white transition-colors"
           >
-            Done / Close Pass
+            {t('common.close')}
           </button>
         )}
       </div>

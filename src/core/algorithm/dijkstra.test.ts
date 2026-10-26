@@ -386,6 +386,76 @@ describe('Dijkstra on real Delhi Metro data', () => {
     expect(result.route!.totalStations).toBe(37);
     expect(result.route!.totalTimeSeconds).toBe(36 * 120);
   });
+
+  // ── Magenta Line P0 Regression Routing Tests ─────────────────────────────
+  describe('Magenta Line Corrected Routing (P0 Regression)', () => {
+    it('routes through the verified sequence: Munirka -> RK Puram -> IIT Delhi -> Hauz Khas -> Panchsheel Park', () => {
+      const result = dijkstra(graph, 'MUNIRKA', 'PANCHSHEEL_PARK', { strategy: 'FASTEST' });
+      expect(result.route).not.toBeNull();
+      const route = result.route!;
+
+      const stationIds = route.stations.map(s => s.id);
+      expect(stationIds).toEqual([
+        'MUNIRKA',
+        'RK_PURAM',
+        'IIT_DELHI',
+        'HAUZ_KHAS',
+        'PANCHSHEEL_PARK',
+      ]);
+      expect(route.interchangeCount).toBe(0);
+      expect(route.lineSegments).toHaveLength(1);
+      expect(route.lineSegments[0].line).toBe('MAGENTA');
+      expect(route.totalTimeSeconds).toBe(4 * 120); // 4 hops, direct
+    });
+
+    it('routes reversed direction: Panchsheel Park -> Hauz Khas -> IIT Delhi -> RK Puram -> Munirka', () => {
+      const result = dijkstra(graph, 'PANCHSHEEL_PARK', 'MUNIRKA', { strategy: 'FASTEST' });
+      expect(result.route).not.toBeNull();
+      const route = result.route!;
+
+      const stationIds = route.stations.map(s => s.id);
+      expect(stationIds).toEqual([
+        'PANCHSHEEL_PARK',
+        'HAUZ_KHAS',
+        'IIT_DELHI',
+        'RK_PURAM',
+        'MUNIRKA',
+      ]);
+      expect(route.interchangeCount).toBe(0);
+      expect(route.totalTimeSeconds).toBe(4 * 120);
+    });
+
+    it('IIT Delhi is directly adjacent to RK Puram and Hauz Khas (1 hop each)', () => {
+      const toRk = dijkstra(graph, 'IIT_DELHI', 'RK_PURAM');
+      expect(toRk.route).not.toBeNull();
+      expect(toRk.route!.totalStations).toBe(2);
+      expect(toRk.route!.stations.map(s => s.id)).toEqual(['IIT_DELHI', 'RK_PURAM']);
+
+      const toHk = dijkstra(graph, 'IIT_DELHI', 'HAUZ_KHAS');
+      expect(toHk.route).not.toBeNull();
+      expect(toHk.route!.totalStations).toBe(2);
+      expect(toHk.route!.stations.map(s => s.id)).toEqual(['IIT_DELHI', 'HAUZ_KHAS']);
+    });
+
+    it('inter-line journey transfers at Hauz Khas to reach IIT Delhi in exactly 1 stop', () => {
+      // AIIMS (Yellow Line) -> Green Park -> Hauz Khas (Transfer) -> IIT Delhi (Magenta Line)
+      const result = dijkstra(graph, 'AIIMS', 'IIT_DELHI', { strategy: 'FASTEST' });
+      expect(result.route).not.toBeNull();
+      const route = result.route!;
+
+      expect(route.stations.map(s => s.id)).toEqual([
+        'AIIMS',
+        'GREEN_PARK',
+        'HAUZ_KHAS',
+        'IIT_DELHI',
+      ]);
+      expect(route.interchangeCount).toBe(1);
+      expect(route.interchanges[0].id).toBe('HAUZ_KHAS');
+      expect(route.lineSegments).toHaveLength(2);
+      expect(route.lineSegments[0].line).toBe('YELLOW');
+      expect(route.lineSegments[1].line).toBe('MAGENTA');
+    });
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 
 export function SignupPage() {
+  const { t, i18n } = useTranslation();
   const { user, registerWithEmail, loginWithGoogle, isConfigured } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,17 +33,17 @@ export function SignupPage() {
     setError(null);
 
     if (!email.trim() || !password) {
-      setError('Please provide a valid email and password.');
+      setError(t('auth.provideValidEmail'));
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters long.');
+      setError(t('auth.passwordMinLength'));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match. Please re-enter your password.');
+      setError(t('auth.passwordsMismatch'));
       return;
     }
 
@@ -49,7 +52,7 @@ export function SignupPage() {
       await registerWithEmail(email, password, displayName);
       navigate(from, { replace: true });
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
+      setError(err instanceof Error ? err.message : t('common.loading'));
     } finally {
       setIsLoading(false);
     }
@@ -67,6 +70,8 @@ export function SignupPage() {
       setIsGoogleLoading(false);
     }
   };
+
+  const isHindi = i18n.language === 'hi';
 
   return (
     <div className="min-h-screen bg-navy-950 text-gray-100 flex flex-col justify-between selection:bg-cyan-500/30 selection:text-cyan-200">
@@ -91,23 +96,27 @@ export function SignupPage() {
             </div>
             <div>
               <span className="text-sm font-extrabold text-white font-display tracking-tight">
-                Delhi Metro
+                {t('nav.delhiMetro')}
               </span>
               <span className="text-[10px] text-cyan-400 font-mono block -mt-1">
-                Metroverse Auth
+                {t('auth.authPortal')}
               </span>
             </div>
           </Link>
 
-          <Link
-            to="/planner"
-            className="text-xs font-mono text-gray-400 hover:text-cyan-300 transition-colors flex items-center gap-1.5"
-          >
-            <span>Skip to Public Planner</span>
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
-          </Link>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <LanguageSwitcher />
+            <Link
+              to="/planner"
+              className="text-xs font-mono text-gray-400 hover:text-cyan-300 transition-colors flex items-center gap-1.5"
+            >
+              <span className="hidden sm:inline">{t('auth.skipToPlanner')}</span>
+              <span className="sm:hidden">{t('nav.planner')}</span>
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -119,13 +128,13 @@ export function SignupPage() {
             <div className="text-center mb-6">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/25 text-cyan-300 text-[11px] font-mono mb-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                Passenger Registration
+                {t('auth.passengerRegistration')}
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-white font-display">
-                Create Account
+                {t('auth.createAccountTitle')}
               </h1>
               <p className="text-xs text-gray-400 mt-1 font-sans">
-                Join Delhi Metro Navigator with your passenger profile
+                {t('auth.signUpSubtitle')}
               </p>
             </div>
 
@@ -139,9 +148,9 @@ export function SignupPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
                 <div>
-                  <p className="font-semibold text-amber-300">Firebase Setup Required</p>
+                  <p className="font-semibold text-amber-300">{t('auth.firebaseRequired')}</p>
                   <p className="text-[11px] text-amber-200/90 mt-0.5 leading-relaxed">
-                    Set your Firebase project keys in <code className="text-cyan-300 font-mono">.env.local</code> to enable live registration.
+                    {t('auth.firebaseRequiredDesc')}
                   </p>
                 </div>
               </div>
@@ -193,13 +202,13 @@ export function SignupPage() {
                   />
                 </svg>
               )}
-              <span>Sign up with Google</span>
+              <span>{t('auth.googleSignUp')}</span>
             </button>
 
             {/* Divider */}
             <div className="flex items-center gap-3 my-5">
               <div className="h-px bg-white/[0.08] flex-1" />
-              <span className="text-[11px] font-mono text-gray-500 uppercase tracking-wider">or with email</span>
+              <span className="text-[11px] font-mono text-gray-500 uppercase tracking-wider">{t('auth.orWithEmail')}</span>
               <div className="h-px bg-white/[0.08] flex-1" />
             </div>
 
@@ -207,7 +216,7 @@ export function SignupPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="signup-name" className="block text-xs font-medium text-gray-300 mb-1.5 font-sans">
-                  Full Name (Optional)
+                  {t('auth.fullNameLabel')}
                 </label>
                 <input
                   id="signup-name"
@@ -216,7 +225,7 @@ export function SignupPage() {
                   autoComplete="name"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="e.g. Aarav Sharma"
+                  placeholder={t('auth.fullNamePlaceholder')}
                   disabled={isLoading || isGoogleLoading}
                   className="metro-input"
                 />
@@ -224,7 +233,7 @@ export function SignupPage() {
 
               <div>
                 <label htmlFor="signup-email" className="block text-xs font-medium text-gray-300 mb-1.5 font-sans">
-                  Email Address
+                  {t('auth.emailLabel')}
                 </label>
                 <input
                   id="signup-email"
@@ -242,7 +251,7 @@ export function SignupPage() {
 
               <div>
                 <label htmlFor="signup-password" className="block text-xs font-medium text-gray-300 mb-1.5 font-sans">
-                  Password <span className="text-gray-500 text-[11px]">(min. 6 characters)</span>
+                  {t('auth.passwordLabel')} <span className="text-gray-500 text-[11px]">{t('auth.min6Chars')}</span>
                 </label>
                 <div className="relative">
                   <input
@@ -261,16 +270,16 @@ export function SignupPage() {
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
                     className="absolute right-3.5 top-3.5 text-gray-400 hover:text-gray-200 transition-colors text-xs font-mono"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    aria-label={showPassword ? t('auth.hidePasswordAria') : t('auth.showPasswordAria')}
                   >
-                    {showPassword ? 'Hide' : 'Show'}
+                    {showPassword ? (isHindi ? 'छुपाएं' : 'Hide') : (isHindi ? 'दिखाएं' : 'Show')}
                   </button>
                 </div>
               </div>
 
               <div>
                 <label htmlFor="signup-confirm-password" className="block text-xs font-medium text-gray-300 mb-1.5 font-sans">
-                  Confirm Password
+                  {t('auth.confirmPasswordLabel')}
                 </label>
                 <input
                   id="signup-confirm-password"
@@ -295,10 +304,10 @@ export function SignupPage() {
                 {isLoading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Creating Passenger Account...</span>
+                    <span>{t('auth.registering')}</span>
                   </>
                 ) : (
-                  <span>Register Account</span>
+                  <span>{t('auth.registerBtn')}</span>
                 )}
               </button>
             </form>
@@ -306,12 +315,12 @@ export function SignupPage() {
             {/* Footer switcher */}
             <div className="mt-6 pt-5 border-t border-white/[0.08] text-center">
               <p className="text-xs text-gray-400 font-sans">
-                Already registered?{' '}
+                {t('auth.haveAccountPrompt')}{' '}
                 <Link
                   to="/login"
                   className="font-semibold text-cyan-400 hover:text-cyan-300 underline underline-offset-2 ml-1"
                 >
-                  Sign In
+                  {t('auth.signInBtn')}
                 </Link>
               </p>
             </div>
@@ -320,7 +329,7 @@ export function SignupPage() {
       </main>
 
       <footer className="relative z-10 border-t border-white/[0.06] py-4 text-center text-xs text-gray-500 font-mono">
-        Delhi Metro Navigator · Protected with Firebase Authentication
+        {t('auth.footerProtected')}
       </footer>
     </div>
   );

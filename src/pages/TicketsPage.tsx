@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AuthNavControl } from '@/components/auth/AuthNavControl';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { useTicketStore } from '@/features/tickets/ticketStore';
 import { DemoTicketCard } from '@/features/tickets/DemoTicketCard';
 import { BookingModal } from '@/features/tickets/BookingModal';
 import type { DemoTicket } from '@/features/tickets/types';
 import { formatDuration } from '@/utils/formatters';
 import { LINE_COLORS } from '@/utils/lineColors';
+import { getStationDisplayName } from '@/i18n';
 
 export function TicketsPage() {
+  const { t, i18n } = useTranslation();
   const tickets = useTicketStore((s) => s.tickets);
   const cancelDemoTicket = useTicketStore((s) => s.cancelDemoTicket);
   const clearHistory = useTicketStore((s) => s.clearHistory);
@@ -18,9 +22,9 @@ export function TicketsPage() {
   const [selectedTicket, setSelectedTicket] = useState<DemoTicket | null>(null);
   const [showFirebaseInfo, setShowFirebaseInfo] = useState<boolean>(false);
 
-  const filteredTickets = tickets.filter((t) => {
+  const filteredTickets = tickets.filter((tkt) => {
     if (filter === 'ALL') return true;
-    return t.status === filter;
+    return tkt.status === filter;
   });
 
   return (
@@ -43,10 +47,10 @@ export function TicketsPage() {
             </div>
             <div>
               <p className="text-sm font-extrabold text-white leading-tight font-display tracking-tight">
-                Delhi Metro
+                {t('nav.brand')}
               </p>
               <p className="text-[11px] text-cyan-400/90 leading-tight font-mono">
-                Demo Ticket Vault
+                {t('tickets.vaultTitle')}
               </p>
             </div>
           </Link>
@@ -57,18 +61,19 @@ export function TicketsPage() {
                 to="/"
                 className="text-gray-400 hover:text-white transition-colors px-2.5 py-1.5 rounded-lg hover:bg-white/5"
               >
-                Home
+                {t('nav.home')}
               </Link>
               <Link
                 to="/planner"
                 className="text-gray-400 hover:text-white transition-colors px-2.5 py-1.5 rounded-lg hover:bg-white/5"
               >
-                Planner
+                {t('nav.planner')}
               </Link>
               <span className="text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 px-3 py-1.5 rounded-lg font-semibold">
-                Demo Tickets ({tickets.length})
+                {t('nav.demoTickets')} ({tickets.length})
               </span>
             </nav>
+            <LanguageSwitcher />
             <AuthNavControl />
           </div>
         </div>
@@ -81,10 +86,7 @@ export function TicketsPage() {
           <span className="text-xl">⚠️</span>
           <div className="text-xs space-y-1">
             <p className="font-bold text-amber-200 uppercase tracking-wider">
-              DEMO TICKET SIMULATION — NOT VALID FOR METRO ENTRY
-            </p>
-            <p className="text-amber-300/80 leading-relaxed font-mono text-[11px]">
-              Every ticket generated here is a proof-of-concept e-token for user experience demonstration. It does not deduct real currency, is not issued by DMRC, and will not operate automated station turnstiles.
+              {t('tickets.afcNotice')}
             </p>
           </div>
         </div>
@@ -93,20 +95,28 @@ export function TicketsPage() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-navy-900/60 p-4 rounded-2xl border border-white/[0.08] backdrop-blur-sm">
           {/* Filter Pills */}
           <div className="flex items-center gap-1.5 font-mono text-xs">
-            {(['ALL', 'ACTIVE', 'CANCELLED'] as const).map((mode) => (
-              <button
-                key={mode}
-                type="button"
-                onClick={() => setFilter(mode)}
-                className={`py-1.5 px-3 rounded-xl transition-all ${
-                  filter === mode
-                    ? 'bg-blue-600 text-white font-bold shadow-glow-blue'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                {mode === 'ALL' ? `All (${tickets.length})` : mode}
-              </button>
-            ))}
+            {(['ALL', 'ACTIVE', 'CANCELLED'] as const).map((mode) => {
+              const label =
+                mode === 'ALL'
+                  ? `${t('tickets.filterAll')} (${tickets.length})`
+                  : mode === 'ACTIVE'
+                    ? t('tickets.filterActive')
+                    : t('tickets.filterCancelled');
+              return (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setFilter(mode)}
+                  className={`py-1.5 px-3 rounded-xl transition-all ${
+                    filter === mode
+                      ? 'bg-blue-600 text-white font-bold shadow-glow-blue'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
 
           <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
@@ -125,18 +135,18 @@ export function TicketsPage() {
               className="btn-primary py-2 px-4 rounded-xl text-xs font-bold font-mono flex items-center gap-1.5"
             >
               <span>+</span>
-              <span>Book Demo Pass</span>
+              <span>{t('tickets.bookNewTicket')}</span>
             </button>
           </div>
         </div>
 
-        {/* Firebase Authentication Configuration Guide (Requirement 6) */}
+        {/* Firebase Authentication Configuration Guide */}
         {showFirebaseInfo && (
           <div className="glass-card p-6 border border-cyan-500/30 bg-navy-900/90 rounded-2xl space-y-4 animate-fade-in text-xs font-mono">
             <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
               <h4 className="font-bold text-white text-sm flex items-center gap-2">
                 <span>🔥</span>
-                <span>Firebase Authentication & Cloud Storage Setup</span>
+                <span>{t('auth.firebaseRequired')}</span>
               </h4>
               <span className="text-[10px] text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
                 Setup Instructions
@@ -144,16 +154,15 @@ export function TicketsPage() {
             </div>
 
             <p className="text-gray-300 leading-relaxed">
-              Firebase Authentication is not currently configured in this environment. Demo tickets are persistently stored in your browser&apos;s <code className="text-cyan-300">localStorage</code> across page reloads.
+              {t('auth.firebaseRequiredDesc')}
             </p>
 
             <div className="bg-navy-950/80 p-4 rounded-xl border border-white/[0.06] space-y-2 text-gray-300">
               <p className="font-bold text-white">To enable Cloud Account Sync with Firebase Auth:</p>
               <ol className="list-decimal list-inside space-y-1.5 text-[11px] text-gray-400">
                 <li>Install the Firebase SDK: <code className="text-cyan-300">npm install firebase</code></li>
-                <li>Create a Firebase Project at <a href="https://console.firebase.google.com" target="_blank" rel="noreferrer" className="text-cyan-400 underline">console.firebase.google.com</a> and enable <strong>Authentication</strong> (Email/Password or Google) and <strong>Cloud Firestore</strong>.</li>
-                <li>Add your credentials to environment variables: <code className="text-cyan-300">VITE_FIREBASE_API_KEY</code>, <code className="text-cyan-300">VITE_FIREBASE_PROJECT_ID</code>, etc.</li>
-                <li>Replace <code className="text-cyan-300">LocalStorageAdapter</code> in <code className="text-cyan-300">src/features/tickets/ticketStore.ts</code> with a Firestore adapter saving to <code className="text-cyan-300">users/{'{userId}'}/demo_tickets/{'{ticketId}'}</code>.</li>
+                <li>Create a Firebase Project at <a href="https://console.firebase.google.com" target="_blank" rel="noreferrer" className="text-cyan-400 underline">console.firebase.google.com</a> and enable <strong>Authentication</strong> and <strong>Cloud Firestore</strong>.</li>
+                <li>Add your credentials to environment variables in <code className="text-cyan-300">.env.local</code>.</li>
               </ol>
             </div>
           </div>
@@ -182,11 +191,9 @@ export function TicketsPage() {
               🎟️
             </div>
             <div>
-              <p className="text-base font-bold text-white">No Demo Tickets Found</p>
+              <p className="text-base font-bold text-white">{t('tickets.noTicketsTitle')}</p>
               <p className="text-xs text-gray-400 mt-1 font-mono">
-                {filter === 'ALL'
-                  ? 'You have not booked any demo metro passes yet.'
-                  : `No tickets with status "${filter}".`}
+                {t('tickets.noTicketsDesc')}
               </p>
             </div>
             <button
@@ -194,40 +201,40 @@ export function TicketsPage() {
               onClick={() => openBookingModal()}
               className="btn-primary py-2.5 px-6 rounded-xl text-xs font-bold"
             >
-              + Book a Demo Ticket Now
+              + {t('tickets.bookNewTicket')}
             </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredTickets.map((t) => (
+            {filteredTickets.map((tkt) => (
               <div
-                key={t.id}
-                onClick={() => setSelectedTicket(t)}
+                key={tkt.id}
+                onClick={() => setSelectedTicket(tkt)}
                 className="glass-card p-5 rounded-2xl border border-white/[0.08] hover:border-cyan-500/40 bg-navy-900/80 hover:bg-navy-900 transition-all cursor-pointer group space-y-3 relative overflow-hidden"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-mono font-bold text-cyan-300">
-                    {t.id}
+                    {tkt.id}
                   </span>
                   <span
                     className={`text-[9px] font-mono px-2 py-0.5 rounded-full uppercase font-bold border ${
-                      t.status === 'CANCELLED'
+                      tkt.status === 'CANCELLED'
                         ? 'bg-red-500/10 text-red-400 border-red-500/20'
                         : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                     }`}
                   >
-                    {t.status}
+                    {tkt.status === 'CANCELLED' ? t('tickets.cancelledNotice') : t('tickets.activeNotice')}
                   </span>
                 </div>
 
                 <div>
                   <div className="flex items-center gap-2 text-base font-bold text-white">
-                    <span>{t.source.name}</span>
+                    <span>{getStationDisplayName(tkt.source, i18n.language)}</span>
                     <span className="text-cyan-400 text-sm">→</span>
-                    <span>{t.destination.name}</span>
+                    <span>{getStationDisplayName(tkt.destination, i18n.language)}</span>
                   </div>
                   <div className="flex items-center gap-1.5 mt-1">
-                    {t.routeSummary.lines.map((l) => (
+                    {tkt.routeSummary.lines.map((l) => (
                       <span
                         key={l}
                         className="w-2.5 h-2.5 rounded-full inline-block"
@@ -235,21 +242,21 @@ export function TicketsPage() {
                       />
                     ))}
                     <span className="text-[10px] text-gray-400 font-mono ml-1">
-                      {t.routeSummary.totalStations - 1} stops • {formatDuration(t.routeSummary.totalTimeSeconds)}
+                      {t('tickets.stationStops', { count: tkt.routeSummary.totalStations - 1 })} • {formatDuration(tkt.routeSummary.totalTimeSeconds)}
                     </span>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t border-white/[0.06] text-xs font-mono">
                   <span className="text-gray-400">
-                    {t.ticketType === 'RETURN' ? 'Return' : 'Single'} • {t.passengerCount} {t.passengerCount === 1 ? 'Adult' : 'Adults'}
+                    {tkt.ticketType === 'RETURN' ? t('booking.returnOption') : t('booking.singleOption')} • {t('tickets.passengers', { count: tkt.passengerCount })}
                   </span>
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-emerald-400 font-display text-sm">
-                      ₹{t.totalFare}
+                      ₹{tkt.totalFare}
                     </span>
                     <span className="text-cyan-400 group-hover:translate-x-1 transition-transform">
-                      View →
+                      {t('tickets.viewDetails')} →
                     </span>
                   </div>
                 </div>
@@ -265,7 +272,7 @@ export function TicketsPage() {
               onClick={clearHistory}
               className="text-xs font-mono text-gray-500 hover:text-red-400 transition-colors"
             >
-              Clear all demo tickets
+              {t('tickets.clearHistory')}
             </button>
           </div>
         )}

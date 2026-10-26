@@ -83,6 +83,7 @@ interface TicketState {
 
   // Actions
   createDemoTicket: (params: CreateTicketParams) => DemoTicket;
+  saveVerifiedTicket: (ticket: DemoTicket) => DemoTicket;
   cancelDemoTicket: (id: string) => void;
   clearHistory: () => void;
   getTicketById: (id: string) => DemoTicket | undefined;
@@ -103,7 +104,17 @@ export const useTicketStore = create<TicketState>((set, get) => ({
   preselectedRoute: null,
 
   createDemoTicket: (params) => {
-    const { source, destination, route, passengerCount = 1, ticketType = 'SINGLE' } = params;
+    const {
+      source,
+      destination,
+      route,
+      passengerCount = 1,
+      ticketType = 'SINGLE',
+      paymentStatus = 'UNVERIFIED_DEMO',
+      isVerifiedPayment = false,
+      razorpayOrderId,
+      razorpayPaymentId,
+    } = params;
 
     if (!source || !destination || source.id === destination.id) {
       throw new Error('Cannot issue ticket: Source and Destination stations cannot be identical or empty.');
@@ -129,7 +140,11 @@ export const useTicketStore = create<TicketState>((set, get) => ({
       bookingId: id,
       type: 'DEMO_TICKET',
       valid: false,
-      disclaimer: 'DEMO TICKET — NOT VALID FOR METRO ENTRY',
+      paymentStatus,
+      isVerifiedPayment,
+      razorpayOrderId: razorpayOrderId || null,
+      razorpayPaymentId: razorpayPaymentId || null,
+      disclaimer: 'DEMO — NOT VALID FOR METRO TRAVEL',
       source: { id: source.id, name: source.name },
       destination: { id: destination.id, name: destination.name },
       passengers: validPassengers,
@@ -158,7 +173,11 @@ export const useTicketStore = create<TicketState>((set, get) => ({
       baseFare,
       totalFare,
       status: 'ACTIVE',
-      disclaimer: 'DEMO TICKET — NOT VALID FOR METRO ENTRY',
+      paymentStatus,
+      isVerifiedPayment,
+      razorpayOrderId,
+      razorpayPaymentId,
+      disclaimer: 'DEMO — NOT VALID FOR METRO TRAVEL',
       qrPayload: JSON.stringify(qrData),
     };
 
@@ -170,6 +189,15 @@ export const useTicketStore = create<TicketState>((set, get) => ({
     }));
 
     return newTicket;
+  },
+
+  saveVerifiedTicket: (ticket: DemoTicket) => {
+    LocalStorageAdapter.saveTicket(ticket);
+    set((state) => ({
+      tickets: [ticket, ...state.tickets.filter((t) => t.id !== ticket.id)],
+      activeTicketId: ticket.id,
+    }));
+    return ticket;
   },
 
   cancelDemoTicket: (id) => {

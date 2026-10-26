@@ -456,4 +456,62 @@ describe('Data Integrity & Topology Audit', () => {
       expect(codeMap.get('PINK')?.stationCount).toBe(38);
     });
   });
+
+  // ── Magenta Line P0 Topology Regression ──────────────────────────────────
+  describe('Magenta Line Sequence Regression (P0 Fix)', () => {
+    it('connects RK_PURAM <-> IIT_DELHI <-> HAUZ_KHAS <-> PANCHSHEEL_PARK with exact adjacency', () => {
+      const magentaEdges = edges.filter(e => e.line === 'MAGENTA');
+
+      const isConnected = (id1: string, id2: string) =>
+        magentaEdges.some(e => (e.from === id1 && e.to === id2) || (e.from === id2 && e.to === id1));
+
+      // Correct verified adjacencies must be present
+      expect(isConnected('RK_PURAM', 'IIT_DELHI')).toBe(true);
+      expect(isConnected('IIT_DELHI', 'HAUZ_KHAS')).toBe(true);
+      expect(isConnected('HAUZ_KHAS', 'PANCHSHEEL_PARK')).toBe(true);
+
+      // Old incorrect inverted adjacencies must NOT be present
+      expect(isConnected('RK_PURAM', 'HAUZ_KHAS')).toBe(false);
+      expect(isConnected('IIT_DELHI', 'PANCHSHEEL_PARK')).toBe(false);
+    });
+
+    it('contains no duplicate edges or self-loops for the corrected Magenta segment', () => {
+      const segmentIds = ['RK_PURAM', 'IIT_DELHI', 'HAUZ_KHAS', 'PANCHSHEEL_PARK'];
+      const segmentEdges = edges.filter(
+        e => e.line === 'MAGENTA' && segmentIds.includes(e.from) && segmentIds.includes(e.to)
+      );
+
+      // Exactly 3 undirected edges connecting the 4 sequential stations
+      expect(segmentEdges).toHaveLength(3);
+
+      for (const e of segmentEdges) {
+        expect(e.from).not.toBe(e.to); // No self loops
+      }
+
+      const pairs = segmentEdges.map(e => [e.from, e.to].sort().join('#'));
+      const uniquePairs = new Set(pairs);
+      expect(uniquePairs.size).toBe(3);
+    });
+
+    it('IIT Delhi has degree 2 and Hauz Khas has degree 4 (2 Magenta + 2 Yellow)', () => {
+      const iitEdges = edges.filter(e => e.from === 'IIT_DELHI' || e.to === 'IIT_DELHI');
+      expect(iitEdges).toHaveLength(2);
+      expect(iitEdges.every(e => e.line === 'MAGENTA')).toBe(true);
+
+      const hkEdges = edges.filter(e => e.from === 'HAUZ_KHAS' || e.to === 'HAUZ_KHAS');
+      expect(hkEdges).toHaveLength(4);
+      expect(hkEdges.filter(e => e.line === 'MAGENTA')).toHaveLength(2);
+      expect(hkEdges.filter(e => e.line === 'YELLOW')).toHaveLength(2);
+
+      const hkMagentaNeighbors = hkEdges
+        .filter(e => e.line === 'MAGENTA')
+        .map(e => (e.from === 'HAUZ_KHAS' ? e.to : e.from));
+      expect(hkMagentaNeighbors).toEqual(expect.arrayContaining(['IIT_DELHI', 'PANCHSHEEL_PARK']));
+
+      const hkYellowNeighbors = hkEdges
+        .filter(e => e.line === 'YELLOW')
+        .map(e => (e.from === 'HAUZ_KHAS' ? e.to : e.from));
+      expect(hkYellowNeighbors).toEqual(expect.arrayContaining(['GREEN_PARK', 'MALVIYA_NAGAR']));
+    });
+  });
 });

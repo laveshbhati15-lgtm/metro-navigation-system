@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
 import { useTicketStore } from '@/features/tickets/ticketStore';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 
 export function ProfilePage() {
+  const { t } = useTranslation();
   const { user, loading, logout, resetPassword } = useAuth();
   const navigate = useNavigate();
   const { tickets } = useTicketStore();
@@ -53,7 +56,7 @@ export function ProfilePage() {
       <div className="min-h-screen bg-navy-950 flex items-center justify-center text-cyan-300">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
-          <p className="font-mono text-xs text-gray-400">Loading passenger credentials...</p>
+          <p className="font-mono text-xs text-gray-400">{t('profile.loadingCredentials')}</p>
         </div>
       </div>
     );
@@ -76,28 +79,37 @@ export function ProfilePage() {
             </div>
             <div>
               <p className="text-sm font-extrabold text-white leading-tight font-display tracking-tight">
-                Delhi Metro
+                {t('nav.brand')}
               </p>
               <p className="text-[11px] text-cyan-400/90 leading-tight font-mono">
-                Passenger Profile
+                {t('profile.title')}
               </p>
             </div>
           </Link>
 
-          <nav className="flex items-center gap-3 text-xs font-mono">
-            <Link
-              to="/planner"
-              className="text-gray-300 hover:text-white px-3 py-1.5 rounded-lg hover:bg-white/5 transition-colors"
-            >
-              Route Planner
-            </Link>
-            <Link
-              to="/tickets"
-              className="text-gray-300 hover:text-white px-3 py-1.5 rounded-lg hover:bg-white/5 transition-colors"
-            >
-              Demo Tickets ({tickets.length})
-            </Link>
-          </nav>
+          <div className="flex items-center gap-3">
+            <nav className="flex items-center gap-2 text-xs font-mono">
+              <Link
+                to="/"
+                className="text-gray-300 hover:text-white px-2.5 py-1.5 rounded-lg hover:bg-white/5 transition-colors"
+              >
+                {t('nav.home')}
+              </Link>
+              <Link
+                to="/planner"
+                className="text-gray-300 hover:text-white px-2.5 py-1.5 rounded-lg hover:bg-white/5 transition-colors"
+              >
+                {t('nav.planner')}
+              </Link>
+              <Link
+                to="/tickets"
+                className="text-gray-300 hover:text-white px-2.5 py-1.5 rounded-lg hover:bg-white/5 transition-colors"
+              >
+                {t('nav.demoTickets')} ({tickets.length})
+              </Link>
+            </nav>
+            <LanguageSwitcher />
+          </div>
         </div>
       </header>
 
@@ -111,17 +123,17 @@ export function ProfilePage() {
               </svg>
             </div>
             <h1 className="text-2xl font-bold font-display text-white mb-2">
-              Sign In Required
+              {t('profile.signInRequiredTitle')}
             </h1>
             <p className="text-sm text-gray-400 mb-6 font-sans">
-              Sign in with your email or Google account to view your passenger profile.
+              {t('profile.signInRequiredDesc')}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link to="/login" className="btn-primary text-xs py-2.5 px-6">
-                Sign In
+                {t('profile.signInBtn')}
               </Link>
               <Link to="/signup" className="btn-ghost text-xs py-2.5 px-6">
-                Create Account
+                {t('profile.createAccountBtn')}
               </Link>
             </div>
           </div>
@@ -149,7 +161,7 @@ export function ProfilePage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <h1 className="text-xl sm:text-2xl font-bold font-display text-white">
-                        {user.displayName || 'Metroverse Passenger'}
+                        {user.displayName || t('nav.traveler')}
                       </h1>
                     </div>
                     <p className="text-xs sm:text-sm text-gray-300 font-mono mt-0.5">
@@ -158,15 +170,15 @@ export function ProfilePage() {
                     <div className="flex flex-wrap items-center gap-2 mt-2.5">
                       <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-cyan-500/10 text-cyan-300 border border-cyan-500/25 flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                        Authenticated
+                        {t('profile.activeSession')}
                       </span>
                       {user.emailVerified ? (
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/25">
-                          ✓ Email Verified
+                          ✓ {t('profile.emailVerified')}
                         </span>
                       ) : (
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/10 text-amber-300 border border-amber-500/25">
-                          Unverified Email
+                          {t('profile.unverified')}
                         </span>
                       )}
                       <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-white/5 text-gray-300 border border-white/10">
@@ -182,7 +194,7 @@ export function ProfilePage() {
                   disabled={isLoggingOut}
                   className="px-4 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-mono transition-all duration-200 self-stretch sm:self-auto text-center"
                 >
-                  {isLoggingOut ? 'Signing out...' : 'Sign Out'}
+                  {isLoggingOut ? t('profile.signingOut') : t('profile.signOutBtn')}
                 </button>
               </div>
             </div>
@@ -192,12 +204,12 @@ export function ProfilePage() {
               {/* Profile Details */}
               <div className="glass-card p-5 sm:p-6 space-y-4">
                 <h2 className="text-xs font-mono uppercase tracking-wider text-cyan-400 font-semibold">
-                  Account Credentials
+                  {t('profile.passengerAccount')}
                 </h2>
 
                 <div className="space-y-3 text-xs font-mono">
                   <div className="flex justify-between items-center py-1.5 border-b border-white/[0.06]">
-                    <span className="text-gray-400">Unique Passenger ID</span>
+                    <span className="text-gray-400">{t('profile.passengerUid')}</span>
                     <button
                       type="button"
                       onClick={handleCopyUid}
@@ -206,7 +218,7 @@ export function ProfilePage() {
                     >
                       <span className="truncate">{user.uid.slice(0, 10)}...</span>
                       <span className="text-[10px] text-gray-400">
-                        {copiedUid ? '✓ Copied' : '📋 Copy'}
+                        {copiedUid ? `✓ ${t('profile.copiedUid')}` : `📋 ${t('profile.copyUid')}`}
                       </span>
                     </button>
                   </div>
@@ -239,10 +251,10 @@ export function ProfilePage() {
                     className="text-xs text-cyan-400 hover:text-cyan-300 font-mono underline underline-offset-2 disabled:opacity-50"
                   >
                     {isSendingReset
-                      ? 'Sending reset email...'
+                      ? t('profile.sendingReset')
                       : resetSent
-                      ? '✓ Password reset email sent'
-                      : 'Send password reset email to ' + user.email}
+                      ? `✓ ${t('profile.resetSuccessNotice')}`
+                      : `${t('profile.sendResetBtn')} (${user.email})`}
                   </button>
                   {resetError && (
                     <p className="text-[11px] text-rose-300 mt-1">{resetError}</p>
@@ -253,27 +265,29 @@ export function ProfilePage() {
               {/* Storage & Privacy Architecture Card */}
               <div className="glass-card p-5 sm:p-6 space-y-4">
                 <h2 className="text-xs font-mono uppercase tracking-wider text-cyan-400 font-semibold">
-                  Transit Storage Status
+                  {t('profile.ticketVaultHeader')}
                 </h2>
 
                 <div className="space-y-3 text-xs font-sans text-gray-300 leading-relaxed">
                   <div className="p-3 rounded-xl bg-navy-850/80 border border-white/10">
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-semibold text-white font-mono text-[11px]">
-                        Demo Tickets on Device
+                        {t('profile.recentDemoTickets')}
                       </span>
                       <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono text-[10px]">
                         {tickets.length} Saved
                       </span>
                     </div>
                     <p className="text-[11px] text-gray-400">
-                      Demo ticketing data is currently maintained in local device storage. Cloud database synchronisation is scheduled for a subsequent release.
+                      {tickets.length === 0
+                        ? t('profile.noTicketsYet')
+                        : `${tickets.length} demo transit passes issued.`}
                     </p>
                   </div>
 
                   <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-[11px] text-blue-200/90">
                     <p className="font-semibold text-cyan-300 font-mono mb-0.5">
-                      Public Metro Navigation
+                      {t('nav.tagline')}
                     </p>
                     <p>
                       All core navigation features (Dijkstra algorithm, station search, route calculation and interactive map) remain completely open and public without requiring an active session.
@@ -289,13 +303,13 @@ export function ProfilePage() {
                 to="/planner"
                 className="btn-primary text-xs py-3 px-5 text-center flex-1"
               >
-                Open Route Planner
+                {t('profile.planJourneyBtn')}
               </Link>
               <Link
                 to="/tickets"
                 className="btn-ghost text-xs py-3 px-5 text-center flex-1"
               >
-                View Demo Tickets
+                {t('profile.viewAllTickets', { count: tickets.length })}
               </Link>
             </div>
           </div>
@@ -303,7 +317,7 @@ export function ProfilePage() {
       </main>
 
       <footer className="border-t border-white/[0.06] py-4 text-center text-xs text-gray-500 font-mono">
-        Delhi Metro Navigator · Firebase Authentication Active
+        {t('footer.rights')}
       </footer>
     </div>
   );

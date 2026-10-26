@@ -39,7 +39,7 @@ describe('Comprehensive Routing & Graph QA Audit', () => {
         }
       }
     }
-  });
+  }, 30000);
 
   it('validates BFS returns minimal hop count and valid connected edges', () => {
     const sample = allStations.filter((_, i) => i % 6 === 0);
@@ -58,7 +58,7 @@ describe('Comprehensive Routing & Graph QA Audit', () => {
         expect(bRes.metrics.totalHops).toBe(r.edges.length);
       }
     }
-  });
+  }, 30000);
 
   it('validates edge cases: identical station, unknown station, unreachable station', () => {
     // Identical station

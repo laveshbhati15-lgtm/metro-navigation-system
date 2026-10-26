@@ -1,35 +1,40 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { MetroRoute, LineSegment, LineCode } from '@/core/graph/types';
-import { LINE_COLORS, LINE_DISPLAY_NAMES } from '@/utils/lineColors';
+import { LINE_COLORS } from '@/utils/lineColors';
 import { formatDuration, estimateFare } from '@/utils/formatters';
 import { useJourneyStore } from '@/store/journeyStore';
 import { metroGraph } from '@/core/graph/MetroGraph';
+import { getStationDisplayName, getStationSecondaryName, getLocalizedLineName } from '@/i18n';
 
 interface StationItineraryProps {
   route: MetroRoute;
 }
 
 export function StationItinerary({ route }: StationItineraryProps) {
+  const { t, i18n } = useTranslation();
   const [expandAllStops, setExpandAllStops] = useState(false);
   const fare = estimateFare(route.totalStations);
 
   if (!route || route.lineSegments.length === 0) return null;
 
+  const lastStation = route.stations[route.stations.length - 1];
+
   return (
-    <div className="glass-card p-5 border border-white/10 bg-navy-900/90 shadow-2xl rounded-2xl animate-fade-in space-y-4">
+    <div className="rounded-2xl p-4 sm:p-5 border border-slate-800 bg-slate-900/90 shadow-xl backdrop-blur-md animate-fade-in space-y-4">
       {/* Header with Metrics & Expand Toggle */}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-white/[0.08]">
         <div>
           <div className="flex items-center gap-2 mb-0.5">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
             <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
-              Station-by-Station Itinerary
+              {t('itinerary.title')}
             </h3>
           </div>
           <p className="text-[11px] text-gray-400 font-mono">
-            {route.totalStations} stations • {formatDuration(route.totalTimeSeconds)}{' '}
-            <span className="text-gray-500">(est.)</span> • ₹{fare.amount}{' '}
-            <span className="text-gray-500">(est.)</span>
+            {route.totalStations} {t('planner.stations').toLowerCase()} • {formatDuration(route.totalTimeSeconds)}{' '}
+            <span className="text-gray-500">{t('hero.est')}</span> • ₹{fare.amount}{' '}
+            <span className="text-gray-500">{t('hero.est')}</span>
           </p>
         </div>
 
@@ -39,7 +44,7 @@ export function StationItinerary({ route }: StationItineraryProps) {
           onClick={() => setExpandAllStops(!expandAllStops)}
           className="text-xs font-mono px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-cyan-300 hover:text-white border border-white/10 transition-colors flex items-center gap-1.5"
         >
-          <span>{expandAllStops ? 'Collapse Intermediate Stops' : 'Expand All Stops'}</span>
+          <span>{expandAllStops ? t('itinerary.collapseStops') : t('itinerary.expandStops')}</span>
           <span>{expandAllStops ? '▲' : '▼'}</span>
         </button>
       </div>
@@ -61,6 +66,7 @@ export function StationItinerary({ route }: StationItineraryProps) {
                 : null
             }
             nextLine={route.lineSegments[segIdx + 1]?.line ?? null}
+            currentLang={i18n.language}
           />
         ))}
       </div>
@@ -70,10 +76,10 @@ export function StationItinerary({ route }: StationItineraryProps) {
         <span className="text-base">✓</span>
         <div className="leading-snug">
           <p className="font-semibold text-white">
-            Arrive at {route.stations[route.stations.length - 1].name}
+            {t('itinerary.arriveAt', { station: getStationDisplayName(lastStation, i18n.language) })}
           </p>
           <p className="text-[11px] text-emerald-400/80">
-            End of journey. Exit through designated automatic fare collection gates.
+            {t('itinerary.endOfJourney')}
           </p>
         </div>
       </div>
@@ -89,8 +95,9 @@ interface SegmentBlockProps {
   isFirstSegment: boolean;
   isLastSegment: boolean;
   expandAll: boolean;
-  interchangeAtEnd: { id: string; name: string } | null;
+  interchangeAtEnd: { id: string; name: string; nameHindi?: string } | null;
   nextLine: LineCode | null;
+  currentLang: string;
 }
 
 function SegmentBlock({
@@ -100,20 +107,30 @@ function SegmentBlock({
   expandAll,
   interchangeAtEnd,
   nextLine,
+  currentLang,
 }: SegmentBlockProps) {
+  const { t } = useTranslation();
   const [isLocallyExpanded, setIsLocallyExpanded] = useState(false);
   const isExpanded = expandAll || isLocallyExpanded;
   const setIndoorStation = useJourneyStore((s) => s.setIndoorStation);
 
   const lineColor = LINE_COLORS[segment.line] || '#0284c7';
-  const lineName = LINE_DISPLAY_NAMES[segment.line] || `${segment.line} Line`;
+  const lineName = getLocalizedLineName(segment.line, currentLang);
   const stopCount = segment.stations.length - 1;
   const startStation = segment.stations[0];
   const endStation = segment.stations[segment.stations.length - 1];
   const intermediateStations = segment.stations.slice(1, -1);
 
+  const startDisplayName = getStationDisplayName(startStation, currentLang);
+  const startSecondaryName = getStationSecondaryName(startStation, currentLang);
+  const endDisplayName = getStationDisplayName(endStation, currentLang);
+
+  const stopsLabel = currentLang === 'hi'
+    ? `${stopCount} स्टॉप`
+    : `${stopCount} stop${stopCount !== 1 ? 's' : ''}`;
+
   return (
-    <div className="rounded-xl bg-navy-800/60 border border-white/[0.06] p-3.5 space-y-3">
+    <div className="rounded-xl bg-slate-950/70 border border-slate-800/80 p-3.5 space-y-3">
       {/* Line Segment Header Strip */}
       <div className="flex items-center justify-between pb-2 border-b border-white/[0.05]">
         <div className="flex items-center gap-2">
@@ -125,8 +142,8 @@ function SegmentBlock({
             {lineName}
           </span>
           <span className="text-[10px] font-mono text-gray-400 bg-white/5 px-2 py-0.5 rounded border border-white/5">
-            {stopCount} stop{stopCount !== 1 ? 's' : ''} • ~{formatDuration(segment.durationSeconds)}{' '}
-            <span className="text-gray-500">(est.)</span>
+            {stopsLabel} • ~{formatDuration(segment.durationSeconds)}{' '}
+            <span className="text-gray-500">{t('hero.est')}</span>
           </span>
         </div>
 
@@ -136,7 +153,11 @@ function SegmentBlock({
             onClick={() => setIsLocallyExpanded(!isLocallyExpanded)}
             className="text-[11px] font-mono text-cyan-400 hover:text-white transition-colors flex items-center gap-1"
           >
-            <span>{isExpanded ? 'Hide Stops' : `${intermediateStations.length} intermediate stops`}</span>
+            <span>
+              {isExpanded
+                ? t('itinerary.hideStops')
+                : t('itinerary.intermediateStops', { count: intermediateStations.length })}
+            </span>
             <span>{isExpanded ? '▲' : '▼'}</span>
           </button>
         )}
@@ -160,25 +181,25 @@ function SegmentBlock({
             />
           </div>
           <div>
-            <p className="font-semibold text-white flex items-center gap-1.5">
-              <span>{isFirstSegment ? 'Board at' : 'Continue on'}</span>
-              <strong className="text-cyan-200">{startStation.name}</strong>
-              {startStation.nameHindi && (
+            <p className="font-semibold text-white flex items-center gap-1.5 flex-wrap">
+              <span>{isFirstSegment ? t('itinerary.boardAt') : t('itinerary.continueOn')}</span>
+              <strong className="text-cyan-200">{startDisplayName}</strong>
+              {startSecondaryName && (
                 <span className="text-[10px] text-gray-500 font-normal">
-                  ({startStation.nameHindi})
+                  ({startSecondaryName})
                 </span>
               )}
               <button
                 type="button"
                 onClick={() => setIndoorStation(startStation)}
                 className="text-[10px] font-mono text-cyan-400 hover:text-white px-1.5 py-0.5 rounded bg-white/5 border border-white/10 hover:border-cyan-400/40 transition-colors"
-                title={`View indoor and accessible layout for ${startStation.name}`}
+                title={t('itinerary.guideTooltip', { station: startDisplayName })}
               >
-                ♿ Guide
+                {t('itinerary.guideBtn')}
               </button>
             </p>
             <p className="text-[10px] text-gray-400 font-mono mt-0.5">
-              Direction towards {endStation.name}
+              {t('itinerary.directionTowards', { station: endDisplayName })}
             </p>
           </div>
         </div>
@@ -205,11 +226,11 @@ function SegmentBlock({
                     <span className="text-gray-500 font-mono mr-1.5 text-[10px]">
                       {idx + 1}.
                     </span>
-                    {station.name}
+                    {getStationDisplayName(station, currentLang)}
                   </span>
                   {station.isInterchange && (
                     <span className="text-[9px] font-mono text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20">
-                      Interchange
+                      {t('search.interchangeBadge')}
                     </span>
                   )}
                 </div>
@@ -222,7 +243,7 @@ function SegmentBlock({
               <span className="w-0.5 h-4 bg-white/20" />
             </div>
             <span className="text-[11px] text-gray-500 font-mono italic">
-              Traversing {intermediateStations.length} intermediate stop{intermediateStations.length !== 1 ? 's' : ''}
+              {t('hero.intermediateStopsCount', { count: intermediateStations.length })}
             </span>
           </div>
         ) : null}
@@ -236,18 +257,18 @@ function SegmentBlock({
             />
           </div>
           <div>
-            <p className="font-semibold text-white flex items-center gap-1.5">
-              <span>{isLastSegment ? 'Alight at' : 'Arrive at transfer node'}</span>
+            <p className="font-semibold text-white flex items-center gap-1.5 flex-wrap">
+              <span>{isLastSegment ? t('hero.alightAt') : t('itinerary.arriveAt', { station: '' }).trim()}</span>
               <strong className={isLastSegment ? 'text-emerald-300' : 'text-purple-300'}>
-                {endStation.name}
+                {endDisplayName}
               </strong>
               <button
                 type="button"
                 onClick={() => setIndoorStation(endStation)}
                 className="text-[10px] font-mono text-cyan-400 hover:text-white px-1.5 py-0.5 rounded bg-white/5 border border-white/10 hover:border-cyan-400/40 transition-colors"
-                title={`View indoor and accessible layout for ${endStation.name}`}
+                title={t('itinerary.guideTooltip', { station: endDisplayName })}
               >
-                ♿ Guide
+                {t('itinerary.guideBtn')}
               </button>
             </p>
           </div>
@@ -261,7 +282,11 @@ function SegmentBlock({
           <div className="space-y-1.5 flex-1">
             <div className="flex items-center justify-between gap-2">
               <p className="font-bold text-white">
-                Concourse Transfer at {interchangeAtEnd.name}
+                {t('itinerary.transferAt', {
+                  station: interchangeAtEnd.nameHindi && currentLang === 'hi'
+                    ? interchangeAtEnd.nameHindi
+                    : interchangeAtEnd.name,
+                })}
               </p>
               <button
                 type="button"
@@ -271,19 +296,15 @@ function SegmentBlock({
                 }}
                 className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 hover:text-white border border-purple-500/40 transition-colors flex items-center gap-1"
               >
-                <span>♿ Transfer Guide</span>
+                <span>{t('indoor.guideBadge')}</span>
                 <span>➔</span>
               </button>
             </div>
             <p className="text-[11px] text-purple-200 leading-relaxed">
-              Alight from the <strong style={{ color: lineColor }}>{lineName}</strong> and proceed to the{' '}
-              <strong style={{ color: LINE_COLORS[nextLine] || '#38bdf8' }}>
-                {LINE_DISPLAY_NAMES[nextLine] || `${nextLine} Line`}
-              </strong>{' '}
-              platform via the station concourse.
+              {t('itinerary.changeLine', { line: getLocalizedLineName(nextLine, currentLang) })}
             </p>
             <p className="text-[10px] text-purple-300/80 font-mono">
-              Calibrated pedestrian walking friction: ~3 min (180s) included in total travel time.
+              {t('itinerary.walkingFriction')}
             </p>
           </div>
         </div>

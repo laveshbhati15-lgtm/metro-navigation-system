@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
 @import 'leaflet/dist/leaflet.css';
 
 @tailwind base;
@@ -7,8 +7,8 @@
 
 /* ─── CSS Custom Properties ──────────────────────────────────────────────── */
 :root {
-  --font-display: 'Outfit', sans-serif;
-  --font-body:    'Inter', sans-serif;
+  --font-display: 'Outfit', 'Noto Sans Devanagari', sans-serif;
+  --font-body:    'Inter', 'Noto Sans Devanagari', sans-serif;
   --font-mono:    'JetBrains Mono', monospace;
 
   /* Metro line colors */

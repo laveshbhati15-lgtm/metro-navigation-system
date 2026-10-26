@@ -1,0 +1,1671 @@
+{
+  "_meta": {
+    "description": "Delhi Metro edge data — Verified 7 Lines: Yellow, Blue, Violet, Red, Green, Magenta, Pink",
+    "source": "DMRC Official Network Map — https://www.delhimetrorail.com",
+    "travelTimeNote": "travelTimeSeconds values are ESTIMATES (~120 s per segment). isEstimated=true on all entries. Replace with official data when available.",
+    "interchangeNote": "Interchange penalty (180 s) is applied by the routing engine, not stored in edges.",
+    "edgeDirectionNote": "Edges are one-directional. The graph builder adds both directions automatically.",
+    "lastVerified": "2026-10"
+  },
+  "edges": [
+    {
+      "from": "SAMAYPUR_BADLI",
+      "to": "ROHINI_SECTOR_18_19",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "ROHINI_SECTOR_18_19",
+      "to": "HAIDERPUR_BADLI_MOR",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "HAIDERPUR_BADLI_MOR",
+      "to": "JAHANGIRPURI",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "JAHANGIRPURI",
+      "to": "ADARSH_NAGAR",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "ADARSH_NAGAR",
+      "to": "AZADPUR",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "AZADPUR",
+      "to": "MODEL_TOWN",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MODEL_TOWN",
+      "to": "GTB_NAGAR",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "GTB_NAGAR",
+      "to": "VISHWA_VIDYALAYA",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "VISHWA_VIDYALAYA",
+      "to": "VIDHAN_SABHA",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "VIDHAN_SABHA",
+      "to": "CIVIL_LINES",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "CIVIL_LINES",
+      "to": "KASHMERE_GATE",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "KASHMERE_GATE",
+      "to": "CHANDNI_CHOWK",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "CHANDNI_CHOWK",
+      "to": "CHAWRI_BAZAR",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "CHAWRI_BAZAR",
+      "to": "NEW_DELHI",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "NEW_DELHI",
+      "to": "RAJIV_CHOWK",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "RAJIV_CHOWK",
+      "to": "PATEL_CHOWK",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "PATEL_CHOWK",
+      "to": "CENTRAL_SECRETARIAT",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "CENTRAL_SECRETARIAT",
+      "to": "UDYOG_BHAWAN",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "UDYOG_BHAWAN",
+      "to": "RACE_COURSE",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "RACE_COURSE",
+      "to": "JORBAGH",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "JORBAGH",
+      "to": "INA",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "INA",
+      "to": "AIIMS",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "AIIMS",
+      "to": "GREEN_PARK",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "GREEN_PARK",
+      "to": "HAUZ_KHAS",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "HAUZ_KHAS",
+      "to": "MALVIYA_NAGAR",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MALVIYA_NAGAR",
+      "to": "SAKET",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SAKET",
+      "to": "QUTAB_MINAR",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "QUTAB_MINAR",
+      "to": "CHHATTARPUR",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "CHHATTARPUR",
+      "to": "SULTANPUR",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SULTANPUR",
+      "to": "GHITORNI",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "GHITORNI",
+      "to": "ARJAN_GARH",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "ARJAN_GARH",
+      "to": "GURU_DRONACHARYA",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "GURU_DRONACHARYA",
+      "to": "SIKANDARPUR",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SIKANDARPUR",
+      "to": "MG_ROAD",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MG_ROAD",
+      "to": "IFFCO_CHOWK",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "IFFCO_CHOWK",
+      "to": "HUDA_CITY_CENTRE",
+      "line": "YELLOW",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "DWARKA_SEC_21",
+      "to": "DWARKA_SEC_8",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "DWARKA_SEC_8",
+      "to": "DWARKA_SEC_9",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "DWARKA_SEC_9",
+      "to": "DWARKA_SEC_10",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "DWARKA_SEC_10",
+      "to": "DWARKA_SEC_11",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "DWARKA_SEC_11",
+      "to": "DWARKA_SEC_12",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "DWARKA_SEC_12",
+      "to": "DWARKA_SEC_13",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "DWARKA_SEC_13",
+      "to": "DWARKA_SEC_14",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "DWARKA_SEC_14",
+      "to": "DWARKA",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "DWARKA",
+      "to": "DWARKA_MOR",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "DWARKA_MOR",
+      "to": "NAWADA",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "NAWADA",
+      "to": "UTTAM_NAGAR_WEST",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "UTTAM_NAGAR_WEST",
+      "to": "UTTAM_NAGAR_EAST",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "UTTAM_NAGAR_EAST",
+      "to": "JANAKPURI_WEST",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "JANAKPURI_WEST",
+      "to": "JANAKPURI_EAST",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "JANAKPURI_EAST",
+      "to": "TILAK_NAGAR",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "TILAK_NAGAR",
+      "to": "SUBHASH_NAGAR",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SUBHASH_NAGAR",
+      "to": "TAGORE_GARDEN",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "TAGORE_GARDEN",
+      "to": "RAJOURI_GARDEN",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "RAJOURI_GARDEN",
+      "to": "RAMESH_NAGAR",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "RAMESH_NAGAR",
+      "to": "MOTI_NAGAR",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MOTI_NAGAR",
+      "to": "KIRTI_NAGAR",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "KIRTI_NAGAR",
+      "to": "SHADIPUR",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SHADIPUR",
+      "to": "PATEL_NAGAR",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "PATEL_NAGAR",
+      "to": "RAJENDRA_PLACE",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "RAJENDRA_PLACE",
+      "to": "KAROL_BAGH",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "KAROL_BAGH",
+      "to": "JHANDEWALAN",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "JHANDEWALAN",
+      "to": "RAMAKRISHNA_ASHRAM_MARG",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "RAMAKRISHNA_ASHRAM_MARG",
+      "to": "RAJIV_CHOWK",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "RAJIV_CHOWK",
+      "to": "BARAKHAMBA_ROAD",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "BARAKHAMBA_ROAD",
+      "to": "MANDI_HOUSE",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MANDI_HOUSE",
+      "to": "SUPREME_COURT",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SUPREME_COURT",
+      "to": "INDRAPRASTHA",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "INDRAPRASTHA",
+      "to": "YAMUNA_BANK",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "YAMUNA_BANK",
+      "to": "LAXMI_NAGAR",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "LAXMI_NAGAR",
+      "to": "NIRMAN_VIHAR",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "NIRMAN_VIHAR",
+      "to": "PREET_VIHAR",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "PREET_VIHAR",
+      "to": "KARKARDUMA",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "KARKARDUMA",
+      "to": "ANAND_VIHAR",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "ANAND_VIHAR",
+      "to": "KAUSHAMBI",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "KAUSHAMBI",
+      "to": "VAISHALI",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "YAMUNA_BANK",
+      "to": "AKSHARDHAM",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "AKSHARDHAM",
+      "to": "MAYUR_VIHAR_1",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MAYUR_VIHAR_1",
+      "to": "MAYUR_VIHAR_EXTENSION",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MAYUR_VIHAR_EXTENSION",
+      "to": "NEW_ASHOK_NAGAR",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "NEW_ASHOK_NAGAR",
+      "to": "NOIDA_SEC_15",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "NOIDA_SEC_15",
+      "to": "NOIDA_SEC_16",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "NOIDA_SEC_16",
+      "to": "NOIDA_SEC_18",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "NOIDA_SEC_18",
+      "to": "BOTANICAL_GARDEN",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "BOTANICAL_GARDEN",
+      "to": "GOLF_COURSE",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "GOLF_COURSE",
+      "to": "NOIDA_CITY_CENTRE",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "NOIDA_CITY_CENTRE",
+      "to": "NOIDA_SEC_34",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "NOIDA_SEC_34",
+      "to": "NOIDA_SEC_52",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "NOIDA_SEC_52",
+      "to": "NOIDA_SEC_61",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "NOIDA_SEC_61",
+      "to": "NOIDA_SEC_59",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "NOIDA_SEC_59",
+      "to": "NOIDA_SEC_62",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "NOIDA_SEC_62",
+      "to": "NOIDA_ELECTRONIC_CITY",
+      "line": "BLUE",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "KASHMERE_GATE",
+      "to": "LAL_QILA",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "LAL_QILA",
+      "to": "JAMA_MASJID",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "JAMA_MASJID",
+      "to": "DELHI_GATE",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "DELHI_GATE",
+      "to": "ITO",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "ITO",
+      "to": "MANDI_HOUSE",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MANDI_HOUSE",
+      "to": "JANPATH",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "JANPATH",
+      "to": "CENTRAL_SECRETARIAT",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "CENTRAL_SECRETARIAT",
+      "to": "KHAN_MARKET",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "KHAN_MARKET",
+      "to": "JLN_STADIUM",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "JLN_STADIUM",
+      "to": "JANGPURA",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "JANGPURA",
+      "to": "LAJPAT_NAGAR",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "LAJPAT_NAGAR",
+      "to": "MOOLCHAND",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MOOLCHAND",
+      "to": "KAILASH_COLONY",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "KAILASH_COLONY",
+      "to": "NEHRU_PLACE",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "NEHRU_PLACE",
+      "to": "KALKAJI_MANDIR",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "KALKAJI_MANDIR",
+      "to": "GOVIND_PURI",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "GOVIND_PURI",
+      "to": "HARKESH_NAGAR_OKHLA",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "HARKESH_NAGAR_OKHLA",
+      "to": "JASOLA_APOLLO",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "JASOLA_APOLLO",
+      "to": "SARITA_VIHAR",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SARITA_VIHAR",
+      "to": "MOHAN_ESTATE",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MOHAN_ESTATE",
+      "to": "TUGHLAKABAD_STATION",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "TUGHLAKABAD_STATION",
+      "to": "BADARPUR_BORDER",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "BADARPUR_BORDER",
+      "to": "SARAI",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SARAI",
+      "to": "NHPC_CHOWK",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "NHPC_CHOWK",
+      "to": "MEWALA_MAHARAJPUR",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MEWALA_MAHARAJPUR",
+      "to": "SECTOR_28",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SECTOR_28",
+      "to": "BADKAL_MOR",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "BADKAL_MOR",
+      "to": "OLD_FARIDABAD",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "OLD_FARIDABAD",
+      "to": "NEELAM_CHOWK_AJRONDA",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "NEELAM_CHOWK_AJRONDA",
+      "to": "BATA_CHOWK",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "BATA_CHOWK",
+      "to": "ESCORTS_MUJESAR",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "ESCORTS_MUJESAR",
+      "to": "SANT_SURDAS",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SANT_SURDAS",
+      "to": "RAJA_NAHAR_SINGH",
+      "line": "VIOLET",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "RITHALA",
+      "to": "ROHINI_WEST",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "ROHINI_WEST",
+      "to": "ROHINI_EAST",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "ROHINI_EAST",
+      "to": "PITAMPURA",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "PITAMPURA",
+      "to": "KOHAT_ENCLAVE",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "KOHAT_ENCLAVE",
+      "to": "NETAJI_SUBHASH_PLACE",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "NETAJI_SUBHASH_PLACE",
+      "to": "KESHAV_PURAM",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "KESHAV_PURAM",
+      "to": "KANHAIYA_NAGAR",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "KANHAIYA_NAGAR",
+      "to": "INDERLOK",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "INDERLOK",
+      "to": "SHASTRI_NAGAR",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SHASTRI_NAGAR",
+      "to": "PRATAP_NAGAR",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "PRATAP_NAGAR",
+      "to": "PUL_BANGASH",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "PUL_BANGASH",
+      "to": "TIS_HAZARI",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "TIS_HAZARI",
+      "to": "KASHMERE_GATE",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "KASHMERE_GATE",
+      "to": "SHASTRI_PARK",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SHASTRI_PARK",
+      "to": "SEELAMPUR",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SEELAMPUR",
+      "to": "WELCOME",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "WELCOME",
+      "to": "SHAHDARA",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SHAHDARA",
+      "to": "MANSAROVAR_PARK",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MANSAROVAR_PARK",
+      "to": "JHILMIL",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "JHILMIL",
+      "to": "DILSHAD_GARDEN",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "DILSHAD_GARDEN",
+      "to": "SHAHEED_NAGAR",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SHAHEED_NAGAR",
+      "to": "RAJ_BAGH",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "RAJ_BAGH",
+      "to": "MAJOR_MOHIT_SHARMA",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MAJOR_MOHIT_SHARMA",
+      "to": "SHYAM_PARK",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SHYAM_PARK",
+      "to": "MOHAN_NAGAR",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MOHAN_NAGAR",
+      "to": "ARTHALA",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "ARTHALA",
+      "to": "HINDON_RIVER",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "HINDON_RIVER",
+      "to": "SHAHEED_STHAL",
+      "line": "RED",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "KIRTI_NAGAR",
+      "to": "SATGURU_RAM_SINGH_MARG",
+      "line": "GREEN",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SATGURU_RAM_SINGH_MARG",
+      "to": "ASHOK_PARK_MAIN",
+      "line": "GREEN",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "INDERLOK",
+      "to": "ASHOK_PARK_MAIN",
+      "line": "GREEN",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "ASHOK_PARK_MAIN",
+      "to": "PUNJABI_BAGH",
+      "line": "GREEN",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "PUNJABI_BAGH",
+      "to": "PUNJABI_BAGH_WEST",
+      "line": "GREEN",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "PUNJABI_BAGH_WEST",
+      "to": "SHIVAJI_PARK",
+      "line": "GREEN",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SHIVAJI_PARK",
+      "to": "MADIPUR",
+      "line": "GREEN",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MADIPUR",
+      "to": "PASCHIM_VIHAR_EAST",
+      "line": "GREEN",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "PASCHIM_VIHAR_EAST",
+      "to": "PASCHIM_VIHAR_WEST",
+      "line": "GREEN",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "PASCHIM_VIHAR_WEST",
+      "to": "PEERAGARHI",
+      "line": "GREEN",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "PEERAGARHI",
+      "to": "UDYOG_NAGAR",
+      "line": "GREEN",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "UDYOG_NAGAR",
+      "to": "MAHARAJA_SURAJMAL_STADIUM",
+      "line": "GREEN",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MAHARAJA_SURAJMAL_STADIUM",
+      "to": "NANGLOI",
+      "line": "GREEN",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "NANGLOI",
+      "to": "NANGLOI_RAILWAY_STATION",
+      "line": "GREEN",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "NANGLOI_RAILWAY_STATION",
+      "to": "RAJDHANI_PARK",
+      "line": "GREEN",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "RAJDHANI_PARK",
+      "to": "MUNDKA",
+      "line": "GREEN",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MUNDKA",
+      "to": "MUNDKA_INDUSTRIAL_AREA",
+      "line": "GREEN",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MUNDKA_INDUSTRIAL_AREA",
+      "to": "GHEVRA",
+      "line": "GREEN",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "GHEVRA",
+      "to": "TIKRI_KALAN",
+      "line": "GREEN",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "TIKRI_KALAN",
+      "to": "TIKRI_BORDER",
+      "line": "GREEN",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "TIKRI_BORDER",
+      "to": "PANDIT_SHREE_RAM_SHARMA",
+      "line": "GREEN",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "PANDIT_SHREE_RAM_SHARMA",
+      "to": "BAHADURGARH_CITY",
+      "line": "GREEN",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "BAHADURGARH_CITY",
+      "to": "BRIGADIER_HOSHIYAR_SINGH",
+      "line": "GREEN",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "JANAKPURI_WEST",
+      "to": "DABRI_MOR",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "DABRI_MOR",
+      "to": "DASHRATHPURI",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "DASHRATHPURI",
+      "to": "PALAM",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "PALAM",
+      "to": "SADAR_BAZAR_CANTONMENT",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SADAR_BAZAR_CANTONMENT",
+      "to": "TERMINAL_1_IGI",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "TERMINAL_1_IGI",
+      "to": "SHANKAR_VIHAR",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SHANKAR_VIHAR",
+      "to": "VASANT_VIHAR",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "VASANT_VIHAR",
+      "to": "MUNIRKA",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MUNIRKA",
+      "to": "RK_PURAM",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "RK_PURAM",
+      "to": "IIT_DELHI",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "IIT_DELHI",
+      "to": "HAUZ_KHAS",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "HAUZ_KHAS",
+      "to": "PANCHSHEEL_PARK",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "PANCHSHEEL_PARK",
+      "to": "CHIRAG_DELHI",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "CHIRAG_DELHI",
+      "to": "GREATER_KAILASH",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "GREATER_KAILASH",
+      "to": "NEHRU_ENCLAVE",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "NEHRU_ENCLAVE",
+      "to": "KALKAJI_MANDIR",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "KALKAJI_MANDIR",
+      "to": "OKHLA_NSIC",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "OKHLA_NSIC",
+      "to": "SUKHDEV_VIHAR",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SUKHDEV_VIHAR",
+      "to": "JAMIA_MILLIA_ISLAMIA",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "JAMIA_MILLIA_ISLAMIA",
+      "to": "OKHLA_VIHAR",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "OKHLA_VIHAR",
+      "to": "JASOLA_VIHAR_SHAHEEN_BAGH",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "JASOLA_VIHAR_SHAHEEN_BAGH",
+      "to": "KALINDI_KUNJ",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "KALINDI_KUNJ",
+      "to": "OKHLA_BIRD_SANCTUARY",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "OKHLA_BIRD_SANCTUARY",
+      "to": "BOTANICAL_GARDEN",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MAJLIS_PARK",
+      "to": "AZADPUR",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "AZADPUR",
+      "to": "SHALIMAR_BAGH",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SHALIMAR_BAGH",
+      "to": "NETAJI_SUBHASH_PLACE",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "NETAJI_SUBHASH_PLACE",
+      "to": "SHAKURPUR",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SHAKURPUR",
+      "to": "PUNJABI_BAGH_WEST",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "PUNJABI_BAGH_WEST",
+      "to": "ESI_HOSPITAL",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "ESI_HOSPITAL",
+      "to": "RAJOURI_GARDEN",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "RAJOURI_GARDEN",
+      "to": "MAYAPURI",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MAYAPURI",
+      "to": "NARAINA_VIHAR",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "NARAINA_VIHAR",
+      "to": "DELHI_CANTT",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "DELHI_CANTT",
+      "to": "DURGABAI_DESHMUKH",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "DURGABAI_DESHMUKH",
+      "to": "SIR_VISHWESHWARAIAH",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SIR_VISHWESHWARAIAH",
+      "to": "BHIKAJI_CAMA_PLACE",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "BHIKAJI_CAMA_PLACE",
+      "to": "SAROJINI_NAGAR",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SAROJINI_NAGAR",
+      "to": "INA",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "INA",
+      "to": "SOUTH_EXTENSION",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SOUTH_EXTENSION",
+      "to": "LAJPAT_NAGAR",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "LAJPAT_NAGAR",
+      "to": "VINOBAPURI",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "VINOBAPURI",
+      "to": "ASHRAM",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "ASHRAM",
+      "to": "SARAI_KALE_KHAN",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "SARAI_KALE_KHAN",
+      "to": "MAYUR_VIHAR_1",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MAYUR_VIHAR_1",
+      "to": "MAYUR_VIHAR_POCKET_1",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MAYUR_VIHAR_POCKET_1",
+      "to": "TRILOKPURI_SANJAY_LAKE",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "TRILOKPURI_SANJAY_LAKE",
+      "to": "EAST_VINOD_NAGAR",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "EAST_VINOD_NAGAR",
+      "to": "MANDAWALI",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MANDAWALI",
+      "to": "IP_EXTENSION",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "IP_EXTENSION",
+      "to": "ANAND_VIHAR",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "ANAND_VIHAR",
+      "to": "KARKARDUMA",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "KARKARDUMA",
+      "to": "KARKARDUMA_COURT",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "KARKARDUMA_COURT",
+      "to": "KRISHNA_NAGAR",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "KRISHNA_NAGAR",
+      "to": "EAST_AZAD_NAGAR",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "EAST_AZAD_NAGAR",
+      "to": "WELCOME",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "WELCOME",
+      "to": "JAFFRABAD",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "JAFFRABAD",
+      "to": "MAUJPUR_BABARPUR",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "MAUJPUR_BABARPUR",
+      "to": "GOKULPURI",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "GOKULPURI",
+      "to": "JOHRI_ENCLAVE",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "JOHRI_ENCLAVE",
+      "to": "SHIV_VIHAR",
+      "line": "PINK",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    }
+  ]
+}

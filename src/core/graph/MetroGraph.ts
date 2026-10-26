@@ -147,7 +147,7 @@ export class MetroGraph {
       const name = station.name.toLowerCase();
       const hindi = station.nameHindi?.toLowerCase() ?? '';
 
-      if (name.startsWith(q)) {
+      if (name.startsWith(q) || (hindi && hindi.startsWith(q))) {
         results.push({ station, score: 2 }); // Prefix match = highest priority
       } else if (name.includes(q) || hindi.includes(q)) {
         results.push({ station, score: 1 }); // Substring match

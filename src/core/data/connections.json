@@ -1305,13 +1305,6 @@
     },
     {
       "from": "RK_PURAM",
-      "to": "HAUZ_KHAS",
-      "line": "MAGENTA",
-      "travelTimeSeconds": 120,
-      "isEstimated": true
-    },
-    {
-      "from": "HAUZ_KHAS",
       "to": "IIT_DELHI",
       "line": "MAGENTA",
       "travelTimeSeconds": 120,
@@ -1319,6 +1312,13 @@
     },
     {
       "from": "IIT_DELHI",
+      "to": "HAUZ_KHAS",
+      "line": "MAGENTA",
+      "travelTimeSeconds": 120,
+      "isEstimated": true
+    },
+    {
+      "from": "HAUZ_KHAS",
       "to": "PANCHSHEEL_PARK",
       "line": "MAGENTA",
       "travelTimeSeconds": 120,

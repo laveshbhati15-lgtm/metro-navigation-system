@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 
 export function ForgotPasswordPage() {
+  const { t } = useTranslation();
   const { resetPassword, isConfigured } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -13,7 +16,7 @@ export function ForgotPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
-      setError('Please provide your registered email address.');
+      setError(t('auth.provideRegisteredEmail'));
       return;
     }
 
@@ -23,7 +26,7 @@ export function ForgotPasswordPage() {
       await resetPassword(email);
       setSuccess(true);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to send password reset email.');
+      setError(err instanceof Error ? err.message : t('common.loading'));
     } finally {
       setIsLoading(false);
     }
@@ -49,20 +52,23 @@ export function ForgotPasswordPage() {
             </div>
             <div>
               <span className="text-sm font-extrabold text-white font-display tracking-tight">
-                Delhi Metro
+                {t('nav.delhiMetro')}
               </span>
               <span className="text-[10px] text-cyan-400 font-mono block -mt-1">
-                Password Recovery
+                {t('auth.passwordRecovery')}
               </span>
             </div>
           </Link>
 
-          <Link
-            to="/login"
-            className="text-xs font-mono text-gray-400 hover:text-cyan-300 transition-colors flex items-center gap-1.5"
-          >
-            <span>← Back to Sign In</span>
-          </Link>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <LanguageSwitcher />
+            <Link
+              to="/login"
+              className="text-xs font-mono text-gray-400 hover:text-cyan-300 transition-colors flex items-center gap-1.5"
+            >
+              <span>{t('auth.backToSignIn')}</span>
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -81,10 +87,10 @@ export function ForgotPasswordPage() {
                 </svg>
               </div>
               <h1 className="text-2xl font-extrabold text-white font-display">
-                Reset Password
+                {t('auth.resetPasswordTitle')}
               </h1>
               <p className="text-xs text-gray-400 mt-1.5 font-sans">
-                Enter your registered email and we&apos;ll send you instructions to reset your password.
+                {t('auth.resetPasswordSubtitle')}
               </p>
             </div>
 
@@ -97,9 +103,9 @@ export function ForgotPasswordPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
                 <div>
-                  <p className="font-semibold text-amber-300">Firebase Setup Required</p>
+                  <p className="font-semibold text-amber-300">{t('auth.firebaseRequired')}</p>
                   <p className="text-[11px] text-amber-200/90 mt-0.5 leading-relaxed">
-                    Set your Firebase credentials in <code className="text-cyan-300 font-mono">.env.local</code> to enable password recovery emails.
+                    {t('auth.firebaseRequiredDesc')}
                   </p>
                 </div>
               </div>
@@ -125,10 +131,10 @@ export function ForgotPasswordPage() {
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span>Recovery Email Dispatched</span>
+                    <span>{t('auth.recoveryEmailDispatched')}</span>
                   </div>
                   <p className="text-[11px] text-emerald-200/90 leading-relaxed">
-                    We sent a secure password reset link to <strong className="text-white">{email}</strong>. Check your inbox and spam folder.
+                    {t('auth.recoveryEmailNotice', { email })}
                   </p>
                 </div>
 
@@ -136,7 +142,7 @@ export function ForgotPasswordPage() {
                   to="/login"
                   className="w-full btn-primary py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
                 >
-                  Return to Sign In
+                  {t('auth.returnToSignIn')}
                 </Link>
 
                 <button
@@ -144,14 +150,14 @@ export function ForgotPasswordPage() {
                   onClick={() => setSuccess(false)}
                   className="w-full text-center text-xs font-mono text-cyan-400 hover:text-cyan-300 pt-1"
                 >
-                  Need to send to another address?
+                  {t('auth.needToSendAnother')}
                 </button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label htmlFor="reset-email" className="block text-xs font-medium text-gray-300 mb-1.5 font-sans">
-                    Email Address
+                    {t('auth.emailLabel')}
                   </label>
                   <input
                     id="reset-email"
@@ -176,10 +182,10 @@ export function ForgotPasswordPage() {
                   {isLoading ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Sending Instructions...</span>
+                      <span>{t('auth.sendingReset')}</span>
                     </>
                   ) : (
-                    <span>Send Reset Instructions</span>
+                    <span>{t('auth.sendResetBtn')}</span>
                   )}
                 </button>
 
@@ -188,7 +194,7 @@ export function ForgotPasswordPage() {
                     to="/login"
                     className="text-xs font-mono text-gray-400 hover:text-cyan-300 transition-colors"
                   >
-                    ← Back to Sign In
+                    {t('auth.backToSignIn')}
                   </Link>
                 </div>
               </form>
@@ -198,7 +204,7 @@ export function ForgotPasswordPage() {
       </main>
 
       <footer className="relative z-10 border-t border-white/[0.06] py-4 text-center text-xs text-gray-500 font-mono">
-        Delhi Metro Navigator · Protected with Firebase Authentication
+        {t('auth.footerProtected')}
       </footer>
     </div>
   );

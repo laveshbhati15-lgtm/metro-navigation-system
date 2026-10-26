@@ -1,14 +1,17 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useJourneyStore } from '@/store/journeyStore';
 import { metroGraph } from '@/core/graph/MetroGraph';
 import { bfs, type BFSResult } from '@/core/algorithm/bfs';
 import { LINE_COLORS } from '@/utils/lineColors';
 import { formatDuration } from '@/utils/formatters';
 import type { Station } from '@/core/graph/types';
+import { getStationDisplayName } from '@/i18n';
 
 export type AlgorithmMode = 'dijkstra' | 'bfs' | 'comparison';
 
 export function AlgorithmVisualizer() {
+  const { t, i18n } = useTranslation();
   const source = useJourneyStore((s) => s.source);
   const destination = useJourneyStore((s) => s.destination);
   const dijkstraResult = useJourneyStore((s) => s.dijkstraResult);
@@ -155,14 +158,14 @@ export function AlgorithmVisualizer() {
           </svg>
         </div>
         <div>
-          <h3 className="text-xl font-bold font-display text-white mb-2">Transit Algorithm Lab</h3>
+          <h3 className="text-xl font-bold font-display text-white mb-2">{t('visualizer.labTitle')}</h3>
           <p className="text-sm text-gray-400 max-w-md mx-auto leading-relaxed">
-            Select an origin and destination station in the Journey Planner and click <strong>&quot;Calculate Optimal Route&quot;</strong> to visually compare Dijkstra&apos;s algorithm and Breadth-First Search (BFS) on the Delhi Metro network.
+            {t('visualizer.labSubtitle')}
           </p>
         </div>
 
         <div className="pt-4 border-t border-white/10 max-w-md mx-auto">
-          <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-3">Try A Benchmark Journey</p>
+          <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-3">{t('visualizer.tryBenchmark')}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left">
             <button
               type="button"
@@ -172,9 +175,9 @@ export function AlgorithmVisualizer() {
               <div className="flex items-center gap-1.5 font-medium text-white mb-1">
                 <span className="w-2 h-2 rounded-full bg-[#7b2d8b]" />
                 <span className="w-2 h-2 rounded-full bg-[#2176ae]" />
-                Kashmere Gate → Botanical Garden
+                {t('visualizer.kgToBg')}
               </div>
-              <span className="text-gray-500">Violet to Blue interchange</span>
+              <span className="text-gray-500">{t('visualizer.kgToBgDesc')}</span>
             </button>
             <button
               type="button"
@@ -184,15 +187,18 @@ export function AlgorithmVisualizer() {
               <div className="flex items-center gap-1.5 font-medium text-white mb-1">
                 <span className="w-2 h-2 rounded-full bg-[#f4c430]" />
                 <span className="w-2 h-2 rounded-full bg-[#2176ae]" />
-                Chandni Chowk → Karol Bagh
+                {t('visualizer.ccToKb')}
               </div>
-              <span className="text-gray-500">Rajiv Chowk transfer hub</span>
+              <span className="text-gray-500">{t('visualizer.ccToKbDesc')}</span>
             </button>
           </div>
         </div>
       </div>
     );
   }
+
+  const srcDisplay = getStationDisplayName(source, i18n.language);
+  const dstDisplay = getStationDisplayName(destination, i18n.language);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -202,12 +208,12 @@ export function AlgorithmVisualizer() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-500/20 text-cyan-300 border border-blue-500/30">
-                Algorithm Lab
+                {t('visualizer.labBadge')}
               </span>
-              <span className="text-xs text-gray-400 font-mono">124-Vertex Transit Graph G = (V, E)</span>
+              <span className="text-xs text-gray-400 font-mono">{t('visualizer.graphVertexLabel')}</span>
             </div>
             <h3 className="text-lg font-bold font-display text-white">
-              {source?.name} <span className="text-gray-500">→</span> {destination?.name}
+              {srcDisplay} <span className="text-gray-500">→</span> {dstDisplay}
             </h3>
           </div>
 
@@ -220,7 +226,7 @@ export function AlgorithmVisualizer() {
             <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
             </svg>
-            Return to Map
+            {t('visualizer.returnToMap')}
           </button>
         </div>
 
@@ -236,7 +242,7 @@ export function AlgorithmVisualizer() {
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            Dijkstra (Weighted MinHeap)
+            {t('visualizer.dijkstraMode')}
           </button>
           <button
             type="button"
@@ -248,7 +254,7 @@ export function AlgorithmVisualizer() {
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            BFS (Unweighted FIFO Queue)
+            {t('visualizer.bfsMode')}
           </button>
           <button
             type="button"
@@ -260,7 +266,7 @@ export function AlgorithmVisualizer() {
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            Side-by-Side Comparison Lab
+            {t('visualizer.comparisonMode')}
           </button>
         </div>
       </div>
@@ -273,8 +279,8 @@ export function AlgorithmVisualizer() {
             <div>
               <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
                 <span>
-                  {mode === 'dijkstra' ? 'MinHeap Extraction Step' : 'FIFO Queue Step'}{' '}
-                  <strong className="text-white font-mono">{currentStepIndex + 1}</strong> of{' '}
+                  {mode === 'dijkstra' ? 'MinHeap Step' : 'FIFO Step'}{' '}
+                  <strong className="text-white font-mono">{currentStepIndex + 1}</strong> {t('visualizer.of')}{' '}
                   <strong className="text-gray-300 font-mono">{totalSteps}</strong>
                 </span>
                 <span className="text-gray-400 font-mono">
@@ -307,7 +313,7 @@ export function AlgorithmVisualizer() {
                     setIsPlaying(false);
                   }}
                   disabled={currentStepIndex === 0}
-                  title="Reset to first step"
+                  title={t('visualizer.reset')}
                   className="p-2 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-gray-300 hover:text-white transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -323,7 +329,7 @@ export function AlgorithmVisualizer() {
                     setIsPlaying(false);
                   }}
                   disabled={currentStepIndex === 0}
-                  title="Previous step"
+                  title={t('visualizer.stepBack')}
                   className="p-2 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-gray-300 hover:text-white transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -347,14 +353,14 @@ export function AlgorithmVisualizer() {
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
                       </svg>
-                      Pause
+                      {t('visualizer.pause')}
                     </>
                   ) : (
                     <>
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M8 5v14l11-7z" />
                       </svg>
-                      {currentStepIndex >= totalSteps - 1 ? 'Replay' : 'Play'}
+                      {currentStepIndex >= totalSteps - 1 ? t('visualizer.reset') : t('visualizer.play')}
                     </>
                   )}
                 </button>
@@ -367,7 +373,7 @@ export function AlgorithmVisualizer() {
                     setIsPlaying(false);
                   }}
                   disabled={currentStepIndex >= totalSteps - 1}
-                  title="Next step"
+                  title={t('visualizer.stepForward')}
                   className="p-2 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed text-gray-300 hover:text-white transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -394,7 +400,7 @@ export function AlgorithmVisualizer() {
 
               {/* Speed Selector */}
               <div className="flex items-center gap-1 bg-navy-800 border border-white/10 rounded-lg p-1 text-xs">
-                <span className="text-gray-400 text-[10px] uppercase font-semibold px-1">Speed:</span>
+                <span className="text-gray-400 text-[10px] uppercase font-semibold px-1">{t('visualizer.speed')}:</span>
                 {[0.5, 1, 2, 5].map((s) => (
                   <button
                     key={s}
@@ -421,7 +427,7 @@ export function AlgorithmVisualizer() {
                 </h4>
                 {visitedStation?.id === destination?.id && (
                   <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-medium">
-                    Target Reached
+                    {t('visualizer.statusCompleted')}
                   </span>
                 )}
               </div>
@@ -439,10 +445,12 @@ export function AlgorithmVisualizer() {
                       }}
                     />
                     <div>
-                      <h4 className="text-base font-bold text-white">{visitedStation.name}</h4>
+                      <h4 className="text-base font-bold text-white">
+                        {getStationDisplayName(visitedStation, i18n.language)}
+                      </h4>
                       <p className="text-xs text-gray-400">
                         Lines: {visitedStation.lines.join(', ')}{' '}
-                        {visitedStation.isInterchange && '• [Interchange Station]'}
+                        {visitedStation.isInterchange && `• [${t('search.interchangeBadge')}]`}
                       </p>
                     </div>
                   </div>
@@ -451,7 +459,7 @@ export function AlgorithmVisualizer() {
                     {mode === 'dijkstra' ? (
                       <>
                         <p>
-                          <strong>Extracted from MinHeap:</strong> &quot;{visitedStation.name}&quot; with lowest tentative travel cost of{' '}
+                          <strong>Extracted from MinHeap:</strong> &quot;{getStationDisplayName(visitedStation, i18n.language)}&quot; with lowest tentative travel cost of{' '}
                           <span className="text-amber-300 font-medium">
                             {formatDuration(currentDijkstraStep?.distances[visitedStation.id] ?? 0)}
                           </span>.
@@ -463,7 +471,7 @@ export function AlgorithmVisualizer() {
                     ) : (
                       <>
                         <p>
-                          <strong>Popped from FIFO Queue:</strong> &quot;{visitedStation.name}&quot; at breadth depth{' '}
+                          <strong>Popped from FIFO Queue:</strong> &quot;{getStationDisplayName(visitedStation, i18n.language)}&quot; at breadth depth{' '}
                           <span className="text-cyan-300 font-mono font-bold">
                             {currentBFSStep?.currentDepth ?? 0} hops
                           </span>{' '}
@@ -534,7 +542,7 @@ export function AlgorithmVisualizer() {
                         >
                           <div className="flex items-center gap-2 truncate">
                             <span className="text-[10px] text-gray-500 font-mono w-4">#{idx + 1}</span>
-                            <span className="truncate">{st?.name ?? item.node}</span>
+                            <span className="truncate">{st ? getStationDisplayName(st, i18n.language) : item.node}</span>
                           </div>
                           <span className="font-mono text-amber-300 ml-2 flex-shrink-0">
                             {formatDuration(item.dist)}
@@ -560,7 +568,7 @@ export function AlgorithmVisualizer() {
                         >
                           <div className="flex items-center gap-2 truncate">
                             <span className="text-[10px] text-gray-500 font-mono w-4">#{idx + 1}</span>
-                            <span className="truncate">{st?.name ?? nodeId}</span>
+                            <span className="truncate">{st ? getStationDisplayName(st, i18n.language) : nodeId}</span>
                           </div>
                           <span className="font-mono text-cyan-300 ml-2 flex-shrink-0">
                             Depth {currentBFSStep.hopDistances[nodeId] ?? '?'}
@@ -597,19 +605,19 @@ export function AlgorithmVisualizer() {
 
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div className="p-2.5 rounded-lg bg-navy-800/80 border border-white/5">
-                  <span className="text-[10px] text-gray-400 font-mono block">Estimated Time</span>
+                  <span className="text-[10px] text-gray-400 font-mono block">{t('hero.estimatedTime')}</span>
                   <span className="text-sm font-bold text-emerald-400 block mt-0.5 font-display">
                     {formatDuration(dijkstraResult.route.totalTimeSeconds)}
                   </span>
                 </div>
                 <div className="p-2.5 rounded-lg bg-navy-800/80 border border-white/5">
-                  <span className="text-[10px] text-gray-400 font-mono block">Line Transfers</span>
+                  <span className="text-[10px] text-gray-400 font-mono block">{t('hero.lineChanges')}</span>
                   <span className="text-sm font-bold text-amber-300 block mt-0.5 font-display">
                     {dijkstraResult.route.interchangeCount}
                   </span>
                 </div>
                 <div className="p-2.5 rounded-lg bg-navy-800/80 border border-white/5">
-                  <span className="text-[10px] text-gray-400 font-mono block">Stations</span>
+                  <span className="text-[10px] text-gray-400 font-mono block">{t('planner.stations')}</span>
                   <span className="text-sm font-bold text-white block mt-0.5 font-display">
                     {dijkstraResult.route.totalStations}
                   </span>
@@ -641,13 +649,13 @@ export function AlgorithmVisualizer() {
 
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div className="p-2.5 rounded-lg bg-navy-800/80 border border-white/5">
-                  <span className="text-[10px] text-gray-400 font-mono block">Estimated Time</span>
+                  <span className="text-[10px] text-gray-400 font-mono block">{t('hero.estimatedTime')}</span>
                   <span className="text-sm font-bold text-purple-300 block mt-0.5 font-display">
                     {formatDuration(bfsResult.route?.totalTimeSeconds ?? 0)}
                   </span>
                 </div>
                 <div className="p-2.5 rounded-lg bg-navy-800/80 border border-white/5">
-                  <span className="text-[10px] text-gray-400 font-mono block">Line Transfers</span>
+                  <span className="text-[10px] text-gray-400 font-mono block">{t('hero.lineChanges')}</span>
                   <span className="text-sm font-bold text-amber-300 block mt-0.5 font-display">
                     {bfsResult.route?.interchangeCount ?? 0}
                   </span>

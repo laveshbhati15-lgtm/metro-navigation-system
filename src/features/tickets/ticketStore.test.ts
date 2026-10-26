@@ -76,7 +76,7 @@ describe('Ticket Booking Store & Workflow (useTicketStore)', () => {
       ticketType: 'SINGLE',
     });
 
-    const EXPECTED_DISCLAIMER = 'DEMO TICKET — NOT VALID FOR METRO ENTRY';
+    const EXPECTED_DISCLAIMER = 'DEMO — NOT VALID FOR METRO TRAVEL';
     expect(ticket.disclaimer).toBe(EXPECTED_DISCLAIMER);
 
     // Verify QR payload is scannable JSON and explicitly marks valid: false with demo disclaimer
@@ -233,7 +233,7 @@ describe('Ticket Booking Store & Workflow (useTicketStore)', () => {
     expect(qr.bookingId).toBe(ticket.id);
     expect(qr.type).toBe('DEMO_TICKET');
     expect(qr.valid).toBe(false);
-    expect(qr.disclaimer).toBe('DEMO TICKET — NOT VALID FOR METRO ENTRY');
+    expect(qr.disclaimer).toBe('DEMO — NOT VALID FOR METRO TRAVEL');
     expect(qr.source.id).toBe('KASHMERE_GATE');
     expect(qr.source.name).toBe('Kashmere Gate');
     expect(qr.destination.id).toBe('BOTANICAL_GARDEN');
@@ -293,5 +293,69 @@ describe('Ticket Booking Store & Workflow (useTicketStore)', () => {
 
     const retrieved = store.getTicketById(t1.id);
     expect(retrieved?.id).toBe(t1.id);
+  });
+
+  it('marks fallback tickets as UNVERIFIED_DEMO and never as paid', () => {
+    const store = useTicketStore.getState();
+    const fallbackTicket = store.createDemoTicket({
+      source: dummySource,
+      destination: dummyDestination,
+      route: dummyRoute,
+      passengerCount: 1,
+      ticketType: 'SINGLE',
+      paymentStatus: 'UNVERIFIED_DEMO',
+      isVerifiedPayment: false,
+    });
+
+    expect(fallbackTicket.paymentStatus).toBe('UNVERIFIED_DEMO');
+    expect(fallbackTicket.isVerifiedPayment).toBe(false);
+    expect(fallbackTicket.razorpayOrderId).toBeUndefined();
+    expect(fallbackTicket.razorpayPaymentId).toBeUndefined();
+    expect(fallbackTicket.disclaimer).toBe('DEMO — NOT VALID FOR METRO TRAVEL');
+  });
+
+  it('correctly creates and saves a verified paid demo ticket with Razorpay IDs', () => {
+    const store = useTicketStore.getState();
+    const mockVerifiedTicket = {
+      id: 'DMRC-DEMO-VERIFIED-123',
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 86400000).toISOString(),
+      source: dummySource,
+      destination: dummyDestination,
+      routeSummary: {
+        label: dummyRoute.label,
+        totalTimeSeconds: dummyRoute.totalTimeSeconds,
+        totalStations: dummyRoute.totalStations,
+        interchangeCount: dummyRoute.interchangeCount,
+        lines: ['VIOLET', 'BLUE'] as any,
+        interchangeStations: [dummyDestination.name],
+      },
+      passengerCount: 2,
+      ticketType: 'RETURN' as const,
+      baseFare: 50,
+      totalFare: 180,
+      status: 'ACTIVE' as const,
+      paymentStatus: 'PAID' as const,
+      isVerifiedPayment: true,
+      razorpayOrderId: 'order_test_99999',
+      razorpayPaymentId: 'pay_test_88888',
+      disclaimer: 'DEMO — NOT VALID FOR METRO TRAVEL',
+      qrPayload: JSON.stringify({ bookingId: 'DMRC-DEMO-VERIFIED-123', valid: false }),
+    };
+
+    const verifiedTicket = store.saveVerifiedTicket(mockVerifiedTicket);
+
+    expect(verifiedTicket.id).toBe('DMRC-DEMO-VERIFIED-123');
+    expect(verifiedTicket.paymentStatus).toBe('PAID');
+    expect(verifiedTicket.isVerifiedPayment).toBe(true);
+    expect(verifiedTicket.razorpayOrderId).toBe('order_test_99999');
+    expect(verifiedTicket.razorpayPaymentId).toBe('pay_test_88888');
+    expect(verifiedTicket.disclaimer).toBe('DEMO — NOT VALID FOR METRO TRAVEL');
+
+    // Also verify it's the active ticket in store and in history
+    expect(useTicketStore.getState().activeTicketId).toBe('DMRC-DEMO-VERIFIED-123');
+    const stored = useTicketStore.getState().tickets.find((t) => t.id === 'DMRC-DEMO-VERIFIED-123');
+    expect(stored).toBeDefined();
+    expect(stored?.isVerifiedPayment).toBe(true);
   });
 });

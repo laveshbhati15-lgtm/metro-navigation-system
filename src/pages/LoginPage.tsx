@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 
 export function LoginPage() {
+  const { t, i18n } = useTranslation();
   const { user, loginWithEmail, loginWithGoogle, isConfigured } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -27,7 +30,7 @@ export function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password) {
-      setError('Please enter both your email address and password.');
+      setError(t('auth.provideValidEmail'));
       return;
     }
 
@@ -37,7 +40,7 @@ export function LoginPage() {
       await loginWithEmail(email, password);
       navigate(from, { replace: true });
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to sign in. Please try again.');
+      setError(err instanceof Error ? err.message : t('common.loading'));
     } finally {
       setIsLoading(false);
     }
@@ -55,6 +58,8 @@ export function LoginPage() {
       setIsGoogleLoading(false);
     }
   };
+
+  const isHindi = i18n.language === 'hi';
 
   return (
     <div className="min-h-screen bg-navy-950 text-gray-100 flex flex-col justify-between selection:bg-cyan-500/30 selection:text-cyan-200">
@@ -79,23 +84,27 @@ export function LoginPage() {
             </div>
             <div>
               <span className="text-sm font-extrabold text-white font-display tracking-tight">
-                Delhi Metro
+                {t('nav.delhiMetro')}
               </span>
               <span className="text-[10px] text-cyan-400 font-mono block -mt-1">
-                Metroverse Auth
+                {t('auth.authPortal')}
               </span>
             </div>
           </Link>
 
-          <Link
-            to="/planner"
-            className="text-xs font-mono text-gray-400 hover:text-cyan-300 transition-colors flex items-center gap-1.5"
-          >
-            <span>Skip to Public Planner</span>
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
-          </Link>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <LanguageSwitcher />
+            <Link
+              to="/planner"
+              className="text-xs font-mono text-gray-400 hover:text-cyan-300 transition-colors flex items-center gap-1.5"
+            >
+              <span className="hidden sm:inline">{t('auth.skipToPlanner')}</span>
+              <span className="sm:hidden">{t('nav.planner')}</span>
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -108,13 +117,13 @@ export function LoginPage() {
             <div className="text-center mb-6">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/25 text-cyan-300 text-[11px] font-mono mb-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                Passenger Portal
+                {t('auth.passengerPortal')}
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-white font-display">
-                Welcome Back
+                {t('auth.welcomeBack')}
               </h1>
               <p className="text-xs text-gray-400 mt-1 font-sans">
-                Sign in to manage your Delhi Metro journey experience
+                {t('auth.signInSubtitle')}
               </p>
             </div>
 
@@ -128,9 +137,9 @@ export function LoginPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
                 <div>
-                  <p className="font-semibold text-amber-300">Firebase Setup Required</p>
+                  <p className="font-semibold text-amber-300">{t('auth.firebaseRequired')}</p>
                   <p className="text-[11px] text-amber-200/90 mt-0.5 leading-relaxed">
-                    Set your Firebase project keys in <code className="text-cyan-300 font-mono">.env.local</code> (or Vercel Environment Variables) to enable live authentication.
+                    {t('auth.firebaseRequiredDesc')}
                   </p>
                 </div>
               </div>
@@ -182,13 +191,13 @@ export function LoginPage() {
                   />
                 </svg>
               )}
-              <span>Continue with Google</span>
+              <span>{t('auth.googleSignIn')}</span>
             </button>
 
             {/* Divider */}
             <div className="flex items-center gap-3 my-5">
               <div className="h-px bg-white/[0.08] flex-1" />
-              <span className="text-[11px] font-mono text-gray-500 uppercase tracking-wider">or email</span>
+              <span className="text-[11px] font-mono text-gray-500 uppercase tracking-wider">{t('auth.orEmail')}</span>
               <div className="h-px bg-white/[0.08] flex-1" />
             </div>
 
@@ -196,7 +205,7 @@ export function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="login-email" className="block text-xs font-medium text-gray-300 mb-1.5 font-sans">
-                  Email Address
+                  {t('auth.emailLabel')}
                 </label>
                 <div className="relative">
                   <input
@@ -225,13 +234,13 @@ export function LoginPage() {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label htmlFor="login-password" className="text-xs font-medium text-gray-300 font-sans">
-                    Password
+                    {t('auth.passwordLabel')}
                   </label>
                   <Link
                     to="/forgot-password"
                     className="text-[11px] font-mono text-cyan-400 hover:text-cyan-300 transition-colors"
                   >
-                    Forgot password?
+                    {t('auth.forgotPasswordLink')}
                   </Link>
                 </div>
                 <div className="relative">
@@ -259,9 +268,9 @@ export function LoginPage() {
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
                     className="absolute right-3.5 top-3.5 text-gray-400 hover:text-gray-200 transition-colors text-xs font-mono"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    aria-label={showPassword ? t('auth.hidePasswordAria') : t('auth.showPasswordAria')}
                   >
-                    {showPassword ? 'Hide' : 'Show'}
+                    {showPassword ? (isHindi ? 'छुपाएं' : 'Hide') : (isHindi ? 'दिखाएं' : 'Show')}
                   </button>
                 </div>
               </div>
@@ -275,10 +284,10 @@ export function LoginPage() {
                 {isLoading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Signing in...</span>
+                    <span>{t('auth.signingIn')}</span>
                   </>
                 ) : (
-                  <span>Sign In</span>
+                  <span>{t('auth.signInBtn')}</span>
                 )}
               </button>
             </form>
@@ -286,12 +295,12 @@ export function LoginPage() {
             {/* Footer switcher */}
             <div className="mt-6 pt-5 border-t border-white/[0.08] text-center">
               <p className="text-xs text-gray-400 font-sans">
-                Don&apos;t have a passenger account?{' '}
+                {t('auth.noAccountPrompt')}{' '}
                 <Link
                   to="/signup"
                   className="font-semibold text-cyan-400 hover:text-cyan-300 underline underline-offset-2 ml-1"
                 >
-                  Create Account
+                  {t('auth.registerBtn')}
                 </Link>
               </p>
             </div>
@@ -301,7 +310,7 @@ export function LoginPage() {
 
       {/* Footer Notice */}
       <footer className="relative z-10 border-t border-white/[0.06] py-4 text-center text-xs text-gray-500 font-mono">
-        Delhi Metro Navigator · Protected with Firebase Authentication
+        {t('auth.footerProtected')}
       </footer>
     </div>
   );
