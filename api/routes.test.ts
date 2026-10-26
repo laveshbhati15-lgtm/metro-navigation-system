@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as crypto from 'crypto';
-import createOrderHandler from './createRazorpayOrder';
-import verifyPaymentHandler from './verifyRazorpayPayment';
-import webhookHandler from './razorpayWebhook';
+import createOrderHandler from './createRazorpayOrder.js';
+import verifyPaymentHandler from './verifyRazorpayPayment.js';
+import webhookHandler from './razorpayWebhook.js';
 
 const TEST_KEY_ID = 'rzp_test_mock1234567890';
 const TEST_KEY_SECRET = 'mockSecretKey9876543210';
@@ -12,7 +12,7 @@ const TEST_WEBHOOK_SECRET = 'mockWebhookSecret11223344';
 const bookingsStore = new Map<string, any>();
 
 // Mock Firebase Admin
-vi.mock('./_lib/firebaseAdmin', () => {
+vi.mock('./_lib/firebaseAdmin.js', () => {
   const mockDb = {
     collection: (colName: string) => {
       if (colName !== 'demo_bookings') {
@@ -86,8 +86,8 @@ vi.mock('./_lib/firebaseAdmin', () => {
 });
 
 // Mock Razorpay API Client
-vi.mock('./_lib/razorpay', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('./_lib/razorpay')>();
+vi.mock('./_lib/razorpay.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./_lib/razorpay.js')>();
   return {
     ...actual,
     createOrderOnRazorpay: vi.fn(async (amountInPaise: number, receipt: string) => ({

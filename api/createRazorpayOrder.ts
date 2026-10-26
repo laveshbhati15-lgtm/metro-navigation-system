@@ -1,22 +1,10 @@
-import type { IncomingMessage, ServerResponse } from 'http';
-import { getRazorpayConfig } from './_lib/config';
-import { getFirebaseAdmin, FieldValue } from './_lib/firebaseAdmin';
-import { validateAndCalculateFare } from './_lib/fare';
-import { createOrderOnRazorpay } from './_lib/razorpay';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { getRazorpayConfig } from './_lib/config.js';
+import { getFirebaseAdmin, FieldValue } from './_lib/firebaseAdmin.js';
+import { validateAndCalculateFare } from './_lib/fare.js';
+import { createOrderOnRazorpay } from './_lib/razorpay.js';
 
-interface ExtendedRequest extends IncomingMessage {
-  body?: any;
-  method?: string;
-  headers: Record<string, string | string[] | undefined>;
-}
-
-interface ExtendedResponse extends ServerResponse {
-  status: (code: number) => ExtendedResponse;
-  json: (data: any) => void;
-  setHeader: (name: string, value: string | number | readonly string[]) => this;
-}
-
-function setCorsHeaders(req: ExtendedRequest, res: ExtendedResponse) {
+function setCorsHeaders(req: VercelRequest, res: VercelResponse) {
   const origin = req.headers.origin;
   if (origin && typeof origin === 'string') {
     res.setHeader('Access-Control-Allow-Origin', origin);
@@ -34,7 +22,7 @@ function generateDemoBookingId(): string {
   return `DMRC-DEMO-${yearMonth}-${randomChars}`;
 }
 
-export default async function handler(req: ExtendedRequest, res: ExtendedResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   setCorsHeaders(req, res);
 
   if (req.method === 'OPTIONS') {

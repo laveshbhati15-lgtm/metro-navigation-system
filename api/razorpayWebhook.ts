@@ -1,19 +1,6 @@
-import type { IncomingMessage, ServerResponse } from 'http';
-import { getRazorpayConfig } from './_lib/config';
-import { getFirebaseAdmin, FieldValue } from './_lib/firebaseAdmin';
-import { verifyWebhookSignature } from './_lib/razorpay';
-
-interface ExtendedRequest extends IncomingMessage {
-  body?: any;
-  method?: string;
-  headers: Record<string, string | string[] | undefined>;
-}
-
-interface ExtendedResponse extends ServerResponse {
-  status: (code: number) => ExtendedResponse;
-  json: (data: any) => void;
-  setHeader: (name: string, value: string | number | readonly string[]) => this;
-}
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { getFirebaseAdmin, FieldValue } from './_lib/firebaseAdmin.js';
+import { verifyWebhookSignature } from './_lib/razorpay.js';
 
 // Disable automatic body parser so we can verify exact HMAC signature on raw body bytes
 export const config = {
@@ -22,7 +9,7 @@ export const config = {
   },
 };
 
-async function getRawBody(req: ExtendedRequest): Promise<Buffer> {
+async function getRawBody(req: VercelRequest): Promise<Buffer> {
   if (Buffer.isBuffer(req.body)) {
     return req.body;
   }
@@ -40,7 +27,7 @@ async function getRawBody(req: ExtendedRequest): Promise<Buffer> {
   return Buffer.concat(chunks);
 }
 
-export default async function handler(req: ExtendedRequest, res: ExtendedResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed.' });
     return;

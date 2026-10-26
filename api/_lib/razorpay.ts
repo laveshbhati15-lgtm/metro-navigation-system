@@ -1,6 +1,6 @@
 import Razorpay from 'razorpay';
 import * as crypto from 'crypto';
-import { getRazorpayConfig } from './config';
+import { getRazorpayConfig } from './config.js';
 
 let razorpayClient: Razorpay | null = null;
 

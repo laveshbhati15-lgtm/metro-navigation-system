@@ -1,5 +1,5 @@
-import stationsData from '../../src/core/data/stations.json';
-import connectionsData from '../../src/core/data/connections.json';
+import stationsData from '../../src/core/data/stations.json' with { type: 'json' };
+import connectionsData from '../../src/core/data/connections.json' with { type: 'json' };
 
 export interface StationData {
   id: string;
