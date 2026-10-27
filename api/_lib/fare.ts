@@ -1,5 +1,6 @@
-import stationsData from '../../src/core/data/stations.json' with { type: 'json' };
-import connectionsData from '../../src/core/data/connections.json' with { type: 'json' };
+import { createRequire } from 'node:module';
+import fs from 'node:fs';
+import path from 'node:path';
 
 export interface StationData {
   id: string;
@@ -13,8 +14,27 @@ export interface EdgeData {
   line: string;
 }
 
-const stationsObj = (stationsData as any)?.default || stationsData || {};
-const connectionsObj = (connectionsData as any)?.default || connectionsData || {};
+const req = createRequire(import.meta.url);
+
+function loadJsonFile(relRequirePath: string, relCwdPath: string): any {
+  try {
+    return req(relRequirePath);
+  } catch {
+    try {
+      const p = path.resolve(process.cwd(), relCwdPath);
+      if (fs.existsSync(p)) {
+        return JSON.parse(fs.readFileSync(p, 'utf8'));
+      }
+    } catch {}
+  }
+  return null;
+}
+
+const stationsRaw = loadJsonFile('../../src/core/data/stations.json', 'src/core/data/stations.json');
+const connectionsRaw = loadJsonFile('../../src/core/data/connections.json', 'src/core/data/connections.json');
+
+const stationsObj = stationsRaw?.default || stationsRaw || {};
+const connectionsObj = connectionsRaw?.default || connectionsRaw || {};
 
 const rawStations: StationData[] = Array.isArray(stationsObj.stations)
   ? stationsObj.stations

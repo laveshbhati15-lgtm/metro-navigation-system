@@ -12,8 +12,8 @@ let lastInitError: string | null = null;
  * Validates configuration structure without logging credential content.
  */
 export function getFirebaseAdmin(): {
-  db: FirebaseFirestore.Firestore;
-  auth: ReturnType<typeof getAuth>;
+  db: FirebaseFirestore.Firestore | null;
+  auth: ReturnType<typeof getAuth> | null;
   isConfigured: boolean;
   initError: string | null;
 } {
@@ -58,14 +58,23 @@ export function getFirebaseAdmin(): {
         parsed.private_key = parsed.private_key.replace(/\\n/g, '\n');
       }
 
-      initializeApp({
-        credential: cert(parsed),
-        projectId: parsed.project_id || projectId,
-      });
+      const existingApps = getApps();
+      const app = existingApps.length > 0
+        ? existingApps[0]
+        : initializeApp({
+            credential: cert(parsed),
+            projectId: parsed.project_id || projectId,
+          });
+
+      dbInstance = getFirestore(app);
+      authInstance = getAuth(app);
       isConfigured = true;
       lastInitError = null;
     } else if (process.env.FIRESTORE_EMULATOR_HOST) {
-      initializeApp({ projectId });
+      const existingApps = getApps();
+      const app = existingApps.length > 0 ? existingApps[0] : initializeApp({ projectId });
+      dbInstance = getFirestore(app);
+      authInstance = getAuth(app);
       isConfigured = true;
       lastInitError = null;
     } else {
@@ -78,14 +87,9 @@ export function getFirebaseAdmin(): {
     console.error('Firebase Admin initialization error:', lastInitError);
   }
 
-  if (getApps().length > 0) {
-    dbInstance = getFirestore();
-    authInstance = getAuth();
-  }
-
   return {
-    db: dbInstance as FirebaseFirestore.Firestore,
-    auth: authInstance as ReturnType<typeof getAuth>,
+    db: dbInstance,
+    auth: authInstance,
     isConfigured,
     initError: lastInitError,
   };

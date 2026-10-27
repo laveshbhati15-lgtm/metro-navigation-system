@@ -23,44 +23,60 @@ function generateDemoBookingId(): string {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  setCorsHeaders(req, res);
-
   const requestId = `req_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
 
-  if (req.method === 'OPTIONS') {
-    res.status(204).end();
-    return;
-  }
-
-  // Safe health-check and configuration status (GET with ?health=1 or ?diagnostics=1)
-  if (
-    req.method === 'GET' &&
-    (req.url?.includes('health') ||
-      req.url?.includes('check') ||
-      req.url?.includes('diagnostic'))
-  ) {
-    const { isConfigured, initError } = getFirebaseAdmin();
-    const diagnostics = getDiagnosticsSummary({ isConfigured, initError });
-    res.status(200).json({
-      status: 'ok',
-      service: 'Delhi Metro Navigator Payment API',
-      disclaimer: 'DEMO — NOT VALID FOR METRO TRAVEL',
-      diagnostics,
-      requestId,
-    });
-    return;
-  }
-
-  if (req.method !== 'POST') {
-    res.status(405).json({
-      error: 'Method not allowed. Use POST.',
-      code: 'METHOD_NOT_ALLOWED',
-      requestId,
-    });
-    return;
-  }
-
   try {
+    setCorsHeaders(req, res);
+
+    if (req.method === 'OPTIONS') {
+      res.status(204).end();
+      return;
+    }
+
+    // Safe health-check and configuration status (GET with ?health=1 or ?diagnostics=1)
+    if (
+      req.method === 'GET' &&
+      (req.url?.includes('health') ||
+        req.url?.includes('check') ||
+        req.url?.includes('diagnostic'))
+    ) {
+      let isConfigured = false;
+      let initError: string | null = null;
+      try {
+        const adminResult = getFirebaseAdmin();
+        isConfigured = adminResult.isConfigured;
+        initError = adminResult.initError;
+      } catch (adminErr: any) {
+        initError = adminErr?.message || 'Firebase Admin initialization exception';
+      }
+
+      let diagnostics;
+      try {
+        diagnostics = getDiagnosticsSummary({ isConfigured, initError });
+      } catch (diagErr: any) {
+        diagnostics = {
+          error: diagErr?.message || 'Failed to generate diagnostics summary',
+        };
+      }
+
+      res.status(200).json({
+        status: 'ok',
+        service: 'Delhi Metro Navigator Payment API',
+        disclaimer: 'DEMO — NOT VALID FOR METRO TRAVEL',
+        diagnostics,
+        requestId,
+      });
+      return;
+    }
+
+    if (req.method !== 'POST') {
+      res.status(405).json({
+        error: 'Method not allowed. Use POST.',
+        code: 'METHOD_NOT_ALLOWED',
+        requestId,
+      });
+      return;
+    }
     // 1. Validate Razorpay Test Mode Configuration
     const config = getRazorpayConfig();
     if (!config) {
