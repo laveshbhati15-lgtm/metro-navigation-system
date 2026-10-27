@@ -1,11 +1,29 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import { getAuth } from 'firebase-admin/auth';
+import type { Auth } from 'firebase-admin/auth';
 
 let dbInstance: FirebaseFirestore.Firestore | null = null;
-let authInstance: ReturnType<typeof getAuth> | null = null;
+let authInstance: Auth | null = null;
 let isConfigured = false;
 let lastInitError: string | null = null;
+
+/**
+ * Lazily loads Firebase Auth SDK to prevent module-level ERR_REQUIRE_ESM crashes.
+ */
+export async function getFirebaseAuth(app?: any): Promise<Auth | null> {
+  if (authInstance) return authInstance;
+  try {
+    const authModule = await import('firebase-admin/auth');
+    const existingApps = getApps();
+    const targetApp = app || (existingApps.length > 0 ? existingApps[0] : undefined);
+    if (!targetApp) return null;
+    authInstance = authModule.getAuth(targetApp);
+    return authInstance;
+  } catch (err: any) {
+    console.warn('Firebase Admin Auth lazy-load notice:', err?.message);
+    return null;
+  }
+}
 
 /**
  * Initializes Firebase Admin SDK on Vercel using server-only FIREBASE_SERVICE_ACCOUNT_KEY.
@@ -13,11 +31,11 @@ let lastInitError: string | null = null;
  */
 export function getFirebaseAdmin(): {
   db: FirebaseFirestore.Firestore | null;
-  auth: ReturnType<typeof getAuth> | null;
+  auth: Auth | null;
   isConfigured: boolean;
   initError: string | null;
 } {
-  if (getApps().length > 0 && dbInstance && authInstance) {
+  if (getApps().length > 0 && dbInstance) {
     return { db: dbInstance, auth: authInstance, isConfigured: true, initError: null };
   }
 
@@ -67,14 +85,12 @@ export function getFirebaseAdmin(): {
           });
 
       dbInstance = getFirestore(app);
-      authInstance = getAuth(app);
       isConfigured = true;
       lastInitError = null;
     } else if (process.env.FIRESTORE_EMULATOR_HOST) {
       const existingApps = getApps();
       const app = existingApps.length > 0 ? existingApps[0] : initializeApp({ projectId });
       dbInstance = getFirestore(app);
-      authInstance = getAuth(app);
       isConfigured = true;
       lastInitError = null;
     } else {

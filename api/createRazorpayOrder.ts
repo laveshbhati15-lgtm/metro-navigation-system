@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getRazorpayConfig, getDiagnosticsSummary } from './_lib/config.js';
-import { getFirebaseAdmin, FieldValue } from './_lib/firebaseAdmin.js';
+import { getFirebaseAdmin, getFirebaseAuth, FieldValue } from './_lib/firebaseAdmin.js';
 import { validateAndCalculateFare } from './_lib/fare.js';
 import { createOrderOnRazorpay } from './_lib/razorpay.js';
 
@@ -135,12 +135,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const authHeader = req.headers.authorization;
     const headerStr = Array.isArray(authHeader) ? authHeader[0] : authHeader;
 
-    if (headerStr?.startsWith('Bearer ') && auth) {
+    if (headerStr?.startsWith('Bearer ')) {
       const idToken = headerStr.split('Bearer ')[1];
       try {
-        const decoded = await auth.verifyIdToken(idToken);
-        userId = decoded.uid;
-        userEmail = decoded.email || null;
+        const auth = await getFirebaseAuth();
+        if (auth) {
+          const decoded = await auth.verifyIdToken(idToken);
+          userId = decoded.uid;
+          userEmail = decoded.email || null;
+        }
       } catch (tokenErr: any) {
         console.warn(
           `[createRazorpayOrder] [${requestId}] [AUTH_TOKEN] Token verification bypassed for guest: ${tokenErr?.message}`

@@ -78,7 +78,9 @@ vi.mock('./_lib/firebaseAdmin.js', () => {
       db: mockDb,
       auth: mockAuth,
       isConfigured: true,
+      initError: null,
     }),
+    getFirebaseAuth: async () => mockAuth,
     FieldValue: {
       serverTimestamp: () => 'MOCK_SERVER_TIMESTAMP',
     },
