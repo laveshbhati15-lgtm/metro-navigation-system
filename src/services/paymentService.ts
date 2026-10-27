@@ -60,6 +60,19 @@ export function loadRazorpayCheckoutScript(): Promise<boolean> {
       return;
     }
 
+    const existing = document.querySelector<HTMLScriptElement>(
+      'script[src="https://checkout.razorpay.com/v1/checkout.js"]'
+    );
+    if (existing) {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
+      existing.addEventListener('load', () => resolve(true), { once: true });
+      existing.addEventListener('error', () => resolve(false), { once: true });
+      return;
+    }
+
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.async = true;
@@ -116,10 +129,19 @@ async function parseErrorResponse(
     message += ` [${errorData.code}${errorData.stage ? ` @ ${errorData.stage}` : ''}]`;
   }
 
+  if (errorData?.firestoreErrorCode || errorData?.firestoreErrorMessage) {
+    const details = [errorData.firestoreErrorCode, errorData.firestoreErrorMessage]
+      .filter(Boolean)
+      .join(': ');
+    message += ` (${details})`;
+  }
+
   const err: any = new Error(message);
   err.status = response.status;
   err.code = errorData?.code;
   err.stage = errorData?.stage;
+  err.firestoreErrorCode = errorData?.firestoreErrorCode;
+  err.firestoreErrorMessage = errorData?.firestoreErrorMessage;
   err.requestId = errorData?.requestId;
   return err;
 }

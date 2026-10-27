@@ -31,6 +31,7 @@ export const DemoTicketCard: React.FC<DemoTicketCardProps> = ({
   };
 
   const isCancelled = ticket.status === 'CANCELLED';
+  const isPaidVerified = Boolean(ticket.isVerifiedPayment && ticket.paymentStatus === 'PAID');
 
   const srcDisplay = getStationDisplayName(ticket.source, i18n.language);
   const srcSecondary = getStationSecondaryName(ticket.source, i18n.language);
@@ -38,14 +39,14 @@ export const DemoTicketCard: React.FC<DemoTicketCardProps> = ({
   const dstSecondary = getStationSecondaryName(ticket.destination, i18n.language);
 
   return (
-    <div className="w-full max-w-md mx-auto bg-navy-950 text-white rounded-3xl overflow-hidden border border-white/10 shadow-2xl relative font-sans">
+    <div className="w-full max-w-md mx-auto bg-navy-950 text-white rounded-2xl sm:rounded-3xl overflow-hidden border border-white/10 shadow-2xl relative font-sans">
       {/* ── Strict Demo Warning Ribbon ── */}
-      <div className="bg-gradient-to-r from-red-600 via-amber-600 to-red-600 text-white text-[11px] font-black tracking-widest text-center py-2 px-4 uppercase shadow-inner flex flex-wrap items-center justify-center gap-2">
+      <div className="bg-gradient-to-r from-red-600 via-amber-600 to-red-600 text-white text-[10px] sm:text-[11px] font-black tracking-widest text-center py-1.5 sm:py-2 px-3 sm:px-4 uppercase shadow-inner flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
         <span>⚠️</span>
         <span>DEMO — NOT VALID FOR METRO TRAVEL</span>
         <span className="opacity-75">·</span>
         <span>
-          {ticket.isVerifiedPayment
+          {isPaidVerified
             ? '✓ TEST MODE PAYMENT VERIFIED'
             : 'UNVERIFIED DEMO — NO PAYMENT PROCESSED'}
         </span>
@@ -53,9 +54,9 @@ export const DemoTicketCard: React.FC<DemoTicketCardProps> = ({
       </div>
 
       {/* ── Ticket Header ── */}
-      <div className="p-6 pb-4 bg-gradient-to-b from-navy-900 to-navy-950 border-b border-white/[0.08]">
+      <div className="p-4 sm:p-6 pb-3 sm:pb-4 bg-gradient-to-b from-navy-900 to-navy-950 border-b border-white/[0.08]">
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-glow-cyan/40">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <rect x="3" y="6" width="18" height="12" rx="3" strokeWidth="2" />
@@ -83,14 +84,14 @@ export const DemoTicketCard: React.FC<DemoTicketCardProps> = ({
               className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase border ${
                 isCancelled
                   ? 'bg-red-500/20 text-red-300 border-red-500/30'
-                  : ticket.isVerifiedPayment
+                  : isPaidVerified
                     ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
                     : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
               }`}
             >
               {isCancelled
                 ? t('tickets.cancelledNotice')
-                : ticket.isVerifiedPayment
+                : isPaidVerified
                   ? '✓ TEST PAID'
                   : 'UNVERIFIED DEMO'}
             </span>
@@ -105,7 +106,7 @@ export const DemoTicketCard: React.FC<DemoTicketCardProps> = ({
               {ticket.id}
             </span>
           </div>
-          {ticket.razorpayPaymentId && (
+          {ticket.razorpayPaymentId && isPaidVerified && (
             <div>
               <span className="text-[10px] text-gray-500 font-mono block">RZP PAYMENT ID</span>
               <span className="text-[11px] font-mono font-semibold text-emerald-400 select-all">
@@ -123,7 +124,7 @@ export const DemoTicketCard: React.FC<DemoTicketCardProps> = ({
       </div>
 
       {/* ── Journey Route Section ── */}
-      <div className="p-6 space-y-4">
+      <div className="p-4 sm:p-6 space-y-3 sm:space-y-4">
         {/* Origin & Destination Terminal Badges */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex-1">
@@ -230,16 +231,16 @@ export const DemoTicketCard: React.FC<DemoTicketCardProps> = ({
           </div>
           <div className="bg-white/[0.03] p-2 rounded-lg border border-white/[0.05]">
             <span className="text-[10px] text-gray-400 block">
-              {ticket.isVerifiedPayment ? t('tickets.farePaid') : 'DEMO FARE'}
+              {isPaidVerified ? t('tickets.farePaid') : 'DEMO FARE'}
             </span>
             <span
               className={`text-sm font-bold block mt-0.5 ${
-                ticket.isVerifiedPayment ? 'text-emerald-400' : 'text-amber-300'
+                isPaidVerified ? 'text-emerald-400' : 'text-amber-300'
               }`}
             >
               ₹{ticket.totalFare}{' '}
               <span className="text-[9px] text-gray-500 font-normal">
-                {ticket.isVerifiedPayment ? '(Test Paid)' : '(Unverified)'}
+                {isPaidVerified ? '(Test Paid)' : '(Unverified)'}
               </span>
             </span>
           </div>
@@ -254,7 +255,7 @@ export const DemoTicketCard: React.FC<DemoTicketCardProps> = ({
       </div>
 
       {/* ── QR Code Section ── */}
-      <div className="p-6 pt-4 flex flex-col items-center bg-navy-950 text-center space-y-3">
+      <div className="p-4 sm:p-6 pt-3 sm:pt-4 flex flex-col items-center bg-navy-950 text-center space-y-3">
         <div className="relative group">
           <DemoQRCode value={ticket.qrPayload} size={170} />
           {isCancelled && (

@@ -8,35 +8,40 @@ const TEST_KEY_ID = 'rzp_test_mock1234567890';
 const TEST_KEY_SECRET = 'mockSecretKey9876543210';
 const TEST_WEBHOOK_SECRET = 'mockWebhookSecret11223344';
 
-// In-memory Firestore store for test isolation
-const bookingsStore = new Map<string, any>();
+// In-memory Firestore store and mock database for test isolation
+const { bookingsStore, mockDb } = vi.hoisted(() => {
+  const bookingsStore = new Map<string, any>();
+  let docOverride: ((docId: string) => any) | null = null;
 
-// Mock Firebase Admin
-vi.mock('./_lib/firebaseAdmin.js', () => {
+  const defaultDoc = (docId: string) => ({
+    set: async (data: any) => {
+      bookingsStore.set(docId, { ...data });
+    },
+    get: async () => {
+      const data = bookingsStore.get(docId);
+      return {
+        exists: !!data,
+        data: () => (data ? { ...data } : undefined),
+      };
+    },
+    update: async (updates: any) => {
+      const existing = bookingsStore.get(docId);
+      if (!existing) throw new Error('Document not found');
+      bookingsStore.set(docId, { ...existing, ...updates });
+    },
+  });
+
   const mockDb = {
+    setDocOverride: (fn: ((docId: string) => any) | null) => {
+      docOverride = fn;
+    },
     collection: (colName: string) => {
       if (colName !== 'demo_bookings') {
         throw new Error(`Unexpected collection: ${colName}`);
       }
       return {
-        doc: (docId: string) => ({
-          set: async (data: any) => {
-            bookingsStore.set(docId, { ...data });
-          },
-          get: async () => {
-            const data = bookingsStore.get(docId);
-            return {
-              exists: !!data,
-              data: () => (data ? { ...data } : undefined),
-            };
-          },
-          update: async (updates: any) => {
-            const existing = bookingsStore.get(docId);
-            if (!existing) throw new Error('Document not found');
-            bookingsStore.set(docId, { ...existing, ...updates });
-          },
-        }),
-        where: (field: string, op: string, value: any) => ({
+        doc: (docId: string) => (docOverride ? docOverride(docId) : defaultDoc(docId)),
+        where: (field: string, _op: string, value: any) => ({
           limit: (_n: number) => ({
             get: async () => {
               const matched: any[] = [];
@@ -63,6 +68,11 @@ vi.mock('./_lib/firebaseAdmin.js', () => {
       };
     },
   };
+  return { bookingsStore, mockDb };
+});
+
+// Mock Firebase Admin
+vi.mock('./_lib/firebaseAdmin.js', () => {
 
   const mockAuth = {
     verifyIdToken: async (token: string) => {
@@ -79,8 +89,36 @@ vi.mock('./_lib/firebaseAdmin.js', () => {
       auth: mockAuth,
       isConfigured: true,
       initError: null,
+      metadata: {
+        isConfigured: true,
+        projectId: 'metro-navigation-system',
+        clientEmailDomain: 'metro-navigation-system.iam.gserviceaccount.com',
+        hasPrivateKey: true,
+        initError: null,
+      },
     }),
     getFirebaseAuth: async () => mockAuth,
+    probeFirestore: async (db: any) => {
+      if (!db) {
+        return {
+          ok: false,
+          stage: 'NOT_INITIALIZED',
+          code: 'DATABASE_UNAVAILABLE',
+          message: 'Firestore instance is not initialized',
+        };
+      }
+      return { ok: true, stage: 'CONNECTED' };
+    },
+    sanitizeFirestoreError: (err: any) => {
+      let code = 'UNKNOWN';
+      if (err?.code === 7) code = 'PERMISSION_DENIED';
+      else if (err?.code === 3) code = 'INVALID_ARGUMENT';
+      else if (err?.code === 5) code = 'NOT_FOUND';
+      else if (err?.code === 16) code = 'UNAUTHENTICATED';
+      else if (typeof err?.code === 'string') code = err.code;
+      const message = String(err?.details || err?.message || 'Error').replace(/[\r\n]+/g, ' ');
+      return { code, message };
+    },
     FieldValue: {
       serverTimestamp: () => 'MOCK_SERVER_TIMESTAMP',
     },
@@ -354,6 +392,84 @@ describe('Vercel API Routes: createRazorpayOrder', () => {
     expect(getResponseData().stage).toBe('CONFIG_VALIDATION');
     expect(getResponseData().requestId).toBeDefined();
   });
+
+  it('returns structured 500 DATABASE_WRITE_ERROR with sanitized PERMISSION_DENIED details when Firestore rejects write', async () => {
+    mockDb.setDocOverride(() => ({
+      set: async () => {
+        const err: any = new Error(
+          '7 PERMISSION_DENIED: Cloud Firestore API has not been used in project metro-navigation-system before or it is disabled.'
+        );
+        err.code = 7;
+        err.details =
+          'Cloud Firestore API has not been used in project metro-navigation-system before or it is disabled.';
+        throw err;
+      },
+      get: async () => ({ exists: false, data: () => null }),
+      update: async () => {},
+    }));
+
+    const { req, res, getStatusCode, getResponseData } = createMockReqRes({
+      method: 'POST',
+      body: {
+        sourceId: 'RAJIV_CHOWK',
+        destinationId: 'HAUZ_KHAS',
+        passengerCount: 1,
+      },
+    });
+
+    try {
+      await createOrderHandler(req, res);
+      expect(getStatusCode()).toBe(500);
+      const data = getResponseData();
+      expect(data.code).toBe('DATABASE_WRITE_ERROR');
+      expect(data.stage).toBe('FIRESTORE_WRITE');
+      expect(data.firestoreErrorCode).toBe('PERMISSION_DENIED');
+      expect(data.firestoreErrorMessage).toContain(
+        'Cloud Firestore API has not been used in project'
+      );
+      expect(data.requestId).toBeDefined();
+    } finally {
+      mockDb.setDocOverride(null);
+    }
+  });
+
+  it('returns structured 500 DATABASE_WRITE_ERROR with INVALID_ARGUMENT when document serialization fails', async () => {
+    mockDb.setDocOverride(() => ({
+      set: async () => {
+        const err: any = new Error(
+          '3 INVALID_ARGUMENT: Value for argument "documentPath" is not a valid resource path.'
+        );
+        err.code = 3;
+        err.details =
+          'Value for argument "documentPath" is not a valid resource path.';
+        throw err;
+      },
+      get: async () => ({ exists: false, data: () => null }),
+      update: async () => {},
+    }));
+
+    const { req, res, getStatusCode, getResponseData } = createMockReqRes({
+      method: 'POST',
+      body: {
+        sourceId: 'RAJIV_CHOWK',
+        destinationId: 'HAUZ_KHAS',
+        passengerCount: 1,
+      },
+    });
+
+    try {
+      await createOrderHandler(req, res);
+      expect(getStatusCode()).toBe(500);
+      const data = getResponseData();
+      expect(data.code).toBe('DATABASE_WRITE_ERROR');
+      expect(data.stage).toBe('FIRESTORE_WRITE');
+      expect(data.firestoreErrorCode).toBe('INVALID_ARGUMENT');
+      expect(data.firestoreErrorMessage).toContain('Value for argument');
+      expect(data.requestId).toBeDefined();
+    } finally {
+      mockDb.setDocOverride(null);
+    }
+  });
 });
 
 describe('Vercel API Routes: verifyRazorpayPayment', () => {
@@ -517,6 +633,71 @@ describe('Vercel API Routes: verifyRazorpayPayment', () => {
     expect(data.status).toBe('PAID');
     expect(data.message).toContain('already verified');
     expect(data.ticket.disclaimer).toBe('DEMO — NOT VALID FOR METRO TRAVEL');
+  });
+
+  it('returns structured 500 DATABASE_UPDATE_ERROR when Firestore update fails after signature verification', async () => {
+    const bookingId = 'DMRC-DEMO-TEST-UPDATE-FAIL';
+    const orderId = 'order_test_valid';
+    const paymentId = 'pay_test_fail_write';
+
+    bookingsStore.set(bookingId, {
+      bookingId,
+      razorpayOrderId: orderId,
+      amountInPaise: 4000,
+      baseFare: 40,
+      totalFare: 40,
+      status: 'PENDING',
+      sourceId: 'RAJIV_CHOWK',
+      sourceName: 'Rajiv Chowk',
+      destinationId: 'HAUZ_KHAS',
+      destinationName: 'Hauz Khas',
+      passengerCount: 1,
+      ticketType: 'SINGLE',
+    });
+
+    const validSignature = crypto
+      .createHmac('sha256', TEST_KEY_SECRET)
+      .update(`${orderId}|${paymentId}`)
+      .digest('hex');
+
+    mockDb.setDocOverride((id: string) => ({
+      get: async () => ({
+        exists: bookingsStore.has(id),
+        data: () => bookingsStore.get(id),
+      }),
+      update: async () => {
+        const err: any = new Error(
+          '7 PERMISSION_DENIED: Missing write permissions on database'
+        );
+        err.code = 7;
+        err.details = 'Missing write permissions on database';
+        throw err;
+      },
+      set: async () => {},
+    }));
+
+    const { req, res, getStatusCode, getResponseData } = createMockReqRes({
+      method: 'POST',
+      body: {
+        bookingId,
+        razorpayPaymentId: paymentId,
+        razorpaySignature: validSignature,
+      },
+    });
+
+    try {
+      await verifyPaymentHandler(req, res);
+      expect(getStatusCode()).toBe(500);
+      const data = getResponseData();
+      expect(data.code).toBe('DATABASE_UPDATE_ERROR');
+      expect(data.stage).toBe('FIRESTORE_UPDATE');
+      expect(data.firestoreErrorCode).toBe('PERMISSION_DENIED');
+      expect(data.firestoreErrorMessage).toContain('Missing write permissions');
+      expect(data.ticket).toBeUndefined();
+      expect(bookingsStore.get(bookingId).status).toBe('PENDING');
+    } finally {
+      mockDb.setDocOverride(null);
+    }
   });
 });
 

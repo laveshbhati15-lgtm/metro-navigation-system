@@ -14,6 +14,8 @@ import {
   createPaymentOrder,
   verifyServerPayment,
 } from '@/services/paymentService';
+import { LINE_COLORS } from '@/utils/lineColors';
+import { getStationDisplayName, getLocalizedLineName } from '@/i18n';
 
 type BookingStep =
   | 'CONFIG'
@@ -24,7 +26,7 @@ type BookingStep =
   | 'FAILED';
 
 export const BookingModal: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth() || {};
 
   const isBookingModalOpen = useTicketStore((s) => s.isBookingModalOpen);
@@ -43,11 +45,13 @@ export const BookingModal: React.FC = () => {
   const [passengerCount, setPassengerCount] = useState<number>(1);
   const [ticketType, setTicketType] = useState<TicketType>('SINGLE');
 
+  // Booking Mode: 'PAYMENT' (Razorpay Gateway Test Mode) or 'DEMO' (Explicit Offline Demo Pass)
+  const [bookingMode, setBookingMode] = useState<'PAYMENT' | 'DEMO'>('PAYMENT');
+
   // Payment Execution State
   const [step, setStep] = useState<BookingStep>('CONFIG');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [confirmedTicketId, setConfirmedTicketId] = useState<string | null>(null);
-  const [devFallbackAvailable, setDevFallbackAvailable] = useState<boolean>(false);
 
   // Sync state when modal opens
   useEffect(() => {
@@ -56,10 +60,12 @@ export const BookingModal: React.FC = () => {
       setDestination(preselectedDestination);
       setPassengerCount(1);
       setTicketType('SINGLE');
+      setBookingMode('PAYMENT');
       setStep('CONFIG');
       setErrorMessage(null);
       setConfirmedTicketId(null);
-      setDevFallbackAvailable(false);
+      // Preload Razorpay Checkout SDK so it is ready when passenger authorizes payment
+      loadRazorpayCheckoutScript().catch(() => {});
     }
   }, [isBookingModalOpen, preselectedSource, preselectedDestination]);
 
@@ -89,8 +95,8 @@ export const BookingModal: React.FC = () => {
     return { baseFare: base, totalFare: total };
   }, [currentRoute, passengerCount, ticketType]);
 
-  // Fallback handler for unverified demo creation
-  const handleIssueUnverifiedDemo = useCallback(() => {
+  // Handler for explicit demo pass creation (No payment processing)
+  const handleIssueExplicitDemo = useCallback(() => {
     if (!source || !destination || !currentRoute) return;
 
     const unverifiedTicket = createDemoTicket({
@@ -107,13 +113,12 @@ export const BookingModal: React.FC = () => {
     setStep('CONFIRMED');
   }, [source, destination, currentRoute, passengerCount, ticketType, createDemoTicket]);
 
-  // Primary payment initiator
+  // Primary payment initiator (Configured Payment Mode)
   const handleProceedToPayment = async () => {
     if (!source || !destination || !currentRoute) return;
 
     setStep('CREATING_ORDER');
     setErrorMessage(null);
-    setDevFallbackAvailable(false);
 
     try {
       // 1. Ensure Razorpay Checkout script is loaded
@@ -251,7 +256,6 @@ export const BookingModal: React.FC = () => {
         orderError.message ||
           'Failed to initialize payment order. Backend may be offline or credentials unconfigured.'
       );
-      setDevFallbackAvailable(true);
     }
   };
 
@@ -263,33 +267,33 @@ export const BookingModal: React.FC = () => {
 
   return (
     <div
-      className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-navy-950/80 backdrop-blur-md overflow-y-auto animate-fade-in"
+      className="fixed inset-0 z-[2000] flex items-center justify-center p-2.5 sm:p-4 bg-navy-950/80 backdrop-blur-md overflow-y-auto animate-fade-in"
       role="dialog"
       aria-modal="true"
       aria-labelledby="booking-modal-title"
     >
-      <div className="relative w-full max-w-xl my-8">
-        {/* Close Button Top-Right */}
+      <div className="relative w-full max-w-xl my-auto py-2 sm:py-4">
+        {/* Close Button Top-Right with Safe Mobile Positioning */}
         <button
           type="button"
           onClick={closeBookingModal}
           disabled={step === 'CREATING_ORDER' || step === 'VERIFYING'}
-          className="absolute -top-3 -right-3 z-20 w-8 h-8 rounded-full bg-navy-800 border border-white/20 text-gray-300 hover:text-white hover:bg-navy-700 disabled:opacity-40 flex items-center justify-center shadow-lg transition-colors"
+          className="absolute top-2 right-2 sm:-top-3 sm:-right-3 z-30 w-8 h-8 rounded-full bg-navy-800 border border-white/20 text-gray-300 hover:text-white hover:bg-navy-700 disabled:opacity-40 flex items-center justify-center shadow-lg transition-colors"
           aria-label={t('common.close')}
         >
           ✕
         </button>
 
         {confirmedTicket ? (
-          /* ── Confirmed E-Ticket View ── */
-          <div className="space-y-4">
+          /* ── Confirmed E-Ticket View with Scroll Containment ── */
+          <div className="max-h-[calc(100dvh-1.5rem)] sm:max-h-[90vh] overflow-y-auto p-1 space-y-4 overscroll-contain">
             <DemoTicketCard
               ticket={confirmedTicket}
               onCancel={cancelDemoTicket}
               onClose={closeBookingModal}
             />
 
-            <div className="flex items-center justify-center gap-3">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 pb-2">
               <button
                 type="button"
                 onClick={() => {
@@ -297,7 +301,7 @@ export const BookingModal: React.FC = () => {
                   setStep('CONFIG');
                   setErrorMessage(null);
                 }}
-                className="py-2.5 px-4 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] text-xs font-mono font-semibold text-gray-300 hover:text-white transition-colors"
+                className="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] text-xs font-mono font-semibold text-gray-300 hover:text-white transition-colors text-center"
               >
                 + {t('booking.bookAnotherBtn')}
               </button>
@@ -307,7 +311,7 @@ export const BookingModal: React.FC = () => {
                   closeBookingModal();
                   openHistoryModal();
                 }}
-                className="py-2.5 px-4 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-xs font-mono font-semibold text-cyan-300 hover:text-white transition-colors"
+                className="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-xs font-mono font-semibold text-cyan-300 hover:text-white transition-colors text-center"
               >
                 {t('booking.openInVaultBtn')}
               </button>
@@ -315,62 +319,79 @@ export const BookingModal: React.FC = () => {
           </div>
         ) : (
           /* ── Ticket Configuration & Payment Checkout View ── */
-          <div className="glass-card bg-navy-900/95 border border-white/10 p-6 sm:p-8 rounded-3xl shadow-2xl space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
-              <div>
+          <div className="glass-card bg-navy-900/95 border border-white/10 p-3.5 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[calc(100dvh-1.5rem)] sm:max-h-[90vh] overflow-hidden">
+            {/* Header (Docked at top) */}
+            <div className="flex items-start justify-between gap-3 pb-3 sm:pb-4 border-b border-white/[0.08] shrink-0 pr-8 sm:pr-0">
+              <div className="min-w-0 flex-1">
                 <h3
                   id="booking-modal-title"
-                  className="text-lg sm:text-xl font-bold font-display text-white tracking-tight flex items-center gap-2"
+                  className="text-base sm:text-xl font-bold font-display text-white tracking-tight flex items-center gap-2 truncate"
                 >
-                  <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
-                  {t('booking.modalTitle')}
+                  <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse shrink-0" />
+                  <span className="truncate">{t('booking.modalTitle')}</span>
                 </h3>
-                <p className="text-xs text-gray-400 font-mono mt-0.5">
+                <p className="text-[11px] sm:text-xs text-gray-400 font-mono mt-0.5 truncate">
                   Razorpay Standard Checkout · Test Mode
                 </p>
               </div>
 
-              <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-300 font-bold uppercase tracking-wider">
+              <span className="shrink-0 text-[10px] font-mono px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-300 font-bold uppercase tracking-wider">
                 Test Mode
               </span>
             </div>
 
-            {/* Strict Notice */}
-            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3 text-xs text-amber-200">
-              <span className="text-base leading-none">⚠️</span>
-              <div>
-                <strong className="font-bold block text-amber-100">
-                  DEMO — NOT VALID FOR METRO TRAVEL
-                </strong>
-                <p className="text-[11px] text-amber-200/80 mt-0.5">
-                  Transactions use simulated test currency in Razorpay Sandbox. No real money is charged.
-                </p>
+            {/* Scrollable Form Body with Safe Scrolling */}
+            <div className="overflow-y-auto pr-1 sm:pr-2 space-y-4 sm:space-y-5 flex-1 overscroll-contain py-2">
+              {/* Strict Notice */}
+              <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-2.5 sm:gap-3 text-xs text-amber-200">
+                <span className="text-base leading-none shrink-0">⚠️</span>
+                <div className="min-w-0">
+                  <strong className="font-bold block text-amber-100 text-[11px] sm:text-xs">
+                    DEMO — NOT VALID FOR METRO TRAVEL
+                  </strong>
+                  <p className="text-[10px] sm:text-[11px] text-amber-200/80 mt-0.5 leading-relaxed">
+                    Transactions use simulated test currency in Razorpay Sandbox. No real money is charged.
+                  </p>
+                </div>
               </div>
-            </div>
 
             {/* Error & Status Alerts */}
             {errorMessage && (
-              <div className="p-4 rounded-2xl bg-red-500/15 border border-red-500/30 text-xs space-y-2">
+              <div className="p-4 rounded-2xl bg-red-500/15 border border-red-500/30 text-xs space-y-3">
                 <div className="flex items-start gap-2.5 text-red-200 font-mono">
-                  <span className="text-red-400 text-sm">✕</span>
-                  <p className="flex-1 leading-relaxed">{errorMessage}</p>
+                  <span className="text-red-400 text-sm font-bold">✕</span>
+                  <div className="flex-1 space-y-1">
+                    <p className="font-bold text-red-100">Payment Order Failed</p>
+                    <p className="text-[11px] leading-relaxed text-red-200/90">{errorMessage}</p>
+                  </div>
                 </div>
 
-                {devFallbackAvailable && (
-                  <div className="pt-2 border-t border-red-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                    <span className="text-[11px] text-gray-300">
-                      Need to inspect UI without live backend emulators?
-                    </span>
+                <div className="pt-2 border-t border-red-500/20 flex flex-wrap items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStep('CONFIG');
+                      setErrorMessage(null);
+                      handleProceedToPayment();
+                    }}
+                    className="py-1.5 px-3 rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-100 text-[11px] font-mono font-bold transition-colors"
+                  >
+                    ↻ Retry Payment
+                  </button>
+                  {bookingMode === 'PAYMENT' && (
                     <button
                       type="button"
-                      onClick={handleIssueUnverifiedDemo}
-                      className="py-1.5 px-3 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-200 text-[11px] font-mono font-bold transition-colors"
+                      onClick={() => {
+                        setBookingMode('DEMO');
+                        setStep('CONFIG');
+                        setErrorMessage(null);
+                      }}
+                      className="text-[11px] font-mono text-amber-300 hover:text-amber-200 underline transition-colors"
                     >
-                      Issue Unverified Demo Ticket
+                      Switch to Explicit Demo Mode (No Payment)
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             )}
 
@@ -401,27 +422,51 @@ export const BookingModal: React.FC = () => {
               />
             </div>
 
-            {/* Route Summary */}
+            {/* Route Summary with Lines Traversed Badges and Transfer Stations */}
             {currentRoute && (
-              <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-2">
-                <div className="flex items-center justify-between text-xs">
+              <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-2.5 text-xs">
+                <div className="flex items-center justify-between">
                   <span className="text-gray-400 font-mono">Route Type</span>
                   <span className="font-semibold text-cyan-300">{currentRoute.label}</span>
                 </div>
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center justify-between">
                   <span className="text-gray-400 font-mono">Travel Metrics</span>
                   <span className="text-gray-200 font-mono">
                     {currentRoute.totalStations} stations · ~{formatDuration(currentRoute.totalTimeSeconds)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400 font-mono">Lines Traversed</span>
+                  <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                    {Array.from(new Set(currentRoute.edges.map((e) => e.line))).map((line) => (
+                      <span
+                        key={line}
+                        className="px-2 py-0.5 rounded text-[10px] font-bold text-white shadow-xs"
+                        style={{ backgroundColor: LINE_COLORS[line] }}
+                      >
+                        {getLocalizedLineName(line, i18n.language)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
                   <span className="text-gray-400 font-mono">Interchanges</span>
                   <span className="text-gray-200 font-mono">
                     {currentRoute.interchangeCount === 0
-                      ? 'Direct (0 line changes)'
+                      ? t('common.direct')
                       : `${currentRoute.interchangeCount} interchange(s)`}
                   </span>
                 </div>
+                {currentRoute.interchanges.length > 0 && (
+                  <div className="flex items-start justify-between gap-2 pt-1.5 border-t border-white/[0.05]">
+                    <span className="text-gray-400 font-mono shrink-0">Transfer At</span>
+                    <span className="text-amber-300 font-mono font-medium text-right text-[11px] break-words">
+                      {currentRoute.interchanges
+                        .map((s) => getStationDisplayName(s, i18n.language))
+                        .join(', ')}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
 
@@ -492,48 +537,132 @@ export const BookingModal: React.FC = () => {
               </div>
             </div>
 
-            {/* Payment Summary & Action Button */}
-            <div className="pt-2 border-t border-white/[0.08] flex items-center justify-between">
-              <div>
-                <span className="text-[10px] text-gray-400 font-mono block">Fare to Authorize</span>
-                <p className="text-xl sm:text-2xl font-black font-display text-emerald-400">
-                  ₹{fareCalculation.totalFare}{' '}
-                  <span className="text-xs font-normal text-gray-400 font-sans">(Test)</span>
-                </p>
-                <span className="text-[10px] text-gray-500 font-mono">
+            {/* Booking Mode Selector: Configured Payment Mode vs Explicit Demo Mode */}
+            <div className="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-mono font-semibold text-gray-300 block">
+                  Booking Mode
+                </label>
+                <span
+                  className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                    bookingMode === 'PAYMENT'
+                      ? 'bg-blue-500/10 text-blue-300 border border-blue-500/30'
+                      : 'bg-amber-500/10 text-amber-300 border border-amber-500/30'
+                  }`}
+                >
+                  {bookingMode === 'PAYMENT' ? 'Razorpay Test Checkout' : 'Explicit Demo Pass'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-1 bg-navy-950/80 rounded-xl border border-white/[0.05]">
+                <button
+                  type="button"
+                  id="btn-mode-payment"
+                  onClick={() => {
+                    setBookingMode('PAYMENT');
+                    setErrorMessage(null);
+                    setStep('CONFIG');
+                  }}
+                  disabled={step === 'CREATING_ORDER' || step === 'VERIFYING'}
+                  className={`py-2 px-3 rounded-lg text-xs font-mono font-bold transition-all flex items-center justify-center gap-1.5 text-center ${
+                    bookingMode === 'PAYMENT'
+                      ? 'bg-blue-600 text-white shadow-glow-blue'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <span>💳</span>
+                  <span>Pay with Razorpay (Test)</span>
+                </button>
+                <button
+                  type="button"
+                  id="btn-mode-demo"
+                  onClick={() => {
+                    setBookingMode('DEMO');
+                    setErrorMessage(null);
+                    setStep('CONFIG');
+                  }}
+                  disabled={step === 'CREATING_ORDER' || step === 'VERIFYING'}
+                  className={`py-2 px-3 rounded-lg text-xs font-mono font-bold transition-all flex items-center justify-center gap-1.5 text-center ${
+                    bookingMode === 'DEMO'
+                      ? 'bg-amber-600 text-white shadow-glow-amber'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <span>🎫</span>
+                  <span>Demo Mode (No Payment)</span>
+                </button>
+              </div>
+
+              <p className="text-[11px] font-mono text-gray-400 leading-tight">
+                {bookingMode === 'PAYMENT'
+                  ? 'Configured payment mode: Creates backend order and opens Razorpay Checkout UI.'
+                  : 'Explicit demo mode: Generates an offline unverified pass. Never represented as paid.'}
+              </p>
+            </div>
+            </div>
+
+            {/* Payment Summary & Action Button (Docked at Bottom of Card) */}
+            <div className="pt-3 border-t border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 bg-navy-900/95 pb-[max(0.25rem,env(safe-area-inset-bottom))]">
+              <div className="flex items-center justify-between sm:block">
+                <div>
+                  <span className="text-[10px] text-gray-400 font-mono block">
+                    {bookingMode === 'PAYMENT' ? 'Fare to Authorize' : 'Demo Fare'}
+                  </span>
+                  <p className="text-xl sm:text-2xl font-black font-display text-emerald-400 leading-tight">
+                    ₹{fareCalculation.totalFare}{' '}
+                    <span className="text-xs font-normal text-gray-400 font-sans">
+                      {bookingMode === 'PAYMENT' ? '(Test)' : '(Demo)'}
+                    </span>
+                  </p>
+                </div>
+                <span className="text-[10px] text-gray-500 font-mono sm:block">
                   {t('booking.baseRate')}: ₹{fareCalculation.baseFare}
                 </span>
               </div>
 
-              <button
-                type="button"
-                id="btn-confirm-demo-booking"
-                onClick={handleProceedToPayment}
-                disabled={!currentRoute || step !== 'CONFIG'}
-                className="btn-primary py-3 px-6 rounded-2xl font-bold flex items-center gap-2 shadow-glow-cyan/20 disabled:opacity-40 disabled:pointer-events-none"
-              >
-                {step === 'CREATING_ORDER' ? (
-                  <>
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Creating Order…</span>
-                  </>
-                ) : step === 'AWAITING_PAYMENT' ? (
-                  <>
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Checkout Active…</span>
-                  </>
-                ) : step === 'VERIFYING' ? (
-                  <>
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Verifying Signature…</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Pay with Razorpay (Test)</span>
-                    <span>→</span>
-                  </>
-                )}
-              </button>
+              {bookingMode === 'PAYMENT' ? (
+                <button
+                  type="button"
+                  id="btn-confirm-demo-booking"
+                  onClick={handleProceedToPayment}
+                  disabled={!currentRoute || step === 'CREATING_ORDER' || step === 'AWAITING_PAYMENT' || step === 'VERIFYING'}
+                  className="btn-primary w-full sm:w-auto py-3 px-6 rounded-2xl font-bold flex items-center justify-center gap-2 shadow-glow-cyan/20 disabled:opacity-40 disabled:pointer-events-none text-center"
+                >
+                  {step === 'CREATING_ORDER' ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Creating Order…</span>
+                    </>
+                  ) : step === 'AWAITING_PAYMENT' ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Checkout Active…</span>
+                    </>
+                  ) : step === 'VERIFYING' ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Verifying Signature…</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Pay with Razorpay (Test)</span>
+                      <span>→</span>
+                    </>
+                  )}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  id="btn-issue-explicit-demo"
+                  onClick={handleIssueExplicitDemo}
+                  disabled={!currentRoute}
+                  className="w-full sm:w-auto py-3 px-6 rounded-2xl font-bold font-mono text-xs text-amber-200 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 flex items-center justify-center gap-2 transition-all shadow-md active:translate-y-0.5 text-center"
+                >
+                  <span>🎫</span>
+                  <span>Issue Demo Ticket</span>
+                  <span>→</span>
+                </button>
+              )}
             </div>
           </div>
         )}

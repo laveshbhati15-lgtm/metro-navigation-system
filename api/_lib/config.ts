@@ -34,7 +34,16 @@ export interface BackendDiagnostics {
   firebase: {
     hasServiceAccountKey: boolean;
     isConfigured: boolean;
+    projectId?: string | null;
+    clientEmailDomain?: string | null;
+    hasPrivateKey?: boolean;
     initError: string | null;
+    firestoreProbe?: {
+      ok: boolean;
+      stage: string;
+      code?: string;
+      message?: string;
+    };
   };
   nodeEnv: string;
   disclaimer: string;
@@ -43,6 +52,17 @@ export interface BackendDiagnostics {
 export function getDiagnosticsSummary(firebaseStatus: {
   isConfigured: boolean;
   initError: string | null;
+  metadata?: {
+    projectId?: string | null;
+    clientEmailDomain?: string | null;
+    hasPrivateKey?: boolean;
+  };
+  firestoreProbe?: {
+    ok: boolean;
+    stage: string;
+    code?: string;
+    message?: string;
+  };
 }): BackendDiagnostics {
   const keyId = process.env.RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
@@ -64,7 +84,11 @@ export function getDiagnosticsSummary(firebaseStatus: {
     firebase: {
       hasServiceAccountKey: hasSaKey,
       isConfigured: firebaseStatus.isConfigured,
+      projectId: firebaseStatus.metadata?.projectId || null,
+      clientEmailDomain: firebaseStatus.metadata?.clientEmailDomain || null,
+      hasPrivateKey: firebaseStatus.metadata?.hasPrivateKey || false,
       initError: firebaseStatus.initError,
+      firestoreProbe: firebaseStatus.firestoreProbe,
     },
     nodeEnv: process.env.NODE_ENV || 'production',
     disclaimer: 'DEMO — NOT VALID FOR METRO TRAVEL',

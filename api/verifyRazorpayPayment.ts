@@ -1,6 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getRazorpayConfig, getDiagnosticsSummary } from './_lib/config.js';
-import { getFirebaseAdmin, FieldValue } from './_lib/firebaseAdmin.js';
+import {
+  getFirebaseAdmin,
+  probeFirestore,
+  sanitizeFirestoreError,
+  FieldValue,
+} from './_lib/firebaseAdmin.js';
 import { verifySignature, fetchRazorpayPayment } from './_lib/razorpay.js';
 import { formatVerifiedTicket } from './_lib/formatTicket.js';
 
@@ -35,17 +40,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ) {
       let isConfigured = false;
       let initError: string | null = null;
+      let metadata: any = null;
+      let dbInstance: any = null;
+
       try {
         const adminResult = getFirebaseAdmin();
         isConfigured = adminResult.isConfigured;
         initError = adminResult.initError;
+        metadata = adminResult.metadata;
+        dbInstance = adminResult.db;
       } catch (adminErr: any) {
         initError = adminErr?.message || 'Firebase Admin initialization exception';
       }
 
+      let firestoreProbe;
+      try {
+        firestoreProbe = await probeFirestore(dbInstance);
+      } catch (probeErr: any) {
+        firestoreProbe = { ok: false, stage: 'PROBE_FAILED', message: probeErr?.message };
+      }
+
       let diagnostics;
       try {
-        diagnostics = getDiagnosticsSummary({ isConfigured, initError });
+        diagnostics = getDiagnosticsSummary({ isConfigured, initError, metadata, firestoreProbe });
       } catch (diagErr: any) {
         diagnostics = {
           error: diagErr?.message || 'Failed to generate diagnostics summary',
@@ -119,13 +136,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const docRef = db.collection('demo_bookings').doc(bookingId);
       docSnap = await docRef.get();
     } catch (lookupErr: any) {
+      const sanitized = sanitizeFirestoreError(lookupErr);
       console.error(
-        `[verifyRazorpayPayment] [${requestId}] [BOOKING_LOOKUP_ERROR] Firestore read failed: ${lookupErr.message}`
+        `[verifyRazorpayPayment] [${requestId}] [BOOKING_LOOKUP] [${sanitized.code}] Firestore read failed: ${sanitized.message}`
       );
       res.status(500).json({
         error: 'Failed to retrieve booking from database.',
         code: 'DATABASE_READ_ERROR',
         stage: 'BOOKING_LOOKUP',
+        firestoreErrorCode: sanitized.code,
+        firestoreErrorMessage: sanitized.message,
         requestId,
       });
       return;
@@ -259,13 +279,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         qrPayload,
       });
     } catch (updateErr: any) {
+      const sanitized = sanitizeFirestoreError(updateErr);
       console.error(
-        `[verifyRazorpayPayment] [${requestId}] [FIRESTORE_UPDATE] Firestore update failed: ${updateErr.message}`
+        `[verifyRazorpayPayment] [${requestId}] [FIRESTORE_UPDATE] [${sanitized.code}] Firestore update failed: ${sanitized.message}`
       );
       res.status(500).json({
         error: 'Failed to update booking status in database.',
         code: 'DATABASE_UPDATE_ERROR',
         stage: 'FIRESTORE_UPDATE',
+        firestoreErrorCode: sanitized.code,
+        firestoreErrorMessage: sanitized.message,
         requestId,
       });
       return;

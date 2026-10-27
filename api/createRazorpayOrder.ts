@@ -1,6 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getRazorpayConfig, getDiagnosticsSummary } from './_lib/config.js';
-import { getFirebaseAdmin, getFirebaseAuth, FieldValue } from './_lib/firebaseAdmin.js';
+import {
+  getFirebaseAdmin,
+  getFirebaseAuth,
+  probeFirestore,
+  sanitizeFirestoreError,
+  FieldValue,
+} from './_lib/firebaseAdmin.js';
 import { validateAndCalculateFare } from './_lib/fare.js';
 import { createOrderOnRazorpay } from './_lib/razorpay.js';
 
@@ -42,17 +48,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ) {
       let isConfigured = false;
       let initError: string | null = null;
+      let metadata: any = null;
+      let dbInstance: any = null;
+
       try {
         const adminResult = getFirebaseAdmin();
         isConfigured = adminResult.isConfigured;
         initError = adminResult.initError;
+        metadata = adminResult.metadata;
+        dbInstance = adminResult.db;
       } catch (adminErr: any) {
         initError = adminErr?.message || 'Firebase Admin initialization exception';
       }
 
+      let firestoreProbe;
+      try {
+        firestoreProbe = await probeFirestore(dbInstance);
+      } catch (probeErr: any) {
+        firestoreProbe = { ok: false, stage: 'PROBE_FAILED', message: probeErr?.message };
+      }
+
       let diagnostics;
       try {
-        diagnostics = getDiagnosticsSummary({ isConfigured, initError });
+        diagnostics = getDiagnosticsSummary({ isConfigured, initError, metadata, firestoreProbe });
       } catch (diagErr: any) {
         diagnostics = {
           error: diagErr?.message || 'Failed to generate diagnostics summary',
@@ -231,13 +249,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         expiresAt: expiresAt.toISOString(),
       });
     } catch (dbErr: any) {
+      const sanitized = sanitizeFirestoreError(dbErr);
       console.error(
-        `[createRazorpayOrder] [${requestId}] [FIRESTORE_WRITE] Booking write failed: ${dbErr.message}`
+        `[createRazorpayOrder] [${requestId}] [FIRESTORE_WRITE] [${sanitized.code}] Booking write failed: ${sanitized.message}`
       );
       res.status(500).json({
         error: 'Failed to record booking in database.',
         code: 'DATABASE_WRITE_ERROR',
         stage: 'FIRESTORE_WRITE',
+        firestoreErrorCode: sanitized.code,
+        firestoreErrorMessage: sanitized.message,
         requestId,
       });
       return;
