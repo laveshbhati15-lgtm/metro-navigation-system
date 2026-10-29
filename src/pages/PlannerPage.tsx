@@ -97,16 +97,16 @@ function PlannerPageContent() {
           </Link>
 
           {/* Navigation Items & Account Controls */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <nav className="flex items-center gap-1 sm:gap-1.5 text-xs font-mono">
               <Link
                 to="/"
-                className="text-[var(--planner-text-secondary)] hover:text-[var(--planner-text-primary)] transition-colors px-2.5 py-1.5 rounded-md hover:bg-[var(--planner-surface-hover)]"
+                className="hidden sm:inline-block text-[var(--planner-text-secondary)] hover:text-[var(--planner-text-primary)] transition-colors px-2.5 py-1.5 rounded-md hover:bg-[var(--planner-surface-hover)]"
               >
                 {t('nav.backToHome')}
               </Link>
 
-              <span className="text-[var(--planner-accent-text)] bg-[var(--planner-accent-subtle)] border border-[var(--planner-border-highlight)] px-2.5 py-1.5 rounded-md font-medium">
+              <span className="hidden md:inline-block text-[var(--planner-accent-text)] bg-[var(--planner-accent-subtle)] border border-[var(--planner-border-highlight)] px-2.5 py-1.5 rounded-md font-medium">
                 {t('nav.planner')}
               </span>
 
@@ -114,7 +114,7 @@ function PlannerPageContent() {
                 type="button"
                 id="btn-nav-demo-tickets"
                 onClick={openHistoryModal}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[var(--planner-surface)] hover:bg-[var(--planner-surface-hover)] border border-[var(--planner-border)] hover:border-[var(--planner-border-highlight)] text-[var(--planner-text-secondary)] hover:text-[var(--planner-text-primary)] transition-colors shadow-xs"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[var(--planner-surface)] hover:bg-[var(--planner-surface-hover)] border border-[var(--planner-border)] hover:border-[var(--planner-border-highlight)] text-[var(--planner-text-secondary)] hover:text-[var(--planner-text-primary)] transition-colors shadow-xs shrink-0"
               >
                 <span className="text-xs">🎟️</span>
                 <span className="hidden sm:inline font-sans font-medium">{t('nav.demoTickets')}</span>
@@ -126,13 +126,15 @@ function PlannerPageContent() {
               </button>
             </nav>
 
-            <div className="h-4 w-px bg-[var(--planner-border)]" aria-hidden="true" />
+            <div className="h-4 w-px bg-[var(--planner-border)] shrink-0" aria-hidden="true" />
 
             {/* Exclusive Planner Theme Switcher */}
             <PlannerThemeSwitcher />
 
-            <LanguageSwitcher />
-            <AuthNavControl />
+            <LanguageSwitcher className="shrink-0" />
+            <div className="shrink-0">
+              <AuthNavControl />
+            </div>
           </div>
         </div>
       </header>

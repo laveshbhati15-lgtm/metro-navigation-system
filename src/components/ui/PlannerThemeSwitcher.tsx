@@ -47,20 +47,22 @@ export function PlannerThemeSwitcher() {
         type="button"
         id="btn-planner-theme-switch"
         aria-label={`Theme: ${t(currentThemeObj.nameKey)}`}
+        title={`Theme: ${t(currentThemeObj.nameKey)}`}
         aria-haspopup="menu"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((prev) => !prev)}
         className={cn(
-          'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-mono transition-colors border shadow-xs',
+          'flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-mono transition-colors border shadow-xs shrink-0',
           'bg-[var(--planner-surface)] border-[var(--planner-border)] text-[var(--planner-text-secondary)] hover:text-[var(--planner-text-primary)] hover:border-[var(--planner-border-highlight)]'
         )}
       >
         <span className="text-xs" aria-hidden="true">{currentThemeObj.icon}</span>
-        <span className="hidden md:inline font-sans text-xs font-medium">
-          {t(currentThemeObj.nameKey)}
+        <span className="font-sans text-xs font-medium">
+          <span className="hidden sm:inline">{t(currentThemeObj.nameKey)}</span>
+          <span className="sm:hidden">Theme</span>
         </span>
         <svg
-          className={cn('w-3 h-3 text-[var(--planner-text-muted)] transition-transform duration-200', isOpen && 'rotate-180')}
+          className={cn('w-3 h-3 text-[var(--planner-text-muted)] transition-transform duration-200 shrink-0', isOpen && 'rotate-180')}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
