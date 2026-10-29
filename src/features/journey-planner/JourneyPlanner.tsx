@@ -51,29 +51,29 @@ export function JourneyPlanner() {
   };
 
   return (
-    <div className="w-full space-y-5">
+    <div className="w-full space-y-4">
       {/* Passenger Journey Search Form */}
-      <div className="rounded-2xl p-5 sm:p-6 bg-slate-900/90 border border-slate-800 shadow-xl backdrop-blur-md">
+      <div className="rounded-xl p-4 sm:p-5 bg-[var(--planner-surface)] border border-[var(--planner-border)] shadow-xs text-[var(--planner-text-primary)] transition-colors">
         {/* Module Header */}
-        <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-800/80">
+        <div className="flex items-center justify-between pb-3.5 mb-3.5 border-b border-[var(--planner-border-subtle)]">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+            <div className="w-7 h-7 rounded-lg bg-[var(--planner-accent-subtle)] border border-[var(--planner-border-highlight)] flex items-center justify-center text-[var(--planner-accent-text)]">
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <circle cx="12" cy="12" r="9" strokeWidth="2" />
                 <path d="M12 7v5l3 3" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </div>
             <div>
-              <h2 className="text-sm sm:text-base font-bold font-display text-white tracking-tight">
+              <h2 className="text-sm sm:text-base font-bold text-[var(--planner-text-primary)] tracking-tight">
                 {t('planner.title')}
               </h2>
-              <p className="text-[11px] text-gray-400 font-sans">
+              <p className="text-[11px] text-[var(--planner-text-secondary)] font-sans">
                 {t('planner.selectPrompt')}
               </p>
             </div>
           </div>
 
-          <span className="hidden sm:inline-flex text-[10px] font-mono text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 px-2 py-0.5 rounded">
+          <span className="hidden sm:inline-flex text-[10px] font-mono text-[var(--planner-text-secondary)] bg-[var(--planner-surface-subtle)] border border-[var(--planner-border)] px-2 py-0.5 rounded">
             DMRC 223 Stn
           </span>
         </div>
@@ -87,12 +87,13 @@ export function JourneyPlanner() {
             onChange={setSource}
             excludeId={destination?.id}
             id="source-station"
+            variant="planner"
           />
 
           {/* Tactical Station Swap Row */}
-          <div className="flex items-center justify-between px-2 py-0.5">
-            <div className="flex items-center gap-2 text-[11px] font-mono text-gray-400">
-              <span className="w-4 h-px bg-slate-700" />
+          <div className="flex items-center justify-between px-1 -my-1">
+            <div className="flex items-center gap-2 text-[10px] font-mono text-[var(--planner-text-muted)]">
+              <span className="w-3 h-px bg-[var(--planner-border)]" />
               <span>{t('planner.swapStations')}</span>
             </div>
 
@@ -100,14 +101,14 @@ export function JourneyPlanner() {
               type="button"
               id="btn-swap-stations"
               aria-label={t('planner.swapAria')}
-              className="group flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 hover:border-cyan-500/50 text-gray-300 hover:text-cyan-300 text-xs font-mono transition-all duration-200 active:scale-95 shadow-sm"
+              className="group flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[var(--planner-surface-subtle)] hover:bg-[var(--planner-surface-hover)] border border-[var(--planner-border)] text-[var(--planner-text-secondary)] hover:text-[var(--planner-text-primary)] text-xs font-mono transition-colors active:scale-95 shadow-xs"
               onClick={swapStations}
             >
-              <svg className="w-3.5 h-3.5 transition-transform duration-300 group-hover:rotate-180 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3 transition-transform duration-300 group-hover:rotate-180 text-[var(--planner-accent-text)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" />
               </svg>
-              <span className="hidden sm:inline">{t('planner.swapStations')}</span>
+              <span className="text-[11px]">{t('planner.swapStations')}</span>
             </button>
           </div>
 
@@ -119,12 +120,13 @@ export function JourneyPlanner() {
             onChange={setDestination}
             excludeId={source?.id}
             id="destination-station"
+            variant="planner"
           />
 
           {/* Popular Interchange Hubs Quick Picks */}
-          <div className="pt-1">
-            <div className="flex items-center gap-1.5 mb-1.5 text-[10px] font-mono text-gray-400 uppercase tracking-wider">
-              <span>★</span>
+          <div className="pt-0.5">
+            <div className="flex items-center gap-1.5 mb-1.5 text-[10px] font-mono text-[var(--planner-text-secondary)] uppercase tracking-wider">
+              <span className="text-amber-500">★</span>
               <span>{t('planner.popularHubs')}</span>
             </div>
             <div className="flex items-center gap-1.5 flex-wrap">
@@ -139,10 +141,10 @@ export function JourneyPlanner() {
                     type="button"
                     onClick={() => handleHubClick(id)}
                     className={cn(
-                      'text-[11px] font-sans px-2.5 py-1 rounded-lg border transition-all duration-150',
+                      'text-[11px] font-sans px-2.5 py-0.5 rounded-md border transition-colors',
                       isSelected
-                        ? 'bg-cyan-500/20 text-cyan-200 border-cyan-400/50 font-medium'
-                        : 'bg-slate-800/60 hover:bg-slate-700/80 text-gray-300 border-slate-700/60 hover:border-slate-600'
+                        ? 'bg-[var(--planner-accent-subtle)] text-[var(--planner-accent-text)] border-[var(--planner-border-highlight)] font-medium'
+                        : 'bg-[var(--planner-surface-subtle)] hover:bg-[var(--planner-surface-hover)] text-[var(--planner-text-secondary)] hover:text-[var(--planner-text-primary)] border-[var(--planner-border)]'
                     )}
                   >
                     {displayName}
@@ -153,12 +155,12 @@ export function JourneyPlanner() {
           </div>
 
           {/* Accessibility Route Preference */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 hover:border-slate-700 transition-colors mt-2">
+          <div className="flex items-center justify-between p-2.5 rounded-lg bg-[var(--planner-surface-subtle)] border border-[var(--planner-border)] transition-colors mt-2">
             <div className="flex items-center gap-2.5">
               <span className="text-base">♿</span>
               <div>
-                <span className="text-xs font-semibold text-white block">{t('planner.stepFreeTitle')}</span>
-                <span className="text-[10px] text-gray-400 font-mono block">{t('planner.stepFreeSubtitle')}</span>
+                <span className="text-xs font-semibold text-[var(--planner-text-primary)] block">{t('planner.stepFreeTitle')}</span>
+                <span className="text-[10px] text-[var(--planner-text-secondary)] font-mono block">{t('planner.stepFreeSubtitle')}</span>
               </div>
             </div>
             <button
@@ -169,12 +171,12 @@ export function JourneyPlanner() {
               onClick={() => setAccessiblePreference(!accessiblePreference)}
               className={cn(
                 'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none',
-                accessiblePreference ? 'bg-cyan-500 shadow-sm' : 'bg-slate-700'
+                accessiblePreference ? 'bg-[var(--planner-accent)]' : 'bg-slate-400 dark:bg-slate-700'
               )}
             >
               <span
                 className={cn(
-                  'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                  'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out',
                   accessiblePreference ? 'translate-x-4' : 'translate-x-0'
                 )}
               />
@@ -183,8 +185,8 @@ export function JourneyPlanner() {
 
           {/* Validation Error Banner */}
           {error && (
-            <div role="alert" className="flex items-start gap-3 bg-rose-500/10 border border-rose-500/30 rounded-xl px-4 py-3 text-xs sm:text-sm text-rose-300 animate-fade-in font-sans">
-              <svg className="w-4 h-4 mt-0.5 flex-shrink-0 text-rose-400" fill="currentColor" viewBox="0 0 20 20">
+            <div role="alert" className="flex items-start gap-2.5 bg-rose-500/10 border border-rose-500/30 rounded-lg px-3.5 py-2.5 text-xs text-rose-500 dark:text-rose-300 font-sans">
+              <svg className="w-4 h-4 mt-0.5 flex-shrink-0 text-rose-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
               <span>{error}</span>
@@ -195,7 +197,7 @@ export function JourneyPlanner() {
           <button
             id="find-route-btn"
             type="button"
-            className="w-full mt-2 py-3 px-6 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 active:from-blue-700 active:to-cyan-700 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-md transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full mt-2 py-2.5 px-4 rounded-lg bg-[var(--planner-accent)] hover:opacity-90 active:opacity-100 text-white font-medium text-sm flex items-center justify-center gap-2 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
             onClick={calculateRoutes}
             disabled={isLoading || !source || !destination}
           >
@@ -220,7 +222,7 @@ export function JourneyPlanner() {
             <button
               id="btn-reset-journey"
               type="button"
-              className="w-full text-center text-xs font-mono text-gray-400 hover:text-white py-1.5 transition-colors"
+              className="w-full text-center text-xs font-mono text-[var(--planner-text-muted)] hover:text-[var(--planner-text-primary)] py-1 transition-colors"
               onClick={resetJourney}
             >
               {t('planner.resetBtn')}
@@ -231,11 +233,11 @@ export function JourneyPlanner() {
 
       {/* Route Results Section */}
       {routes.length > 0 && (
-        <div className="space-y-4 animate-fade-in">
+        <div className="space-y-3.5 animate-fade-in">
           {/* Header Bar: Alternatives Count & Visualizer Toggle */}
           <div className="flex items-center justify-between px-1">
-            <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-gray-300 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-cyan-400" />
+            <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--planner-text-secondary)] flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[var(--planner-accent-text)]" />
               <span>
                 {routes.length === 1
                   ? t('planner.optimalComputed')
@@ -246,7 +248,7 @@ export function JourneyPlanner() {
             <button
               type="button"
               onClick={() => setActiveView(activeView === 'visualizer' ? 'map' : 'visualizer')}
-              className="text-xs text-cyan-300 hover:text-white flex items-center gap-1.5 font-mono font-medium bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 px-2.5 py-1 rounded-lg transition-colors"
+              className="text-xs text-[var(--planner-accent-text)] hover:text-[var(--planner-text-primary)] flex items-center gap-1.5 font-mono font-medium bg-[var(--planner-surface)] hover:bg-[var(--planner-surface-hover)] border border-[var(--planner-border)] px-2.5 py-1 rounded-md transition-colors shadow-xs"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -257,8 +259,8 @@ export function JourneyPlanner() {
 
           {/* Route Option Tabs for Easy Comparison */}
           {routes.length > 1 && (
-            <div className="p-1 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-1.5 overflow-x-auto">
-              <span className="text-[10px] font-mono uppercase text-gray-500 pl-2 shrink-0">
+            <div className="p-1 rounded-lg bg-[var(--planner-surface)] border border-[var(--planner-border)] flex items-center gap-1.5 overflow-x-auto shadow-xs">
+              <span className="text-[10px] font-mono uppercase text-[var(--planner-text-muted)] pl-2 shrink-0">
                 {t('planner.routeOptions')}:
               </span>
               {routes.map((r, i) => (
@@ -267,14 +269,14 @@ export function JourneyPlanner() {
                   type="button"
                   onClick={() => setActiveRouteIndex(i)}
                   className={cn(
-                    'px-3 py-1.5 rounded-lg text-xs font-mono shrink-0 transition-all flex items-center gap-1.5',
+                    'px-2.5 py-1 rounded-md text-xs font-mono shrink-0 transition-colors flex items-center gap-1.5',
                     i === activeRouteIndex
-                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold shadow-sm'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+                      ? 'bg-[var(--planner-accent)] text-white font-semibold shadow-xs'
+                      : 'text-[var(--planner-text-secondary)] hover:text-[var(--planner-text-primary)] hover:bg-[var(--planner-surface-hover)]'
                   )}
                 >
                   <span>{r.label}</span>
-                  <span className="text-[10px] opacity-75">({formatDuration(r.totalTimeSeconds)})</span>
+                  <span className="text-[10px] opacity-80">({formatDuration(r.totalTimeSeconds)})</span>
                 </button>
               ))}
             </div>
@@ -299,7 +301,7 @@ export function JourneyPlanner() {
       )}
 
       {/* Transit Network Disclaimer */}
-      <p className="text-[11px] text-gray-500 text-center px-4 leading-relaxed font-mono">
+      <p className="text-[11px] text-[var(--planner-text-muted)] text-center px-4 leading-relaxed font-mono">
         {t('planner.disclaimer')}
       </p>
     </div>

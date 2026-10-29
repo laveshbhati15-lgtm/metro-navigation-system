@@ -111,7 +111,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // 2. Validate Firebase Admin / Firestore Availability
-    const { db, auth, isConfigured, initError } = getFirebaseAdmin();
+    const { db, isConfigured, initError } = getFirebaseAdmin();
     if (!isConfigured || !db) {
       console.error(
         `[createRazorpayOrder] [${requestId}] [DATABASE_UNAVAILABLE] Firebase Admin not configured. Cause: ${initError || 'FIREBASE_SERVICE_ACCOUNT_KEY missing'}`

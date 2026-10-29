@@ -459,6 +459,15 @@ export const en = {
     loading: 'Loading...',
     close: 'Close',
   },
+  theme: {
+    title: 'Planner Theme',
+    darkTransit: 'Dark Transit',
+    darkTransitDesc: 'High-density dark operations console',
+    lightMetro: 'Light Metro',
+    lightMetroDesc: 'Crisp, high-contrast daytime interface',
+    midnightBlue: 'Midnight Blue',
+    midnightBlueDesc: 'Deep navy transit observatory',
+  },
 } as const;
 
 export default en;

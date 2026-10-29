@@ -4,6 +4,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { LandingPage } from '@/pages/LandingPage';
 import { PlannerPage } from '@/pages/PlannerPage';
 import { TicketsPage } from '@/pages/TicketsPage';
+import { CheckoutPage } from '@/pages/CheckoutPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { SignupPage } from '@/pages/SignupPage';
 import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
@@ -34,6 +35,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/planner" element={<PlannerPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/metro-pay" element={<CheckoutPage />} />
           <Route path="/tickets" element={<TicketsPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />

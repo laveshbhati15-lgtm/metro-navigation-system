@@ -60,27 +60,42 @@ export function loadRazorpayCheckoutScript(): Promise<boolean> {
       return;
     }
 
+    const scriptSrc = 'https://checkout.razorpay.com/v1/checkout.js';
     const existing = document.querySelector<HTMLScriptElement>(
-      'script[src="https://checkout.razorpay.com/v1/checkout.js"]'
+      `script[src="${scriptSrc}"]`
     );
+
+    const timeoutId = setTimeout(() => {
+      resolve(typeof window.Razorpay !== 'undefined');
+    }, 7000);
+
+    const handleSuccess = () => {
+      clearTimeout(timeoutId);
+      resolve(true);
+    };
+
+    const handleFailure = () => {
+      clearTimeout(timeoutId);
+      console.warn('Failed to load Razorpay Checkout script (blocked by network or privacy extension).');
+      resolve(false);
+    };
+
     if (existing) {
       if (window.Razorpay) {
+        clearTimeout(timeoutId);
         resolve(true);
         return;
       }
-      existing.addEventListener('load', () => resolve(true), { once: true });
-      existing.addEventListener('error', () => resolve(false), { once: true });
+      existing.addEventListener('load', handleSuccess, { once: true });
+      existing.addEventListener('error', handleFailure, { once: true });
       return;
     }
 
     const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.src = scriptSrc;
     script.async = true;
-    script.onload = () => resolve(true);
-    script.onerror = () => {
-      console.warn('Failed to load Razorpay Checkout script.');
-      resolve(false);
-    };
+    script.onload = handleSuccess;
+    script.onerror = handleFailure;
     document.body.appendChild(script);
   });
 }
@@ -92,27 +107,24 @@ async function parseErrorResponse(
   let errorData: any = {};
   let rawText = '';
 
-  if (typeof response.json === 'function') {
+  if (typeof response.text === 'function') {
+    try {
+      rawText = await response.text();
+      if (rawText) {
+        try {
+          errorData = JSON.parse(rawText);
+        } catch {
+          // Response body is plain text or HTML
+        }
+      }
+    } catch {
+      // Stream could not be read
+    }
+  } else if (typeof response.json === 'function') {
     try {
       errorData = await response.json();
     } catch {
       // Body may not be JSON
-    }
-  }
-
-  if (!errorData?.error && typeof response.text === 'function') {
-    try {
-      rawText = await response.text();
-      if (rawText && !rawText.includes('<html') && rawText.length < 200) {
-        try {
-          const parsed = JSON.parse(rawText);
-          if (parsed && typeof parsed === 'object') errorData = parsed;
-        } catch {
-          // Plain text message
-        }
-      }
-    } catch {
-      // Ignore
     }
   }
 
@@ -177,16 +189,29 @@ export async function createPaymentOrder(
     headers['Authorization'] = `Bearer ${params.idToken}`;
   }
 
-  const response = await fetch(`${FUNCTIONS_BASE_URL}/createRazorpayOrder`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
-      sourceId: params.sourceId,
-      destinationId: params.destinationId,
-      passengerCount: params.passengerCount,
-      ticketType: params.ticketType,
-    }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${FUNCTIONS_BASE_URL}/createRazorpayOrder`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        sourceId: params.sourceId,
+        destinationId: params.destinationId,
+        passengerCount: params.passengerCount,
+        ticketType: params.ticketType,
+      }),
+    });
+  } catch (netErr: any) {
+    const isSafariLoadFailed = netErr?.message === 'Load failed';
+    const message = isSafariLoadFailed
+      ? `Network connection error while contacting payment server (${FUNCTIONS_BASE_URL}). Check internet connection or verify API availability.`
+      : (netErr?.message || 'Network request failed while connecting to payment server.');
+    const err: any = new Error(message);
+    err.isNetworkError = true;
+    err.code = 'NETWORK_ERROR';
+    err.originalError = netErr;
+    throw err;
+  }
 
   if (!response.ok) {
     throw await parseErrorResponse(response, 'Order creation failed');
@@ -201,13 +226,26 @@ export async function createPaymentOrder(
 export async function verifyServerPayment(
   params: VerifyPaymentRequest
 ): Promise<VerifyPaymentResponse> {
-  const response = await fetch(`${FUNCTIONS_BASE_URL}/verifyRazorpayPayment`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(params),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${FUNCTIONS_BASE_URL}/verifyRazorpayPayment`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(params),
+    });
+  } catch (netErr: any) {
+    const isSafariLoadFailed = netErr?.message === 'Load failed';
+    const message = isSafariLoadFailed
+      ? `Network connection error while contacting payment verification server (${FUNCTIONS_BASE_URL}).`
+      : (netErr?.message || 'Network request failed while contacting verification server.');
+    const err: any = new Error(message);
+    err.isNetworkError = true;
+    err.code = 'NETWORK_ERROR';
+    err.originalError = netErr;
+    throw err;
+  }
 
   if (!response.ok) {
     throw await parseErrorResponse(response, 'Payment verification failed');

@@ -242,10 +242,16 @@ export const BookingModal: React.FC = () => {
       razorpayInstance.on('payment.failed', (failedResponse: any) => {
         console.warn('Razorpay payment failed:', failedResponse);
         setStep('FAILED');
-        setErrorMessage(
-          failedResponse.error?.description ||
-            'Payment failed or was declined by test provider.'
-        );
+        const desc = failedResponse.error?.description || '';
+        if (desc.toLowerCase().includes('load failed')) {
+          setErrorMessage(
+            'The payment dialog could not connect to Razorpay. This commonly occurs if an ad-blocker or Safari content blocker prevents checkout.razorpay.com from loading. Please disable content blockers and try again.'
+          );
+        } else {
+          setErrorMessage(
+            desc || 'Payment failed or was declined by test provider.'
+          );
+        }
       });
 
       razorpayInstance.open();

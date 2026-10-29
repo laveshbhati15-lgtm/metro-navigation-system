@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useTicketStore } from './ticketStore';
 import type { Station, MetroRoute } from '@/core/graph/types';
+import type { DemoTicket } from './types';
 
 describe('Ticket Booking Store & Workflow (useTicketStore)', () => {
   const dummySource: Station = {
@@ -357,5 +358,59 @@ describe('Ticket Booking Store & Workflow (useTicketStore)', () => {
     const stored = useTicketStore.getState().tickets.find((t) => t.id === 'DMRC-DEMO-VERIFIED-123');
     expect(stored).toBeDefined();
     expect(stored?.isVerifiedPayment).toBe(true);
+  });
+
+  it('recovers existing verified paid ticket from localStorage upon simulated browser refresh / store rehydration', () => {
+    const store = useTicketStore.getState();
+    const verifiedTicket: DemoTicket = {
+      id: 'DMRC-DEMO-RECOVER-999',
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 86400000).toISOString(),
+      source: dummySource,
+      destination: dummyDestination,
+      routeSummary: {
+        label: dummyRoute.label,
+        totalTimeSeconds: dummyRoute.totalTimeSeconds,
+        totalStations: dummyRoute.totalStations,
+        interchangeCount: dummyRoute.interchangeCount,
+        lines: ['VIOLET', 'BLUE'] as any,
+        interchangeStations: [dummyDestination.name],
+      },
+      passengerCount: 1,
+      ticketType: 'SINGLE' as const,
+      baseFare: 40,
+      totalFare: 40,
+      status: 'ACTIVE' as const,
+      paymentStatus: 'PAID' as const,
+      isVerifiedPayment: true,
+      razorpayOrderId: 'order_test_recover_999',
+      razorpayPaymentId: 'pay_test_recover_999',
+      disclaimer: 'DEMO — NOT VALID FOR METRO TRAVEL',
+      qrPayload: JSON.stringify({ bookingId: 'DMRC-DEMO-RECOVER-999', valid: false }),
+    };
+
+    // Save ticket in store (which writes to localStorage)
+    store.saveVerifiedTicket(verifiedTicket);
+
+    // Verify localStorage has persisted the ticket
+    const rawStorage = localStorage.getItem('delhi_metro_demo_tickets');
+    expect(rawStorage).not.toBeNull();
+    const parsed = JSON.parse(rawStorage!);
+    expect(parsed).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'DMRC-DEMO-RECOVER-999', paymentStatus: 'PAID' }),
+      ])
+    );
+
+    // Simulate page reload: re-read localStorage into store state
+    const loadedFromStorage = JSON.parse(localStorage.getItem('delhi_metro_demo_tickets') || '[]');
+    useTicketStore.setState({ tickets: loadedFromStorage });
+
+    const recovered = useTicketStore.getState().getTicketById('DMRC-DEMO-RECOVER-999');
+    expect(recovered).toBeDefined();
+    expect(recovered?.id).toBe('DMRC-DEMO-RECOVER-999');
+    expect(recovered?.paymentStatus).toBe('PAID');
+    expect(recovered?.isVerifiedPayment).toBe(true);
+    expect(recovered?.disclaimer).toBe('DEMO — NOT VALID FOR METRO TRAVEL');
   });
 });

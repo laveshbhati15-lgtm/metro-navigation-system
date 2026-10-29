@@ -248,15 +248,39 @@ export const verifyRazorpayPayment = onRequest(
             return;
           }
 
-          if (payment.status !== 'captured' && payment.status !== 'authorized') {
+          const expectedCurrency = (booking.currency || 'INR').toUpperCase();
+          if (payment.currency && payment.currency.toUpperCase() !== expectedCurrency) {
             res.status(400).json({
-              error: `Payment is not in successful state (status: ${payment.status}).`,
-              code: 'PAYMENT_NOT_CAPTURED',
+              error: 'Paid currency does not match booking currency.',
+              code: 'CURRENCY_MISMATCH',
+            });
+            return;
+          }
+
+          if (payment.status !== 'captured') {
+            const isAuthorized = payment.status === 'authorized';
+            res.status(400).json({
+              error: isAuthorized
+                ? 'Payment is authorized but not yet captured. Ticket will be issued upon capture confirmation.'
+                : `Payment is not in successful state (status: ${payment.status}).`,
+              code: isAuthorized ? 'PAYMENT_AUTHORIZED_PENDING_CAPTURE' : 'PAYMENT_NOT_CAPTURED',
             });
             return;
           }
         } catch (fetchErr: any) {
-          console.warn('Could not fetch payment from Razorpay API directly, relying on HMAC verification:', fetchErr.message);
+          if (fetchErr?.statusCode === 400 || fetchErr?.statusCode === 404 || fetchErr?.code === 'BAD_REQUEST_ERROR') {
+            res.status(400).json({
+              error: 'Payment record could not be found or validated with provider.',
+              code: 'PAYMENT_NOT_FOUND',
+            });
+            return;
+          }
+          console.error('Razorpay API verification failed (unreachable/error):', fetchErr.message);
+          res.status(502).json({
+            error: 'Payment provider verification service temporarily unavailable. Please retry verification.',
+            code: 'PROVIDER_UNAVAILABLE',
+          });
+          return;
         }
 
         // Generate verified ticket QR payload
@@ -277,29 +301,51 @@ export const verifyRazorpayPayment = onRequest(
           verifiedAt: now.toISOString(),
         });
 
-        // Update Firestore booking record
-        await docRef.update({
-          status: 'PAID',
-          razorpayPaymentId,
-          razorpaySignature,
-          paidAt: FieldValue.serverTimestamp(),
-          updatedAt: FieldValue.serverTimestamp(),
-          qrPayload,
-        });
-
-        const updatedBooking = {
+        // Update Firestore booking record atomically inside a transaction
+        let currentBookingData = {
           ...booking,
           status: 'PAID',
           razorpayPaymentId,
+          razorpaySignature,
           qrPayload,
           paidAt: now.toISOString(),
         };
 
+        await db.runTransaction(async (transaction) => {
+          const freshSnap = await transaction.get(docRef);
+          if (!freshSnap.exists) {
+            throw new Error('BOOKING_NOT_FOUND');
+          }
+          const freshData = freshSnap.data() as any;
+          if (freshData.status === 'PAID') {
+            currentBookingData = freshData;
+            return;
+          }
+
+          transaction.update(docRef, {
+            status: 'PAID',
+            razorpayPaymentId,
+            razorpaySignature,
+            paidAt: FieldValue.serverTimestamp(),
+            updatedAt: FieldValue.serverTimestamp(),
+            qrPayload,
+          });
+
+          currentBookingData = {
+            ...freshData,
+            status: 'PAID',
+            razorpayPaymentId,
+            razorpaySignature,
+            qrPayload,
+            paidAt: now.toISOString(),
+          };
+        });
+
         res.status(200).json({
           success: true,
           status: 'PAID',
-          bookingId: booking.bookingId,
-          ticket: formatVerifiedTicket(updatedBooking),
+          bookingId: currentBookingData.bookingId,
+          ticket: formatVerifiedTicket(currentBookingData),
         });
       } catch (err: any) {
         console.error('Error verifying Razorpay payment:', err);
@@ -350,6 +396,7 @@ export const razorpayWebhook = onRequest(
         const orderId = paymentEntity?.order_id || event.payload?.order?.entity?.id;
         const paymentId = paymentEntity?.id;
         const amount = paymentEntity?.amount;
+        const currency = paymentEntity?.currency;
 
         if (orderId) {
           const snapshot = await db
@@ -360,23 +407,95 @@ export const razorpayWebhook = onRequest(
 
           if (!snapshot.empty) {
             const doc = snapshot.docs[0];
-            const booking = doc.data() as any;
 
-            if (booking.status !== 'PAID') {
-              if (amount && Number(amount) !== Number(booking.amountInPaise)) {
-                console.error(`Amount mismatch in webhook for order ${orderId}: expected ${booking.amountInPaise}, got ${amount}`);
+            try {
+              await db.runTransaction(async (transaction) => {
+                const freshSnap = await transaction.get(doc.ref);
+                if (!freshSnap.exists) return;
+                const booking = freshSnap.data() as any;
+
+                // Idempotency: skip if already PAID
+                if (booking.status === 'PAID') {
+                  console.log(`Webhook: Booking ${booking.bookingId} already marked PAID`);
+                  return;
+                }
+
+                if (amount && Number(amount) !== Number(booking.amountInPaise)) {
+                  console.error(`Amount mismatch in webhook for order ${orderId}: expected ${booking.amountInPaise}, got ${amount}`);
+                  throw new Error('AMOUNT_MISMATCH');
+                }
+
+                const expectedCurrency = (booking.currency || 'INR').toUpperCase();
+                if (currency && currency.toUpperCase() !== expectedCurrency) {
+                  console.error(`Currency mismatch in webhook for order ${orderId}: expected ${expectedCurrency}, got ${currency}`);
+                  throw new Error('CURRENCY_MISMATCH');
+                }
+
+                const now = new Date();
+                const qrPayload = JSON.stringify({
+                  app: 'DELHI_METRO_NAVIGATOR',
+                  bookingId: booking.bookingId,
+                  type: 'DEMO_TICKET',
+                  status: 'PAID',
+                  valid: false,
+                  disclaimer: 'DEMO — NOT VALID FOR METRO TRAVEL',
+                  source: { id: booking.sourceId, name: booking.sourceName },
+                  destination: { id: booking.destinationId, name: booking.destinationName },
+                  passengers: booking.passengerCount,
+                  ticketType: booking.ticketType,
+                  totalFare: booking.totalFare,
+                  razorpayPaymentId: paymentId || booking.razorpayPaymentId || null,
+                  verifiedAt: now.toISOString(),
+                });
+
+                transaction.update(doc.ref, {
+                  status: 'PAID',
+                  razorpayPaymentId: paymentId || booking.razorpayPaymentId || null,
+                  paidAt: FieldValue.serverTimestamp(),
+                  updatedAt: FieldValue.serverTimestamp(),
+                  qrPayload,
+                });
+                console.log(`Webhook marked booking ${booking.bookingId} as PAID`);
+              });
+            } catch (txErr: any) {
+              if (txErr?.message === 'AMOUNT_MISMATCH') {
                 res.status(400).json({ error: 'Amount mismatch' });
                 return;
               }
-
-              await doc.ref.update({
-                status: 'PAID',
-                razorpayPaymentId: paymentId || booking.razorpayPaymentId || null,
-                paidAt: FieldValue.serverTimestamp(),
-                updatedAt: FieldValue.serverTimestamp(),
-              });
-              console.log(`Webhook marked booking ${booking.bookingId} as PAID`);
+              if (txErr?.message === 'CURRENCY_MISMATCH') {
+                res.status(400).json({ error: 'Currency mismatch' });
+                return;
+              }
+              throw txErr;
             }
+          }
+        }
+      } else if (eventType === 'payment.authorized') {
+        const paymentEntity = event.payload?.payment?.entity;
+        const orderId = paymentEntity?.order_id;
+
+        if (orderId) {
+          const snapshot = await db
+            .collection('demo_bookings')
+            .where('razorpayOrderId', '==', orderId)
+            .limit(1)
+            .get();
+
+          if (!snapshot.empty) {
+            const doc = snapshot.docs[0];
+            await db.runTransaction(async (transaction) => {
+              const freshSnap = await transaction.get(doc.ref);
+              if (!freshSnap.exists) return;
+              const booking = freshSnap.data() as any;
+              if (booking.status === 'PENDING') {
+                transaction.update(doc.ref, {
+                  status: 'AUTHORIZED',
+                  razorpayPaymentId: paymentEntity?.id || null,
+                  updatedAt: FieldValue.serverTimestamp(),
+                });
+                console.log(`Webhook marked booking ${doc.id} as AUTHORIZED`);
+              }
+            });
           }
         }
       } else if (eventType === 'payment.failed') {
@@ -392,12 +511,22 @@ export const razorpayWebhook = onRequest(
 
           if (!snapshot.empty) {
             const doc = snapshot.docs[0];
-            await doc.ref.update({
-              status: 'FAILED',
-              failureReason: paymentEntity?.error_description || 'Payment failed',
-              updatedAt: FieldValue.serverTimestamp(),
+            await db.runTransaction(async (transaction) => {
+              const freshSnap = await transaction.get(doc.ref);
+              if (!freshSnap.exists) return;
+              const booking = freshSnap.data() as any;
+              // Protect already confirmed PAID tickets from being overwritten by a delayed failure event
+              if (booking.status !== 'PAID') {
+                transaction.update(doc.ref, {
+                  status: 'FAILED',
+                  failureReason: paymentEntity?.error_description || 'Payment failed',
+                  updatedAt: FieldValue.serverTimestamp(),
+                });
+                console.log(`Webhook marked booking ${doc.id} as FAILED`);
+              } else {
+                console.log(`Webhook ignored payment.failed for already PAID booking ${doc.id}`);
+              }
             });
-            console.log(`Webhook marked booking ${doc.id} as FAILED`);
           }
         }
       }
@@ -411,6 +540,24 @@ export const razorpayWebhook = onRequest(
 );
 
 function formatVerifiedTicket(booking: any) {
+  const qrPayload =
+    booking.qrPayload ||
+    JSON.stringify({
+      app: 'DELHI_METRO_NAVIGATOR',
+      bookingId: booking.bookingId,
+      type: 'DEMO_TICKET',
+      status: 'PAID',
+      valid: false,
+      disclaimer: 'DEMO — NOT VALID FOR METRO TRAVEL',
+      source: { id: booking.sourceId, name: booking.sourceName },
+      destination: { id: booking.destinationId, name: booking.destinationName },
+      passengers: booking.passengerCount,
+      ticketType: booking.ticketType,
+      totalFare: booking.totalFare,
+      razorpayPaymentId: booking.razorpayPaymentId || null,
+      verifiedAt: new Date().toISOString(),
+    });
+
   return {
     id: booking.bookingId,
     createdAt: typeof booking.createdAt === 'string' ? booking.createdAt : new Date().toISOString(),
@@ -427,6 +574,6 @@ function formatVerifiedTicket(booking: any) {
     disclaimer: 'DEMO — NOT VALID FOR METRO TRAVEL',
     razorpayOrderId: booking.razorpayOrderId,
     razorpayPaymentId: booking.razorpayPaymentId,
-    qrPayload: booking.qrPayload || '',
+    qrPayload,
   };
 }

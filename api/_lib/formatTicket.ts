@@ -1,4 +1,22 @@
 export function formatVerifiedTicket(booking: any) {
+  const qrPayload =
+    booking.qrPayload ||
+    JSON.stringify({
+      app: 'DELHI_METRO_NAVIGATOR',
+      bookingId: booking.bookingId,
+      type: 'DEMO_TICKET',
+      status: 'PAID',
+      valid: false,
+      disclaimer: 'DEMO — NOT VALID FOR METRO TRAVEL',
+      source: { id: booking.sourceId, name: booking.sourceName },
+      destination: { id: booking.destinationId, name: booking.destinationName },
+      passengers: booking.passengerCount,
+      ticketType: booking.ticketType,
+      totalFare: booking.totalFare,
+      razorpayPaymentId: booking.razorpayPaymentId || null,
+      verifiedAt: new Date().toISOString(),
+    });
+
   return {
     id: booking.bookingId,
     createdAt: typeof booking.createdAt === 'string' ? booking.createdAt : new Date().toISOString(),
@@ -15,6 +33,6 @@ export function formatVerifiedTicket(booking: any) {
     disclaimer: 'DEMO — NOT VALID FOR METRO TRAVEL',
     razorpayOrderId: booking.razorpayOrderId,
     razorpayPaymentId: booking.razorpayPaymentId,
-    qrPayload: booking.qrPayload || '',
+    qrPayload,
   };
 }

@@ -355,6 +355,211 @@ describe('Booking Flow Regression & Protection Tests', () => {
       expect(useTicketStore.getState().tickets).toHaveLength(0);
       expect(screen.queryByText(/✓ TEST PAID/i)).toBeNull();
     });
+
+    it('rejects forged frontend callback with currency mismatch from backend without issuing a paid ticket', async () => {
+      let capturedOptions: any = null;
+      class MockRazorpay {
+        constructor(options: any) {
+          capturedOptions = options;
+        }
+        open() {}
+        on() {}
+      }
+      (window as any).Razorpay = MockRazorpay;
+
+      // 1st fetch: createRazorpayOrder succeeds
+      vi.spyOn(globalThis, 'fetch')
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            success: true,
+            bookingId: 'DMRC-DEMO-202610-CURRFAIL',
+            orderId: 'order_test_currfail',
+            amount: 5000,
+            currency: 'INR',
+            keyId: 'rzp_test_123',
+          }),
+        } as Response)
+        // 2nd fetch: verifyRazorpayPayment fails (currency mismatch)
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 400,
+          json: async () => ({
+            success: false,
+            error: 'Paid currency does not match booking currency.',
+            code: 'CURRENCY_MISMATCH',
+          }),
+        } as Response);
+
+      useTicketStore.getState().openBookingModal({
+        source: mockSource,
+        destination: mockDestination,
+        route: mockRoute,
+      });
+
+      render(<BookingModal />);
+
+      const payButton = document.getElementById('btn-confirm-demo-booking');
+      fireEvent.click(payButton!);
+
+      await waitFor(() => {
+        expect(capturedOptions).not.toBeNull();
+      });
+
+      // Simulate Razorpay checkout calling handler with USD currency or forged callback
+      await act(async () => {
+        await capturedOptions.handler({
+          razorpay_payment_id: 'pay_test_usd',
+          razorpay_order_id: 'order_test_currfail',
+          razorpay_signature: 'valid_sig_but_usd_currency',
+        });
+      });
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/Paid currency does not match booking currency/i)
+        ).toBeDefined();
+      });
+
+      // No ticket in store marked paid
+      expect(useTicketStore.getState().tickets).toHaveLength(0);
+      expect(screen.queryByText(/✓ TEST PAID/i)).toBeNull();
+    });
+
+    it('rejects authorized-but-not-captured payment and displays pending capture message without issuing ticket', async () => {
+      let capturedOptions: any = null;
+      class MockRazorpay {
+        constructor(options: any) {
+          capturedOptions = options;
+        }
+        open() {}
+        on() {}
+      }
+      (window as any).Razorpay = MockRazorpay;
+
+      vi.spyOn(globalThis, 'fetch')
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            success: true,
+            bookingId: 'DMRC-DEMO-202610-AUTHFAIL',
+            orderId: 'order_test_authfail',
+            amount: 5000,
+            currency: 'INR',
+            keyId: 'rzp_test_123',
+          }),
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 400,
+          json: async () => ({
+            success: false,
+            error: 'Payment is authorized but not yet captured. Ticket will be issued upon capture confirmation.',
+            code: 'PAYMENT_AUTHORIZED_PENDING_CAPTURE',
+          }),
+        } as Response);
+
+      useTicketStore.getState().openBookingModal({
+        source: mockSource,
+        destination: mockDestination,
+        route: mockRoute,
+      });
+
+      render(<BookingModal />);
+
+      const payButton = document.getElementById('btn-confirm-demo-booking');
+      fireEvent.click(payButton!);
+
+      await waitFor(() => {
+        expect(capturedOptions).not.toBeNull();
+      });
+
+      await act(async () => {
+        await capturedOptions.handler({
+          razorpay_payment_id: 'pay_test_authorized',
+          razorpay_order_id: 'order_test_authfail',
+          razorpay_signature: 'sig_authorized',
+        });
+      });
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/Payment is authorized but not yet captured/i)
+        ).toBeDefined();
+      });
+
+      expect(useTicketStore.getState().tickets).toHaveLength(0);
+      expect(screen.queryByText(/✓ TEST PAID/i)).toBeNull();
+    });
+
+    it('handles Razorpay API outage (502 fail-closed) gracefully without issuing a ticket', async () => {
+      let capturedOptions: any = null;
+      class MockRazorpay {
+        constructor(options: any) {
+          capturedOptions = options;
+        }
+        open() {}
+        on() {}
+      }
+      (window as any).Razorpay = MockRazorpay;
+
+      vi.spyOn(globalThis, 'fetch')
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            success: true,
+            bookingId: 'DMRC-DEMO-202610-OUTAGEFAIL',
+            orderId: 'order_test_outagefail',
+            amount: 5000,
+            currency: 'INR',
+            keyId: 'rzp_test_123',
+          }),
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 502,
+          json: async () => ({
+            success: false,
+            error: 'Payment provider verification service temporarily unavailable. Please retry verification.',
+            code: 'PROVIDER_UNAVAILABLE',
+          }),
+        } as Response);
+
+      useTicketStore.getState().openBookingModal({
+        source: mockSource,
+        destination: mockDestination,
+        route: mockRoute,
+      });
+
+      render(<BookingModal />);
+
+      const payButton = document.getElementById('btn-confirm-demo-booking');
+      fireEvent.click(payButton!);
+
+      await waitFor(() => {
+        expect(capturedOptions).not.toBeNull();
+      });
+
+      await act(async () => {
+        await capturedOptions.handler({
+          razorpay_payment_id: 'pay_test_outage',
+          razorpay_order_id: 'order_test_outagefail',
+          razorpay_signature: 'sig_outage',
+        });
+      });
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/Payment provider verification service temporarily unavailable/i)
+        ).toBeDefined();
+      });
+
+      expect(useTicketStore.getState().tickets).toHaveLength(0);
+      expect(screen.queryByText(/✓ TEST PAID/i)).toBeNull();
+    });
   });
 
   describe('Razorpay Script Deduplication', () => {

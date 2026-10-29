@@ -1,9 +1,10 @@
 import { useTranslation } from 'react-i18next';
 import type { MetroRoute, LineSegment } from '@/core/graph/types';
 import { LINE_COLORS } from '@/utils/lineColors';
-import { formatDuration, formatInterchangeCount, estimateFare } from '@/utils/formatters';
+import { formatDuration, estimateFare } from '@/utils/formatters';
 import { cn } from '@/utils/cn';
-import { useTicketStore } from '@/features/tickets/ticketStore';
+import { usePlannerTheme } from '@/context/PlannerThemeContext';
+import { navigateToCheckout } from '@/features/checkout/checkoutSession';
 import { getStationDisplayName, getLocalizedLineName } from '@/i18n';
 
 interface RouteCardProps {
@@ -15,6 +16,7 @@ interface RouteCardProps {
 
 export function RouteCard({ route, isActive, onClick, index }: RouteCardProps) {
   const { t, i18n } = useTranslation();
+  const { theme } = usePlannerTheme();
   const fare = estimateFare(route.totalStations);
 
   return (
@@ -25,116 +27,90 @@ export function RouteCard({ route, isActive, onClick, index }: RouteCardProps) {
       aria-pressed={isActive}
       aria-label={`${route.label} route: ${formatDuration(route.totalTimeSeconds)}, ${route.totalStations} stations`}
       className={cn(
-        'rounded-2xl p-4 sm:p-5 cursor-pointer transition-all duration-200 border',
-        'bg-slate-900/90 backdrop-blur-md',
+        'rounded-xl p-4 sm:p-5 cursor-pointer transition-all duration-150 border shadow-xs',
+        'bg-[var(--planner-surface)] text-[var(--planner-text-primary)]',
         isActive
-          ? 'border-cyan-400/80 bg-slate-900 shadow-lg shadow-cyan-950/40 ring-1 ring-cyan-400/40'
-          : 'border-slate-800 hover:border-slate-700 hover:bg-slate-850',
+          ? 'border-[var(--planner-accent)] bg-[var(--planner-surface-subtle)] ring-1 ring-[var(--planner-accent-subtle)]'
+          : 'border-[var(--planner-border)] hover:border-[var(--planner-border-highlight)] hover:bg-[var(--planner-surface-hover)]',
       )}
       onClick={onClick}
       onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && onClick()}
     >
-      {/* 5. Route Type & Recommended Badge */}
+      {/* Route Badge & Selection State */}
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2 flex-wrap">
           <span className={cn(
-            'text-xs font-mono font-semibold px-2.5 py-0.5 rounded-md border',
+            'text-[11px] font-mono uppercase tracking-wider font-semibold px-2 py-0.5 rounded',
             isActive
-              ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30'
-              : 'bg-white/5 text-gray-300 border-white/10',
+              ? 'bg-[var(--planner-accent-subtle)] text-[var(--planner-accent-text)] border border-[var(--planner-border-highlight)]'
+              : 'bg-[var(--planner-surface-subtle)] text-[var(--planner-text-secondary)] border border-[var(--planner-border)]',
           )}>
             {route.label}
           </span>
           {index === 0 && (
-            <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md flex items-center gap-1 font-sans">
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              {t('routeCard.recommended')}
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-500 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded flex items-center gap-1">
+              ✓ {t('routeCard.recommended')}
             </span>
           )}
         </div>
 
         <span className="text-[11px] font-mono">
           {isActive ? (
-            <span className="text-cyan-400 font-semibold flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+            <span className="text-[var(--planner-accent-text)] font-semibold flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--planner-accent-text)]" />
               {t('routeCard.selectedVariant', 'Selected Route')}
             </span>
           ) : (
-            <span className="text-gray-400 hover:text-white transition-colors">
+            <span className="text-[var(--planner-text-muted)] hover:text-[var(--planner-text-primary)] transition-colors">
               {t('search.oneClickSelect', 'Select Route')} →
             </span>
           )}
         </span>
       </div>
 
-      {/* 1, 2, 3, 4: Essential Information Grid (Time, Fare, Stations, Interchanges) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 rounded-xl bg-slate-950/80 border border-slate-800/90 mb-3.5">
-        {/* 1. Estimated Travel Time */}
-        <div className="p-2 rounded-lg bg-slate-900/60 border border-white/[0.04]">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-gray-400 block">
-            {t('planner.travelTime')}
-          </span>
-          <p className="text-lg sm:text-xl font-bold font-display text-white mt-0.5 leading-tight">
+      {/* Primary Transit Metrics */}
+      <div className="flex items-baseline justify-between gap-3 pb-3 border-b border-[var(--planner-border-subtle)]">
+        <div className="flex items-baseline gap-2 sm:gap-3">
+          <span className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-[var(--planner-text-primary)]">
             {formatDuration(route.totalTimeSeconds)}
-          </p>
-          {route.hasEstimatedTimes && (
-            <span className="text-[9px] text-amber-400/80 font-mono block mt-0.5">
-              ~2 min/station
-            </span>
-          )}
+          </span>
+          <span className="text-xs sm:text-sm font-sans text-[var(--planner-text-secondary)]">
+            ({route.totalStations} {t('common.stations')})
+          </span>
         </div>
 
-        {/* 2. Estimated Fare */}
-        <div className="p-2 rounded-lg bg-slate-900/60 border border-white/[0.04]">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-gray-400 block">
-            {t('planner.fare')}
-          </span>
-          <p className="text-lg sm:text-xl font-bold font-display text-emerald-400 mt-0.5 leading-tight">
+        <div className="text-right">
+          <span className="text-xl sm:text-2xl font-bold font-mono text-emerald-500">
             ₹{fare.amount}
-          </p>
-          <span className="text-[9px] text-gray-400 font-mono block mt-0.5">
-            DMRC Fare Chart
           </span>
-        </div>
-
-        {/* 3. Number of Stations */}
-        <div className="p-2 rounded-lg bg-slate-900/60 border border-white/[0.04]">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-gray-400 block">
-            {t('planner.stations')}
-          </span>
-          <p className="text-lg sm:text-xl font-bold font-display text-white mt-0.5 leading-tight">
-            {route.totalStations}
-          </p>
-          <span className="text-[9px] text-gray-400 font-mono block mt-0.5">
-            {t('common.stations')}
-          </span>
-        </div>
-
-        {/* 4. Interchanges and Line Changes */}
-        <div className="p-2 rounded-lg bg-slate-900/60 border border-white/[0.04]">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-gray-400 block">
-            {t('planner.transfers')}
-          </span>
-          <p className={cn(
-            'text-lg sm:text-xl font-bold font-display mt-0.5 leading-tight',
-            route.interchangeCount === 0 ? 'text-emerald-400' : 'text-amber-400',
-          )}>
-            {route.interchangeCount === 0
-              ? t('common.direct')
-              : route.interchangeCount}
-          </p>
-          <span className="text-[9px] text-gray-400 font-mono block mt-0.5">
-            {route.interchangeCount === 0
-              ? t('common.direct')
-              : formatInterchangeCount(route.interchangeCount)}
+          <span className="text-[10px] text-[var(--planner-text-muted)] font-mono block uppercase tracking-wide">
+            {t('planner.fare')}
           </span>
         </div>
       </div>
 
-      {/* Line segments visual progression */}
-      <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+      {/* Key Transit Attributes */}
+      <div className="flex items-center gap-4 py-2.5 text-xs font-mono text-[var(--planner-text-secondary)]">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[var(--planner-text-muted)]">{t('planner.transfers')}:</span>
+          <span className={cn('font-semibold', route.interchangeCount === 0 ? 'text-emerald-500' : 'text-amber-500')}>
+            {route.interchangeCount === 0 ? t('common.direct') : `${route.interchangeCount} ${t('common.interchange')}`}
+          </span>
+        </div>
+        <span className="text-[var(--planner-border)]">•</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[var(--planner-text-muted)]">Pace:</span>
+          <span className="text-[var(--planner-text-secondary)]">~2 min/stn</span>
+        </div>
+        <span className="text-[var(--planner-border)]">•</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[var(--planner-text-muted)]">Network:</span>
+          <span className="text-[var(--planner-text-secondary)]">DMRC</span>
+        </div>
+      </div>
+
+      {/* Line Segments Visual Progression */}
+      <div className="flex items-center gap-2 py-1.5 flex-wrap">
         {route.lineSegments.map((seg, i) => (
           <LineSegmentBadge
             key={i}
@@ -145,28 +121,29 @@ export function RouteCard({ route, isActive, onClick, index }: RouteCardProps) {
         ))}
       </div>
 
-      {/* 6. Station Path Preview */}
+      {/* Station Path Preview */}
       <StationPath route={route} currentLang={i18n.language} />
 
-      {/* 7. Route Action / Ticket Booking Flow */}
+      {/* Action / Booking Trigger */}
       {isActive && (
-        <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between gap-3">
-          <span className="text-xs font-mono text-gray-400">
+        <div className="mt-4 pt-3 border-t border-[var(--planner-border-subtle)] flex items-center justify-between gap-3">
+          <span className="text-xs font-mono text-[var(--planner-text-secondary)]">
             {t('routeCard.selectedVariant')}{' '}
-            <strong className="text-white font-medium">{route.label}</strong>
+            <strong className="text-[var(--planner-text-primary)] font-medium">{route.label}</strong>
           </span>
           <button
             type="button"
             id={`btn-book-route-${index}`}
             onClick={(e) => {
               e.stopPropagation();
-              useTicketStore.getState().openBookingModal({
+              navigateToCheckout({
                 source: route.stations[0],
                 destination: route.stations[route.stations.length - 1],
                 route,
+                theme,
               });
             }}
-            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white text-xs font-semibold flex items-center gap-2 transition-all shadow-md active:translate-y-0.5"
+            className="px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-medium flex items-center gap-2 transition-colors shadow-sm"
           >
             <span>🎟️</span>
             <span>{t('routeCard.bookVariant')} (₹{fare.amount})</span>
@@ -196,22 +173,16 @@ function LineSegmentBadge({
     : `${stops} stop${stops !== 1 ? 's' : ''}`;
 
   return (
-    <div className="flex items-center gap-1">
-      <div
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium"
-        style={{ backgroundColor: `${color}20`, border: `1px solid ${color}40`, color }}
+    <div className="flex items-center gap-1.5 text-xs font-sans">
+      <span
+        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-white font-medium text-xs shadow-xs"
+        style={{ backgroundColor: color }}
       >
-        <span
-          className="w-2 h-2 rounded-full"
-          style={{ backgroundColor: color }}
-        />
-        {name}
-        <span className="opacity-70">{stopsLabel}</span>
-      </div>
+        <span>{name}</span>
+        <span className="text-[10px] font-mono opacity-90">({stopsLabel})</span>
+      </span>
       {!isLast && (
-        <svg className="w-4 h-4 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-        </svg>
+        <span className="text-slate-600 font-mono text-xs">→</span>
       )}
     </div>
   );
@@ -233,11 +204,11 @@ function StationPath({ route, currentLang }: { route: MetroRoute; currentLang: s
   const hiddenCount = hasMore ? stations.length - MAX_VISIBLE - 2 : 0;
 
   return (
-    <div className="border-t border-white/8 pt-4 mt-2">
-      <p className="text-xs text-gray-500 mb-3 uppercase tracking-wide font-medium">
+    <div className="border-t border-[var(--planner-border-subtle)] pt-3 mt-2">
+      <p className="text-[10px] font-mono uppercase tracking-wider text-[var(--planner-text-muted)] mb-2">
         {t('booking.routeLabel')}
       </p>
-      <div className="flex flex-col gap-0">
+      <div className="flex flex-col gap-0 font-sans">
         {visibleStart.map((station, i) => {
           const edgeBeforeNext = route.edges[i];
           const isInterchange = route.interchanges.some(ic => ic.id === station.id);
@@ -262,9 +233,9 @@ function StationPath({ route, currentLang }: { route: MetroRoute; currentLang: s
         {hasMore && (
           <div className="flex items-start gap-3 py-1">
             <div className="flex flex-col items-center" style={{ width: '12px' }}>
-              <div className="w-0.5 h-full bg-white/15 flex-grow" style={{ minHeight: '24px' }} />
+              <div className="w-0.5 h-full bg-[var(--planner-border)] flex-grow" style={{ minHeight: '20px' }} />
             </div>
-            <span className="text-xs text-gray-500 py-1 italic">
+            <span className="text-xs text-[var(--planner-text-muted)] py-0.5 font-mono">
               · · · {hiddenCount} {currentLang === 'hi' ? 'अन्य स्टेशन' : `more station${hiddenCount !== 1 ? 's' : ''}`} · · ·
             </span>
           </div>
@@ -320,27 +291,27 @@ function StationRow({
           className={cn(
             'rounded-full flex-shrink-0 z-10',
             isFirst || isLast
-              ? 'w-3 h-3 mt-1'
+              ? 'w-2.5 h-2.5 mt-1'
               : isInterchange
-                ? 'w-2.5 h-2.5 mt-1'
-                : 'w-2 h-2 mt-1.5',
+                ? 'w-2 h-2 mt-1 ring-2 ring-amber-400/30'
+                : 'w-1.5 h-1.5 mt-1.5',
           )}
-          style={{ backgroundColor: lineColor, boxShadow: isInterchange ? `0 0 6px ${lineColor}80` : 'none' }}
+          style={{ backgroundColor: lineColor }}
         />
         {showConnector && (
-          <div className="w-0.5 bg-white/15 flex-grow" style={{ minHeight: '16px', backgroundColor: lineColor + '40' }} />
+          <div className="w-0.5 flex-grow" style={{ minHeight: '16px', backgroundColor: `${lineColor}50` }} />
         )}
       </div>
 
       {/* Station name */}
       <span className={cn(
-        'text-sm pb-2',
-        isFirst || isLast ? 'font-semibold text-white' : 'text-gray-300',
-        isInterchange && !isFirst && !isLast && 'text-amber-300 font-medium',
+        'text-xs pb-1.5 leading-snug',
+        isFirst || isLast ? 'font-semibold text-[var(--planner-text-primary)]' : 'text-[var(--planner-text-secondary)]',
+        isInterchange && !isFirst && !isLast && 'text-amber-500 font-medium',
       )}>
         {name}
         {isInterchange && !isFirst && !isLast && (
-          <span className="ml-2 text-xs opacity-60">({interchangeLabel})</span>
+          <span className="ml-1.5 text-[10px] font-mono text-amber-500 font-normal">({interchangeLabel})</span>
         )}
       </span>
     </div>

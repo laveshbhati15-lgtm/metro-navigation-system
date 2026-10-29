@@ -1,0 +1,169 @@
+/* ==========================================================================
+   MetroPay Dedicated Transit Checkout Styling
+   Strictly scoped to [data-page="checkout"].
+   Seamlessly inherits Planner's active theme: dark-transit, light-metro, midnight-blue.
+   ========================================================================== */
+
+/* ── 1. Scoped Theme Tokens ──────────────────────────────────────────────── */
+
+/* Dark Transit (Default Theme) */
+[data-page="checkout"],
+[data-page="checkout"][data-checkout-theme="dark-transit"] {
+  --mp-bg: #090d16;
+  --mp-header-bg: rgba(13, 19, 32, 0.95);
+  --mp-header-border: #1e2a42;
+  --mp-surface: #101625;
+  --mp-surface-subtle: #0d1320;
+  --mp-surface-elevated: #172036;
+  --mp-surface-hover: #1b2640;
+  --mp-border: #1e2a42;
+  --mp-border-subtle: #162033;
+  --mp-border-highlight: #3b82f6;
+  --mp-text-primary: #f8fafc;
+  --mp-text-secondary: #94a3b8;
+  --mp-text-muted: #64748b;
+  --mp-notice-bg: linear-gradient(to right, rgba(69, 26, 3, 0.8), rgba(120, 53, 15, 0.9), rgba(69, 26, 3, 0.8));
+  --mp-notice-border: rgba(245, 158, 11, 0.4);
+  --mp-notice-text: #fef3c7;
+  --mp-option-active-bg: rgba(16, 185, 129, 0.12);
+  --mp-option-active-border: rgba(16, 185, 129, 0.8);
+  --mp-option-active-text: #f8fafc;
+  --mp-stat-bg: #0d1320;
+  --mp-stat-border: #162033;
+  --mp-footer-bg: #090d16;
+  --mp-footer-border: #1e2a42;
+  --mp-badge-bg: rgba(16, 185, 129, 0.15);
+  --mp-badge-border: rgba(16, 185, 129, 0.35);
+  --mp-badge-text: #6ee7b7;
+  --mp-back-btn-bg: #101625;
+  --mp-back-btn-border: #1e2a42;
+  --mp-back-btn-text: #cbd5e1;
+  --mp-back-btn-hover-bg: #172036;
+}
+
+/* Light Metro Theme */
+[data-page="checkout"][data-checkout-theme="light-metro"] {
+  --mp-bg: #f8fafc;
+  --mp-header-bg: rgba(255, 255, 255, 0.96);
+  --mp-header-border: #cbd5e1;
+  --mp-surface: #ffffff;
+  --mp-surface-subtle: #f1f5f9;
+  --mp-surface-elevated: #e2e8f0;
+  --mp-surface-hover: #f1f5f9;
+  --mp-border: #cbd5e1;
+  --mp-border-subtle: #e2e8f0;
+  --mp-border-highlight: #2563eb;
+  --mp-text-primary: #0f172a;
+  --mp-text-secondary: #334155;
+  --mp-text-muted: #64748b;
+  --mp-notice-bg: linear-gradient(to right, #fef3c7, #fde68a, #fef3c7);
+  --mp-notice-border: #f59e0b;
+  --mp-notice-text: #78350f;
+  --mp-option-active-bg: rgba(16, 185, 129, 0.12);
+  --mp-option-active-border: #059669;
+  --mp-option-active-text: #065f46;
+  --mp-stat-bg: #f8fafc;
+  --mp-stat-border: #e2e8f0;
+  --mp-footer-bg: #f8fafc;
+  --mp-footer-border: #cbd5e1;
+  --mp-badge-bg: rgba(16, 185, 129, 0.12);
+  --mp-badge-border: rgba(16, 185, 129, 0.4);
+  --mp-badge-text: #047857;
+  --mp-back-btn-bg: #ffffff;
+  --mp-back-btn-border: #cbd5e1;
+  --mp-back-btn-text: #334155;
+  --mp-back-btn-hover-bg: #f1f5f9;
+}
+
+/* Midnight Blue Theme */
+[data-page="checkout"][data-checkout-theme="midnight-blue"] {
+  --mp-bg: #020617;
+  --mp-header-bg: rgba(3, 10, 30, 0.96);
+  --mp-header-border: #172a54;
+  --mp-surface: #07122b;
+  --mp-surface-subtle: #040c1e;
+  --mp-surface-elevated: #0d214d;
+  --mp-surface-hover: #0b1a3d;
+  --mp-border: #172a54;
+  --mp-border-subtle: #0f1c3a;
+  --mp-border-highlight: #38bdf8;
+  --mp-text-primary: #f8fafc;
+  --mp-text-secondary: #93c5fd;
+  --mp-text-muted: #60a5fa;
+  --mp-notice-bg: linear-gradient(to right, rgba(4, 15, 38, 0.9), rgba(120, 53, 15, 0.8), rgba(4, 15, 38, 0.9));
+  --mp-notice-border: rgba(245, 158, 11, 0.45);
+  --mp-notice-text: #fef08a;
+  --mp-option-active-bg: rgba(16, 185, 129, 0.16);
+  --mp-option-active-border: rgba(16, 185, 129, 0.9);
+  --mp-option-active-text: #f8fafc;
+  --mp-stat-bg: #040c1e;
+  --mp-stat-border: #0f1c3a;
+  --mp-footer-bg: #020617;
+  --mp-footer-border: #172a54;
+  --mp-badge-bg: rgba(16, 185, 129, 0.18);
+  --mp-badge-border: rgba(16, 185, 129, 0.45);
+  --mp-badge-text: #6ee7b7;
+  --mp-back-btn-bg: #07122b;
+  --mp-back-btn-border: #172a54;
+  --mp-back-btn-text: #93c5fd;
+  --mp-back-btn-hover-bg: #0d214d;
+}
+
+/* ── 2. Structural & Component Rules ─────────────────────────────────────── */
+
+[data-page="checkout"] {
+  background-color: var(--mp-bg);
+  color: var(--mp-text-primary);
+  min-height: 100vh;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+[data-page="checkout"] .metropay-header {
+  background-color: var(--mp-header-bg);
+  border-bottom: 1px solid var(--mp-header-border);
+}
+
+[data-page="checkout"] .metropay-card {
+  background-color: var(--mp-surface);
+  border: 1px solid var(--mp-border);
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.18);
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-page="checkout"] .metropay-notice-banner {
+  background: var(--mp-notice-bg);
+  border-bottom: 1px solid var(--mp-notice-border);
+  color: var(--mp-notice-text);
+}
+
+[data-page="checkout"] .metropay-stat-box {
+  background-color: var(--mp-stat-bg);
+  border: 1px solid var(--mp-stat-border);
+}
+
+[data-page="checkout"] .metropay-footer {
+  background-color: var(--mp-footer-bg);
+  border-top: 1px solid var(--mp-footer-border);
+  color: var(--mp-text-muted);
+}
+
+[data-page="checkout"] .metropay-btn-primary {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 14px -2px rgba(16, 185, 129, 0.4);
+  transition: all 0.15s ease-in-out;
+}
+
+[data-page="checkout"] .metropay-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 6px 20px -2px rgba(16, 185, 129, 0.5);
+  transform: translateY(-1px);
+}
+
+[data-page="checkout"] .metropay-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}

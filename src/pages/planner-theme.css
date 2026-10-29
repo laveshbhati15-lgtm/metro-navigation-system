@@ -1,0 +1,196 @@
+/* ==========================================================================
+   Planner Scoped Theme Tokens & Leaflet Adapters
+   STRICTLY scoped to [data-planner-theme]. Homepage and other routes are 100% unaffected.
+   ========================================================================== */
+
+/* ── 1. Scoped CSS Custom Properties ───────────────────────────────────────── */
+
+[data-planner-theme] {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+[data-planner-theme="dark-transit"] {
+  --planner-bg: #070b14;
+  --planner-header-bg: rgba(8, 13, 26, 0.95);
+  --planner-header-border: rgba(30, 41, 59, 0.8);
+  --planner-surface: #0f1524;
+  --planner-surface-subtle: #0b101c;
+  --planner-surface-elevated: #162035;
+  --planner-surface-hover: #1e293b;
+  --planner-border: #1e293b;
+  --planner-border-subtle: rgba(51, 65, 85, 0.6);
+  --planner-border-highlight: rgba(96, 165, 250, 0.4);
+  --planner-text-primary: #f8fafc;
+  --planner-text-secondary: #94a3b8;
+  --planner-text-muted: #64748b;
+  --planner-accent: #2563eb;
+  --planner-accent-hover: #3b82f6;
+  --planner-accent-text: #60a5fa;
+  --planner-accent-subtle: rgba(37, 99, 235, 0.15);
+  --planner-input-bg: #0a0f1d;
+  --planner-input-border: #1e293b;
+  --planner-input-focus: #3b82f6;
+  --planner-map-bg: #060913;
+  --planner-hud-bg: rgba(12, 18, 32, 0.92);
+  --planner-tab-active-bg: #1e293b;
+  --planner-tab-active-text: #ffffff;
+  --planner-advisory-bg: #0c1220;
+  --planner-selection-bg: rgba(37, 99, 235, 0.3);
+  --planner-selection-text: #93c5fd;
+  --planner-dropdown-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+[data-planner-theme="light-metro"] {
+  --planner-bg: #f8fafc;
+  --planner-header-bg: rgba(255, 255, 255, 0.96);
+  --planner-header-border: #cbd5e1;
+  --planner-surface: #ffffff;
+  --planner-surface-subtle: #f1f5f9;
+  --planner-surface-elevated: #e2e8f0;
+  --planner-surface-hover: #f1f5f9;
+  --planner-border: #cbd5e1;
+  --planner-border-subtle: #e2e8f0;
+  --planner-border-highlight: rgba(37, 99, 235, 0.4);
+  --planner-text-primary: #0f172a;
+  --planner-text-secondary: #334155;
+  --planner-text-muted: #64748b;
+  --planner-accent: #2563eb;
+  --planner-accent-hover: #1d4ed8;
+  --planner-accent-text: #1d4ed8;
+  --planner-accent-subtle: rgba(37, 99, 235, 0.08);
+  --planner-input-bg: #ffffff;
+  --planner-input-border: #cbd5e1;
+  --planner-input-focus: #2563eb;
+  --planner-map-bg: #e2e8f0;
+  --planner-hud-bg: rgba(255, 255, 255, 0.95);
+  --planner-tab-active-bg: #ffffff;
+  --planner-tab-active-text: #0f172a;
+  --planner-advisory-bg: #ffffff;
+  --planner-selection-bg: rgba(37, 99, 235, 0.15);
+  --planner-selection-text: #1d4ed8;
+  --planner-dropdown-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+[data-planner-theme="midnight-blue"] {
+  --planner-bg: #020617;
+  --planner-header-bg: rgba(3, 10, 30, 0.96);
+  --planner-header-border: #172a54;
+  --planner-surface: #07122b;
+  --planner-surface-subtle: #040c1e;
+  --planner-surface-elevated: #0d214d;
+  --planner-surface-hover: #0b1a3d;
+  --planner-border: #172a54;
+  --planner-border-subtle: #0f1c3a;
+  --planner-border-highlight: rgba(56, 189, 248, 0.4);
+  --planner-text-primary: #f8fafc;
+  --planner-text-secondary: #93c5fd;
+  --planner-text-muted: #60a5fa;
+  --planner-accent: #0284c7;
+  --planner-accent-hover: #0369a1;
+  --planner-accent-text: #38bdf8;
+  --planner-accent-subtle: rgba(2, 132, 199, 0.2);
+  --planner-input-bg: #030a1c;
+  --planner-input-border: #172a54;
+  --planner-input-focus: #38bdf8;
+  --planner-map-bg: #020512;
+  --planner-hud-bg: rgba(7, 18, 43, 0.94);
+  --planner-tab-active-bg: #0d214d;
+  --planner-tab-active-text: #ffffff;
+  --planner-advisory-bg: #07122b;
+  --planner-selection-bg: rgba(2, 132, 199, 0.3);
+  --planner-selection-text: #bae6fd;
+  --planner-dropdown-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
+}
+
+/* ── 2. Leaflet Scoped Adaptations ─────────────────────────────────────────── */
+
+/* Dark Transit Leaflet */
+[data-planner-theme="dark-transit"] .leaflet-container {
+  background: #060913 !important;
+}
+
+/* Light Metro Leaflet */
+[data-planner-theme="light-metro"] .leaflet-container {
+  background: #e2e8f0 !important;
+}
+
+[data-planner-theme="light-metro"] .leaflet-tile {
+  filter: none !important;
+}
+
+[data-planner-theme="light-metro"] .leaflet-control-zoom {
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-planner-theme="light-metro"] .leaflet-control-zoom a {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+[data-planner-theme="light-metro"] .leaflet-control-zoom a:hover {
+  background: #f1f5f9 !important;
+  color: #1d4ed8 !important;
+}
+
+[data-planner-theme="light-metro"] .leaflet-popup-content-wrapper {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12) !important;
+}
+
+[data-planner-theme="light-metro"] .leaflet-popup-tip {
+  background: #ffffff !important;
+}
+
+[data-planner-theme="light-metro"] .leaflet-popup-close-button {
+  color: #64748b !important;
+}
+
+[data-planner-theme="light-metro"] .leaflet-tooltip {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-planner-theme="light-metro"] .leaflet-tooltip-top:before {
+  border-top-color: #ffffff !important;
+}
+
+[data-planner-theme="light-metro"] .leaflet-tooltip-bottom:before {
+  border-bottom-color: #ffffff !important;
+}
+
+/* Midnight Blue Leaflet */
+[data-planner-theme="midnight-blue"] .leaflet-container {
+  background: #020512 !important;
+}
+
+[data-planner-theme="midnight-blue"] .leaflet-popup-content-wrapper {
+  background: #07122b !important;
+  color: #f8fafc !important;
+  border: 1px solid #172a54 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7) !important;
+}
+
+[data-planner-theme="midnight-blue"] .leaflet-popup-tip {
+  background: #07122b !important;
+}
+
+[data-planner-theme="midnight-blue"] .leaflet-tooltip {
+  background: #050e24 !important;
+  color: #f8fafc !important;
+  border: 1px solid #172a54 !important;
+}
+
+[data-planner-theme="midnight-blue"] .leaflet-tooltip-top:before {
+  border-top-color: #050e24 !important;
+}
+
+[data-planner-theme="midnight-blue"] .leaflet-tooltip-bottom:before {
+  border-bottom-color: #050e24 !important;
+}
+

@@ -231,22 +231,58 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return;
       }
 
-      if (payment.status !== 'captured' && payment.status !== 'authorized') {
+      const expectedCurrency = (booking.currency || 'INR').toUpperCase();
+      if (payment.currency && payment.currency.toUpperCase() !== expectedCurrency) {
         console.warn(
-          `[verifyRazorpayPayment] [${requestId}] [PAYMENT_NOT_CAPTURED] Unexpected payment status: ${payment.status}`
+          `[verifyRazorpayPayment] [${requestId}] [CURRENCY_MISMATCH] Currency mismatch: expected ${expectedCurrency}, got ${payment.currency}`
         );
         res.status(400).json({
-          error: `Payment is not in successful state (status: ${payment.status}).`,
-          code: 'PAYMENT_NOT_CAPTURED',
+          error: 'Paid currency does not match booking currency.',
+          code: 'CURRENCY_MISMATCH',
+          stage: 'RAZORPAY_FETCH',
+          requestId,
+        });
+        return;
+      }
+
+      if (payment.status !== 'captured') {
+        const isAuthorized = payment.status === 'authorized';
+        console.warn(
+          `[verifyRazorpayPayment] [${requestId}] [PAYMENT_NOT_CAPTURED] Payment status is not captured: ${payment.status}`
+        );
+        res.status(400).json({
+          error: isAuthorized
+            ? 'Payment is authorized but not yet captured. Ticket will be issued upon capture confirmation.'
+            : `Payment is not in successful state (status: ${payment.status}).`,
+          code: isAuthorized ? 'PAYMENT_AUTHORIZED_PENDING_CAPTURE' : 'PAYMENT_NOT_CAPTURED',
           stage: 'RAZORPAY_FETCH',
           requestId,
         });
         return;
       }
     } catch (fetchErr: any) {
-      console.warn(
-        `[verifyRazorpayPayment] [${requestId}] Razorpay API fetch bypassed (HMAC verified): ${fetchErr.message}`
+      if (fetchErr?.statusCode === 400 || fetchErr?.statusCode === 404 || fetchErr?.code === 'BAD_REQUEST_ERROR') {
+        console.warn(
+          `[verifyRazorpayPayment] [${requestId}] [PAYMENT_NOT_FOUND] Payment not found on Razorpay: ${fetchErr.message}`
+        );
+        res.status(400).json({
+          error: 'Payment record could not be found or validated with provider.',
+          code: 'PAYMENT_NOT_FOUND',
+          stage: 'RAZORPAY_FETCH',
+          requestId,
+        });
+        return;
+      }
+      console.error(
+        `[verifyRazorpayPayment] [${requestId}] [PROVIDER_UNAVAILABLE] Razorpay API unreachable: ${fetchErr.message}`
       );
+      res.status(502).json({
+        error: 'Payment provider verification service temporarily unavailable. Please retry verification.',
+        code: 'PROVIDER_UNAVAILABLE',
+        stage: 'RAZORPAY_FETCH',
+        requestId,
+      });
+      return;
     }
 
     // Generate verified ticket QR payload with mandatory disclaimer
@@ -267,18 +303,58 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       verifiedAt: now.toISOString(),
     });
 
-    // Update Firestore booking record
+    let currentBookingData = {
+      ...booking,
+      status: 'PAID',
+      razorpayPaymentId,
+      razorpaySignature,
+      qrPayload,
+      paidAt: now.toISOString(),
+    };
+
+    // Concurrency-safe atomic transaction for booking state transition
     try {
       const docRef = db.collection('demo_bookings').doc(bookingId);
-      await docRef.update({
-        status: 'PAID',
-        razorpayPaymentId,
-        razorpaySignature,
-        paidAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
-        qrPayload,
+      await db.runTransaction(async (transaction: any) => {
+        const freshSnap = await transaction.get(docRef);
+        if (!freshSnap.exists) {
+          throw new Error('BOOKING_NOT_FOUND');
+        }
+        const freshData = freshSnap.data() as any;
+        if (freshData.status === 'PAID') {
+          // Idempotent: already marked PAID by concurrent request or webhook
+          currentBookingData = freshData;
+          return;
+        }
+
+        transaction.update(docRef, {
+          status: 'PAID',
+          razorpayPaymentId,
+          razorpaySignature,
+          paidAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+          qrPayload,
+        });
+
+        currentBookingData = {
+          ...freshData,
+          status: 'PAID',
+          razorpayPaymentId,
+          razorpaySignature,
+          qrPayload,
+          paidAt: now.toISOString(),
+        };
       });
     } catch (updateErr: any) {
+      if (updateErr?.message === 'BOOKING_NOT_FOUND') {
+        res.status(404).json({
+          error: `Booking record "${bookingId}" not found.`,
+          code: 'BOOKING_NOT_FOUND',
+          stage: 'FIRESTORE_UPDATE',
+          requestId,
+        });
+        return;
+      }
       const sanitized = sanitizeFirestoreError(updateErr);
       console.error(
         `[verifyRazorpayPayment] [${requestId}] [FIRESTORE_UPDATE] [${sanitized.code}] Firestore update failed: ${sanitized.message}`
@@ -294,19 +370,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     }
 
-    const updatedBooking = {
-      ...booking,
-      status: 'PAID',
-      razorpayPaymentId,
-      qrPayload,
-      paidAt: now.toISOString(),
-    };
-
     res.status(200).json({
       success: true,
       status: 'PAID',
-      bookingId: booking.bookingId,
-      ticket: formatVerifiedTicket(updatedBooking),
+      bookingId: currentBookingData.bookingId,
+      ticket: formatVerifiedTicket(currentBookingData),
       requestId,
     });
   } catch (err: any) {

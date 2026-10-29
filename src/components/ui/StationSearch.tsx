@@ -13,6 +13,7 @@ interface StationSearchProps {
   onChange: (station: Station | null) => void;
   excludeId?: string;   // Prevent selecting the same station as the other field
   id?: string;
+  variant?: 'default' | 'planner';
 }
 
 export function StationSearch({
@@ -22,6 +23,7 @@ export function StationSearch({
   onChange,
   excludeId,
   id: propId,
+  variant = 'default',
 }: StationSearchProps) {
   const { t, i18n } = useTranslation();
   const autoId = useId();
@@ -182,40 +184,61 @@ export function StationSearch({
   }
 
   const isOrigin = label.toLowerCase().includes('from') || label.toLowerCase().includes('origin') || label.includes('प्रारंभिक');
+  const isPlanner = variant === 'planner';
 
   return (
     <div ref={containerRef} className="relative w-full">
       <div className="flex items-center justify-between mb-1.5">
         <label
           htmlFor={inputId}
-          className="text-xs font-semibold uppercase tracking-wider text-gray-300 flex items-center gap-2 font-mono"
+          className={cn(
+            'flex items-center gap-2 font-mono uppercase tracking-wider font-semibold',
+            isPlanner ? 'text-[11px] text-[var(--planner-text-secondary)]' : 'text-xs text-gray-300'
+          )}
         >
           <span
             className={cn(
-              'w-2.5 h-2.5 rounded-full inline-block shrink-0',
-              isOrigin ? 'bg-emerald-400 ring-4 ring-emerald-500/20' : 'bg-rose-400 ring-4 ring-rose-500/20'
+              'rounded-full inline-block shrink-0',
+              isPlanner
+                ? isOrigin ? 'w-2 h-2 bg-emerald-500' : 'w-2 h-2 bg-rose-500'
+                : isOrigin ? 'w-2.5 h-2.5 bg-emerald-400 ring-4 ring-emerald-500/20' : 'w-2.5 h-2.5 bg-rose-400 ring-4 ring-rose-500/20'
             )}
           />
           <span>{label}</span>
         </label>
         {value && (
-          <span className="text-[11px] font-mono text-cyan-400/90 flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-            {value.lines.map(l => getLocalizedLineName(l, i18n.language)).join(', ')}
+          <span className={cn(
+            'font-mono flex items-center gap-1.5',
+            isPlanner ? 'text-[10px] text-[var(--planner-text-secondary)]' : 'text-[11px] text-cyan-400/90'
+          )}>
+            <div className="flex items-center gap-1">
+              {value.lines.map(l => (
+                <span
+                  key={l}
+                  className="w-2 h-2 rounded-full inline-block"
+                  style={{ backgroundColor: LINE_COLORS[l] }}
+                  title={getLocalizedLineName(l, i18n.language)}
+                />
+              ))}
+            </div>
+            <span>{value.lines.map(l => getLocalizedLineName(l, i18n.language)).join(', ')}</span>
           </span>
         )}
       </div>
 
       <div className="relative group">
         {/* Departure / Arrival Transit Icon */}
-        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors">
+        <span className={cn(
+          'absolute top-1/2 -translate-y-1/2 pointer-events-none transition-colors',
+          isPlanner ? 'left-3 text-[var(--planner-text-muted)]' : 'left-3.5'
+        )}>
           {isOrigin ? (
-            <svg className="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <svg className={cn('w-4 h-4', isPlanner ? 'text-emerald-500' : 'text-emerald-400')} viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <circle cx="12" cy="12" r="9" strokeWidth="2" />
               <circle cx="12" cy="12" r="3" fill="currentColor" />
             </svg>
           ) : (
-            <svg className="w-4 h-4 text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <svg className={cn('w-4 h-4', isPlanner ? 'text-rose-500' : 'text-rose-400')} viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <circle cx="12" cy="11" r="2.5" fill="currentColor" />
             </svg>
@@ -235,11 +258,11 @@ export function StationSearch({
           }
           autoComplete="off"
           className={cn(
-            'w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-10 pr-9 py-2.5 sm:py-3',
-            'text-gray-100 placeholder-gray-500 font-sans text-sm font-medium',
-            'focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/25',
-            'hover:border-slate-600 transition-all duration-200 shadow-inner',
-            value && 'border-cyan-500/50 bg-slate-900',
+            'w-full font-sans text-sm font-medium transition-all duration-200',
+            isPlanner
+              ? 'bg-[var(--planner-input-bg)] border border-[var(--planner-input-border)] rounded-lg pl-9 pr-8 py-2.5 text-[var(--planner-text-primary)] placeholder-[var(--planner-text-muted)] focus:outline-none focus:border-[var(--planner-input-focus)] focus:ring-1 focus:ring-[var(--planner-accent-subtle)] hover:border-[var(--planner-border-highlight)] shadow-xs'
+              : 'bg-slate-900/90 border border-slate-700/80 rounded-xl pl-10 pr-9 py-2.5 sm:py-3 text-gray-100 placeholder-gray-500 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/25 hover:border-slate-600 shadow-inner',
+            value && (isPlanner ? 'border-[var(--planner-border-highlight)]' : 'border-cyan-500/50 bg-slate-900'),
           )}
           placeholder={defaultPlaceholder}
           value={query}
@@ -253,7 +276,10 @@ export function StationSearch({
           <button
             type="button"
             aria-label={t('search.clearAria')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-200 transition-colors p-1"
+            className={cn(
+              'absolute top-1/2 -translate-y-1/2 transition-colors p-1',
+              isPlanner ? 'right-2.5 text-[var(--planner-text-muted)] hover:text-[var(--planner-text-primary)]' : 'right-3 text-gray-500 hover:text-gray-200'
+            )}
             onClick={handleClear}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -271,14 +297,17 @@ export function StationSearch({
           role="listbox"
           aria-label={t('search.suggestionsAria', { label })}
           className={cn(
-            'absolute z-50 mt-1 w-full max-h-64 overflow-y-auto',
-            'bg-navy-900 border border-white/15 rounded-xl shadow-2xl',
-            'backdrop-blur-xl divide-y divide-white/[0.04]',
-            'animate-fade-in',
+            'absolute z-50 mt-1 w-full max-h-64 overflow-y-auto shadow-2xl animate-fade-in',
+            isPlanner
+              ? 'bg-[var(--planner-surface)] border border-[var(--planner-border)] rounded-lg divide-y divide-[var(--planner-border-subtle)]'
+              : 'bg-navy-900 border border-white/15 rounded-xl backdrop-blur-xl divide-y divide-white/[0.04]'
           )}
         >
           {query.trim().length === 0 && (
-            <li className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-cyan-400/90 bg-cyan-950/40 border-b border-white/5 flex items-center justify-between pointer-events-none select-none">
+            <li className={cn(
+              'px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider flex items-center justify-between pointer-events-none select-none',
+              isPlanner ? 'text-[var(--planner-text-muted)] bg-[var(--planner-surface-subtle)] border-b border-[var(--planner-border-subtle)]' : 'text-cyan-400/90 bg-cyan-950/40 border-b border-white/5'
+            )}>
               <span>{t('search.hubsHeader')}</span>
               <span>{t('search.oneClickSelect')}</span>
             </li>
@@ -297,8 +326,10 @@ export function StationSearch({
                   'flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors',
                   'first:rounded-t-xl last:rounded-b-xl',
                   index === highlightedIndex
-                    ? 'bg-blue-600/30 text-white'
-                    : 'text-gray-200 hover:bg-white/5',
+                    ? 'bg-[var(--planner-accent-subtle)] text-[var(--planner-text-primary)] font-medium'
+                    : isPlanner
+                      ? 'text-[var(--planner-text-primary)] hover:bg-[var(--planner-surface-hover)]'
+                      : 'text-gray-200 hover:bg-white/5',
                 )}
                 onMouseEnter={() => setHighlightedIndex(index)}
                 onMouseDown={(e) => {
@@ -323,13 +354,16 @@ export function StationSearch({
                   <span className="font-medium text-sm truncate flex items-center gap-1.5">
                     <span>{displayName}</span>
                     {secondaryName && (
-                      <span className="text-[11px] text-gray-500 font-normal">
+                      <span className={cn(
+                        'text-[11px] font-normal',
+                        isPlanner ? 'text-[var(--planner-text-muted)]' : 'text-gray-500'
+                      )}>
                         ({secondaryName})
                       </span>
                     )}
                   </span>
                   {station.isInterchange && (
-                    <span className="text-xs text-yellow-400/80 flex items-center gap-1">
+                    <span className="text-xs text-amber-500 flex items-center gap-1">
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
                       </svg>
@@ -339,7 +373,10 @@ export function StationSearch({
                 </span>
 
                 {/* Line name labels */}
-                <span className="ml-auto text-xs text-gray-500 hidden sm:block">
+                <span className={cn(
+                  'ml-auto text-xs hidden sm:block',
+                  isPlanner ? 'text-[var(--planner-text-muted)]' : 'text-gray-500'
+                )}>
                   {station.lines.map(l => getLocalizedLineName(l, i18n.language)).join(' / ')}
                 </span>
               </li>

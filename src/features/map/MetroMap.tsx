@@ -1,9 +1,10 @@
-import { useMemo, useState, useCallback, Fragment } from 'react';
+import { useMemo, useState, useCallback, useEffect, Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MapContainer, TileLayer, Polyline, CircleMarker, Tooltip, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Polyline, CircleMarker, Tooltip, Popup, useMap } from 'react-leaflet';
 import { useJourneyStore } from '@/store/journeyStore';
 import { metroGraph } from '@/core/graph/MetroGraph';
 import { LINE_COLORS } from '@/utils/lineColors';
+import { usePlannerTheme } from '@/context/PlannerThemeContext';
 import {
   buildLineTracks,
   getRouteCoordinates,
@@ -14,8 +15,24 @@ import {
 import { MapOverlayControls, MapBoundsHandler, type LineFilter } from './MapControls';
 import { getStationDisplayName, getStationSecondaryName, getLocalizedLineName } from '@/i18n';
 
+function MapResizer() {
+  const map = useMap();
+  const { theme } = usePlannerTheme();
+
+  useEffect(() => {
+    map.invalidateSize();
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [map, theme]);
+
+  return null;
+}
+
 export function MetroMap() {
   const { t, i18n } = useTranslation();
+  const { isLight } = usePlannerTheme();
   const source           = useJourneyStore((s) => s.source);
   const destination      = useJourneyStore((s) => s.destination);
   const setSource        = useJourneyStore((s) => s.setSource);
@@ -77,12 +94,16 @@ export function MetroMap() {
 
   return (
     <div
-      className="relative w-full rounded-2xl border border-slate-800 shadow-xl bg-[#02050c] overflow-hidden h-[460px] sm:h-[560px] lg:h-[640px] isolate"
+      className="relative w-full rounded-xl border overflow-hidden h-[480px] sm:h-[580px] lg:h-[calc(100vh-13rem)] min-h-[520px] isolate shadow-xs transition-colors"
+      style={{
+        backgroundColor: 'var(--planner-map-bg)',
+        borderColor: 'var(--planner-border)',
+      }}
     >
       {/* Tile-unavailable banner */}
       {tileError && basemapMode === 'streets' && (
         <div className="absolute inset-x-0 top-3 z-[500] flex justify-center pointer-events-none">
-          <div className="bg-amber-900/90 border border-amber-500/50 text-amber-200 text-xs px-4 py-2 rounded-lg shadow-lg backdrop-blur-sm flex items-center gap-2">
+          <div className="bg-amber-950/90 border border-amber-500/40 text-amber-200 text-xs px-3.5 py-1.5 rounded-md shadow-md backdrop-blur-sm flex items-center gap-2 font-mono">
             <svg className="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
             </svg>
@@ -97,12 +118,13 @@ export function MetroMap() {
         minZoom={10}
         maxZoom={17}
         scrollWheelZoom={true}
-        style={{ height: '100%', width: '100%', borderRadius: '1rem', background: '#030712' }}
+        style={{ height: '100%', width: '100%', borderRadius: '0.75rem', background: 'var(--planner-map-bg)' }}
       >
         <MapBoundsHandler
           routeCoordinates={routeCoordinates}
           allCoordinates={allCoordinates}
         />
+        <MapResizer />
 
         {/* Overlay controls: fit-network, fit-route, line filters, basemap toggle, legend */}
         <MapOverlayControls
@@ -229,23 +251,40 @@ export function MetroMap() {
           const isOnRoute     = routeStationIds.has(station.id);
           const isInterchange = station.isInterchange;
 
+          const isLineFiltered = lineFilter !== 'ALL';
+          const matchesLine    = !isLineFiltered || station.lines.includes(lineFilter);
+
           const primaryColor =
             station.lines.length > 0 ? LINE_COLORS[station.lines[0]] : '#94a3b8';
 
           let fillColor    = primaryColor;
           let radius       = isInterchange ? 6.5 : 4.5;
-          let strokeColor  = '#030712';
+          let strokeColor  = isLight ? '#0f172a' : '#030712';
           let strokeWidth  = 1.5;
           let fillOpacity  = 0.92;
 
           if (isSource) {
-            fillColor = '#10b981'; radius = 9; strokeColor = '#ffffff'; strokeWidth = 2.5; fillOpacity = 1;
+            fillColor = '#10b981';
+            radius = 9;
+            strokeColor = isLight ? '#064e3b' : '#ffffff';
+            strokeWidth = 2.5;
+            fillOpacity = 1;
           } else if (isDestination) {
-            fillColor = '#ef4444'; radius = 9; strokeColor = '#ffffff'; strokeWidth = 2.5; fillOpacity = 1;
+            fillColor = '#ef4444';
+            radius = 9;
+            strokeColor = isLight ? '#7f1d1d' : '#ffffff';
+            strokeWidth = 2.5;
+            fillOpacity = 1;
           } else if (isOnRoute) {
-            radius = isInterchange ? 8 : 6; strokeColor = '#ffffff'; strokeWidth = 2; fillOpacity = 1;
+            radius = isInterchange ? 8.5 : 6.5;
+            strokeColor = isLight ? '#0f172a' : '#ffffff';
+            strokeWidth = 2;
+            fillOpacity = 1;
+          } else if (isLineFiltered && !matchesLine) {
+            fillOpacity = 0.2;
+            strokeWidth = 1;
           } else if (routeCoordinates.length > 0) {
-            fillOpacity = 0.45;
+            fillOpacity = 0.75;
           }
 
           const displayName = getStationDisplayName(station, i18n.language);
@@ -258,6 +297,7 @@ export function MetroMap() {
                 <CircleMarker
                   center={[station.coordinates.lat, station.coordinates.lng]}
                   radius={16}
+                  pane="markerPane"
                   pathOptions={{
                     color: isSource ? '#10b981' : '#ef4444',
                     weight: 1.5,
@@ -273,12 +313,13 @@ export function MetroMap() {
                 <CircleMarker
                   center={[station.coordinates.lat, station.coordinates.lng]}
                   radius={isOnRoute ? 12 : 9.5}
+                  pane="markerPane"
                   pathOptions={{
                     color: '#a855f7',
                     weight: 1.5,
                     dashArray: '2 2',
                     fillColor: '#c084fc',
-                    fillOpacity: 0.2,
+                    fillOpacity: isLineFiltered && !matchesLine ? 0.08 : 0.25,
                   }}
                 />
               )}
@@ -287,17 +328,18 @@ export function MetroMap() {
               <CircleMarker
                 center={[station.coordinates.lat, station.coordinates.lng]}
                 radius={radius}
+                pane="markerPane"
                 pathOptions={{ color: strokeColor, weight: strokeWidth, fillColor, fillOpacity }}
               >
               {/* Tooltip on hover */}
               <Tooltip direction="top" offset={[0, -6]} opacity={0.97}>
                 <div className="font-sans text-xs">
-                  <span className="font-semibold text-white">{displayName}</span>
+                  <span className="font-semibold">{displayName}</span>
                   {secondaryName && (
-                    <span className="text-gray-400 ml-1 font-normal">({secondaryName})</span>
+                    <span className="opacity-80 ml-1 font-normal">({secondaryName})</span>
                   )}
                   {isInterchange && (
-                    <span className="ml-1 text-[10px] text-amber-400 font-semibold"> [{t('map.interchange')}]</span>
+                    <span className="ml-1 text-[10px] text-amber-500 font-semibold"> [{t('map.interchange')}]</span>
                   )}
                 </div>
               </Tooltip>
@@ -306,9 +348,9 @@ export function MetroMap() {
               <Popup className="station-popup">
                 <div className="p-1 space-y-2.5 min-w-[190px]">
                   <div>
-                    <h4 className="text-sm font-bold text-white leading-snug">{displayName}</h4>
+                    <h4 className="text-sm font-bold text-[var(--planner-text-primary)] leading-snug">{displayName}</h4>
                     {secondaryName && (
-                      <p className="text-xs text-gray-400">{secondaryName}</p>
+                      <p className="text-xs text-[var(--planner-text-secondary)]">{secondaryName}</p>
                     )}
                   </div>
 
@@ -328,13 +370,13 @@ export function MetroMap() {
                       </span>
                     ))}
                     {isInterchange && (
-                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40">
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-500 border border-amber-500/40">
                         {t('map.interchange')}
                       </span>
                     )}
                   </div>
 
-                  <div className="pt-2 border-t border-white/10 grid grid-cols-2 gap-1.5">
+                  <div className="pt-2 border-t border-[var(--planner-border-subtle)] grid grid-cols-2 gap-1.5">
                     <button
                       type="button"
                       disabled={isSource}
@@ -346,8 +388,8 @@ export function MetroMap() {
                       }}
                       className={`text-xs py-1.5 px-2 rounded-lg font-medium transition-colors ${
                         isSource
-                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default'
-                          : 'bg-white/10 hover:bg-emerald-600/30 text-gray-200 hover:text-emerald-300 hover:border-emerald-500/40 border border-white/10'
+                          ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 cursor-default'
+                          : 'bg-[var(--planner-surface-subtle)] hover:bg-[var(--planner-surface-hover)] text-[var(--planner-text-primary)] border border-[var(--planner-border)]'
                       }`}
                     >
                       {isSource ? t('map.startChecked') : destination && destination.id !== station.id ? t('map.setAndPlan') : t('map.setAsFrom')}
@@ -363,8 +405,8 @@ export function MetroMap() {
                       }}
                       className={`text-xs py-1.5 px-2 rounded-lg font-medium transition-colors ${
                         isDestination
-                          ? 'bg-red-500/20 text-red-400 border border-red-500/30 cursor-default'
-                          : 'bg-white/10 hover:bg-red-600/30 text-gray-200 hover:text-red-300 hover:border-red-500/40 border border-white/10'
+                          ? 'bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30 cursor-default'
+                          : 'bg-[var(--planner-surface-subtle)] hover:bg-[var(--planner-surface-hover)] text-[var(--planner-text-primary)] border border-[var(--planner-border)]'
                       }`}
                     >
                       {isDestination ? t('map.endChecked') : source && source.id !== station.id ? t('map.setAndPlan') : t('map.setAsTo')}
@@ -374,7 +416,7 @@ export function MetroMap() {
                   <button
                     type="button"
                     onClick={() => setIndoorStation(station)}
-                    className="w-full text-[11px] py-1.5 px-2.5 rounded-lg font-medium bg-blue-600/20 hover:bg-blue-600/30 text-cyan-300 border border-cyan-500/30 flex items-center justify-center gap-1.5 transition-colors"
+                    className="w-full text-[11px] py-1.5 px-2.5 rounded-lg font-medium bg-[var(--planner-surface-subtle)] hover:bg-[var(--planner-surface-hover)] text-[var(--planner-accent-text)] border border-[var(--planner-border)] flex items-center justify-center gap-1.5 transition-colors shadow-xs"
                   >
                     <span>♿</span>
                     <span>{t('map.indoorGuide')}</span>
@@ -388,14 +430,21 @@ export function MetroMap() {
       </MapContainer>
       {/* Bottom Persistent Map Legend Strip */}
       <div className="absolute bottom-3 left-3 right-3 z-[400] pointer-events-none">
-        <div className="max-w-max mx-auto px-3.5 py-1.5 rounded-xl bg-slate-900/90 backdrop-blur-md border border-slate-800/90 text-xs shadow-lg flex items-center gap-3 flex-wrap justify-center pointer-events-auto">
+        <div
+          className="max-w-max mx-auto px-3.5 py-1.5 rounded-xl border text-xs shadow-md flex items-center gap-3 flex-wrap justify-center pointer-events-auto transition-colors"
+          style={{
+            backgroundColor: 'var(--planner-hud-bg)',
+            borderColor: 'var(--planner-border)',
+            color: 'var(--planner-text-primary)',
+          }}
+        >
           {activeRoute ? (
             <>
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-emerald-500/30" />
-                <span className="text-[11px] font-medium text-white">{getStationDisplayName(activeRoute.stations[0], i18n.language)}</span>
+                <span className="text-[11px] font-medium text-[var(--planner-text-primary)]">{getStationDisplayName(activeRoute.stations[0], i18n.language)}</span>
               </div>
-              <span className="text-gray-500 text-xs">➔</span>
+              <span className="text-[var(--planner-text-muted)] text-xs">➔</span>
               <div className="flex items-center gap-1.5">
                 {activeRoute.lineSegments.map((seg, sIdx) => (
                   <span
@@ -407,14 +456,14 @@ export function MetroMap() {
                   </span>
                 ))}
               </div>
-              <span className="text-gray-500 text-xs">➔</span>
+              <span className="text-[var(--planner-text-muted)] text-xs">➔</span>
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-rose-400 ring-2 ring-rose-500/30" />
-                <span className="text-[11px] font-medium text-white">{getStationDisplayName(activeRoute.stations[activeRoute.stations.length - 1], i18n.language)}</span>
+                <span className="text-[11px] font-medium text-[var(--planner-text-primary)]">{getStationDisplayName(activeRoute.stations[activeRoute.stations.length - 1], i18n.language)}</span>
               </div>
             </>
           ) : (
-            <div className="flex items-center gap-4 text-[11px] font-sans text-gray-300">
+            <div className="flex items-center gap-4 text-[11px] font-sans text-[var(--planner-text-secondary)]">
               <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-yellow-400" />
                 <span>{getLocalizedLineName('YELLOW', i18n.language)}</span>
@@ -428,7 +477,7 @@ export function MetroMap() {
                 <span>{getLocalizedLineName('VIOLET', i18n.language)}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full ring-2 ring-purple-400/80 bg-slate-900" />
+                <span className="w-2 h-2 rounded-full ring-2 ring-purple-400/80 bg-[var(--planner-surface)]" />
                 <span>{t('search.interchangeBadge')}</span>
               </div>
             </div>

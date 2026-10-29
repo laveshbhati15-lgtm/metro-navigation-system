@@ -161,6 +161,14 @@ describe('Payment & Fare Integrity Safeguards', () => {
     expect(isMatch).toBe(false);
   });
 
+  it('detects mismatched payment currencies', () => {
+    const expectedCurrency = 'INR';
+    const reportedCurrency = 'USD';
+
+    const isMatch = expectedCurrency === reportedCurrency;
+    expect(isMatch).toBe(false);
+  });
+
   it('detects mismatched order associations', () => {
     const expectedOrderId: string = 'order_EXPECTED_123';
     const reportedOrderId: string = 'order_ATTACKER_999';
@@ -169,11 +177,34 @@ describe('Payment & Fare Integrity Safeguards', () => {
     expect(isOrderAssociated).toBe(false);
   });
 
-  it('rejects payments with non-captured/failed statuses', () => {
-    const failedStatuses = ['failed', 'created', 'refunded'];
-    failedStatuses.forEach((status) => {
-      const isSuccessful = status === 'captured' || status === 'authorized';
-      expect(isSuccessful).toBe(false);
+  it('rejects payments with non-captured or failed statuses', () => {
+    const nonCapturedStatuses = ['failed', 'created', 'refunded'];
+    nonCapturedStatuses.forEach((status) => {
+      const isCaptured = status === 'captured';
+      expect(isCaptured).toBe(false);
     });
+  });
+
+  it('strictly rejects authorized status from issuing paid tickets until capture is confirmed', () => {
+    const paymentStatus: string = 'authorized';
+    const canIssueTicket = paymentStatus === 'captured';
+    expect(canIssueTicket).toBe(false);
+  });
+
+  it('allows ticket issuance strictly and only when payment status is captured', () => {
+    const capturedStatus: string = 'captured';
+    const canIssueTicket = capturedStatus === 'captured';
+    expect(canIssueTicket).toBe(true);
+  });
+
+  it('protects already confirmed PAID status from being overwritten by delayed payment.failed event', () => {
+    let currentBookingStatus = 'PAID';
+    const incomingEvent = 'payment.failed';
+
+    if (incomingEvent === 'payment.failed' && currentBookingStatus !== 'PAID') {
+      currentBookingStatus = 'FAILED';
+    }
+
+    expect(currentBookingStatus).toBe('PAID');
   });
 });

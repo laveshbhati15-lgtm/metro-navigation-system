@@ -56,7 +56,8 @@ describe('paymentService (Client Razorpay Integration)', () => {
     const [url, options] = fetchSpy.mock.calls[0];
     expect(url).toContain('/createRazorpayOrder');
     expect(options?.method).toBe('POST');
-    expect((options?.headers as Record<string, string>)['Authorization']).toBe(
+    const headers = options?.headers as Record<string, string> | undefined;
+    expect(headers?.['Authorization']).toBe(
       'Bearer mock-firebase-token'
     );
 
@@ -68,11 +69,11 @@ describe('paymentService (Client Razorpay Integration)', () => {
     expect(body.destinationId).toBe('BOTANICAL_GARDEN');
   });
 
-  it('createPaymentOrder throws error when server returns failure', async () => {
+  it('createPaymentOrder throws error when server returns failure with JSON error', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
       ok: false,
       status: 400,
-      json: async () => ({ error: 'Invalid source station' }),
+      text: async () => JSON.stringify({ error: 'Invalid source station' }),
     } as Response);
 
     await expect(
@@ -83,6 +84,36 @@ describe('paymentService (Client Razorpay Integration)', () => {
         ticketType: 'SINGLE',
       })
     ).rejects.toThrow('Invalid source station');
+  });
+
+  it('createPaymentOrder handles non-JSON HTML server crash gracefully without throwing unhandled exceptions', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: false,
+      status: 502,
+      text: async () => '<html><body>502 Bad Gateway</body></html>',
+    } as Response);
+
+    await expect(
+      createPaymentOrder({
+        sourceId: 'SAMAYPUR_BADLI',
+        destinationId: 'RAJIV_CHOWK',
+        passengerCount: 1,
+        ticketType: 'SINGLE',
+      })
+    ).rejects.toThrow('Order creation failed (HTTP 502)');
+  });
+
+  it('createPaymentOrder catches Safari Load failed network error and provides descriptive network error', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValueOnce(new TypeError('Load failed'));
+
+    await expect(
+      createPaymentOrder({
+        sourceId: 'SAMAYPUR_BADLI',
+        destinationId: 'RAJIV_CHOWK',
+        passengerCount: 1,
+        ticketType: 'SINGLE',
+      })
+    ).rejects.toThrow(/Network connection error while contacting payment server/i);
   });
 
   it('verifyServerPayment submits bookingId, paymentId, and signature for verification', async () => {

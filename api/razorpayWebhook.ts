@@ -44,7 +44,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let rawBodyBuffer: Buffer;
   try {
     rawBodyBuffer = await getRawBody(req);
-  } catch (err: any) {
+  } catch (_err: any) {
     res.status(400).json({ error: 'Failed to read request body stream.' });
     return;
   }
@@ -74,6 +74,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const orderId = paymentEntity?.order_id || event.payload?.order?.entity?.id;
       const paymentId = paymentEntity?.id;
       const amount = paymentEntity?.amount;
+      const currency = paymentEntity?.currency;
 
       if (orderId) {
         const snapshot = await db
@@ -84,26 +85,99 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         if (!snapshot.empty) {
           const doc = snapshot.docs[0];
-          const booking = doc.data() as any;
 
-          // Idempotency: skip if already PAID
-          if (booking.status !== 'PAID') {
-            if (amount && Number(amount) !== Number(booking.amountInPaise)) {
-              console.error(
-                `Amount mismatch in webhook for order ${orderId}: expected ${booking.amountInPaise}, got ${amount}`
-              );
+          try {
+            await db.runTransaction(async (transaction: any) => {
+              const freshSnap = await transaction.get(doc.ref);
+              if (!freshSnap.exists) return;
+              const booking = freshSnap.data() as any;
+
+              // Idempotency: skip if already PAID
+              if (booking.status === 'PAID') {
+                console.log(`Webhook: Booking ${booking.bookingId} already marked PAID`);
+                return;
+              }
+
+              if (amount && Number(amount) !== Number(booking.amountInPaise)) {
+                console.error(
+                  `Amount mismatch in webhook for order ${orderId}: expected ${booking.amountInPaise}, got ${amount}`
+                );
+                throw new Error('AMOUNT_MISMATCH');
+              }
+
+              const expectedCurrency = (booking.currency || 'INR').toUpperCase();
+              if (currency && currency.toUpperCase() !== expectedCurrency) {
+                console.error(
+                  `Currency mismatch in webhook for order ${orderId}: expected ${expectedCurrency}, got ${currency}`
+                );
+                throw new Error('CURRENCY_MISMATCH');
+              }
+
+              const now = new Date();
+              const qrPayload = JSON.stringify({
+                app: 'DELHI_METRO_NAVIGATOR',
+                bookingId: booking.bookingId,
+                type: 'DEMO_TICKET',
+                status: 'PAID',
+                valid: false,
+                disclaimer: 'DEMO — NOT VALID FOR METRO TRAVEL',
+                source: { id: booking.sourceId, name: booking.sourceName },
+                destination: { id: booking.destinationId, name: booking.destinationName },
+                passengers: booking.passengerCount,
+                ticketType: booking.ticketType,
+                totalFare: booking.totalFare,
+                razorpayPaymentId: paymentId || booking.razorpayPaymentId || null,
+                verifiedAt: now.toISOString(),
+              });
+
+              transaction.update(doc.ref, {
+                status: 'PAID',
+                razorpayPaymentId: paymentId || booking.razorpayPaymentId || null,
+                paidAt: FieldValue.serverTimestamp(),
+                updatedAt: FieldValue.serverTimestamp(),
+                qrPayload,
+              });
+              console.log(`Webhook marked booking ${booking.bookingId} as PAID`);
+            });
+          } catch (txErr: any) {
+            if (txErr?.message === 'AMOUNT_MISMATCH') {
               res.status(400).json({ error: 'Amount mismatch' });
               return;
             }
-
-            await doc.ref.update({
-              status: 'PAID',
-              razorpayPaymentId: paymentId || booking.razorpayPaymentId || null,
-              paidAt: FieldValue.serverTimestamp(),
-              updatedAt: FieldValue.serverTimestamp(),
-            });
-            console.log(`Webhook marked booking ${booking.bookingId} as PAID`);
+            if (txErr?.message === 'CURRENCY_MISMATCH') {
+              res.status(400).json({ error: 'Currency mismatch' });
+              return;
+            }
+            throw txErr;
           }
+        }
+      }
+    } else if (eventType === 'payment.authorized') {
+      const paymentEntity = event.payload?.payment?.entity;
+      const orderId = paymentEntity?.order_id;
+
+      if (orderId) {
+        const snapshot = await db
+          .collection('demo_bookings')
+          .where('razorpayOrderId', '==', orderId)
+          .limit(1)
+          .get();
+
+        if (!snapshot.empty) {
+          const doc = snapshot.docs[0];
+          await db.runTransaction(async (transaction: any) => {
+            const freshSnap = await transaction.get(doc.ref);
+            if (!freshSnap.exists) return;
+            const booking = freshSnap.data() as any;
+            if (booking.status === 'PENDING') {
+              transaction.update(doc.ref, {
+                status: 'AUTHORIZED',
+                razorpayPaymentId: paymentEntity?.id || null,
+                updatedAt: FieldValue.serverTimestamp(),
+              });
+              console.log(`Webhook marked booking ${doc.id} as AUTHORIZED`);
+            }
+          });
         }
       }
     } else if (eventType === 'payment.failed') {
@@ -119,12 +193,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         if (!snapshot.empty) {
           const doc = snapshot.docs[0];
-          await doc.ref.update({
-            status: 'FAILED',
-            failureReason: paymentEntity?.error_description || 'Payment failed',
-            updatedAt: FieldValue.serverTimestamp(),
+          await db.runTransaction(async (transaction: any) => {
+            const freshSnap = await transaction.get(doc.ref);
+            if (!freshSnap.exists) return;
+            const booking = freshSnap.data() as any;
+            // Protect already confirmed PAID tickets from being overwritten by a delayed failure event
+            if (booking.status !== 'PAID') {
+              transaction.update(doc.ref, {
+                status: 'FAILED',
+                failureReason: paymentEntity?.error_description || 'Payment failed',
+                updatedAt: FieldValue.serverTimestamp(),
+              });
+              console.log(`Webhook marked booking ${doc.id} as FAILED`);
+            } else {
+              console.log(`Webhook ignored payment.failed for already PAID booking ${doc.id}`);
+            }
           });
-          console.log(`Webhook marked booking ${doc.id} as FAILED`);
         }
       }
     }

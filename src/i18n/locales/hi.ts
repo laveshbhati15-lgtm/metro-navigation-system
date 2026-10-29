@@ -459,6 +459,15 @@ export const hi = {
     loading: 'लोड हो रहा है...',
     close: 'बंद करें',
   },
+  theme: {
+    title: 'प्लानर थीम',
+    darkTransit: 'डार्क ट्रांजिट',
+    darkTransitDesc: 'उच्च-सटीक डार्क ऑपरेशंस कंसोल',
+    lightMetro: 'लाइट मेट्रो',
+    lightMetroDesc: 'स्पष्ट, उच्च-कंट्रास्ट दिन का इंटरफेस',
+    midnightBlue: 'मिडनाइट ब्लू',
+    midnightBlueDesc: 'गहरा नेवी ट्रांजिट इंटरफेस',
+  },
 } as const;
 
 export default hi;

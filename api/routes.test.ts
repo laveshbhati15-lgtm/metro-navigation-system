@@ -35,6 +35,21 @@ const { bookingsStore, mockDb } = vi.hoisted(() => {
     setDocOverride: (fn: ((docId: string) => any) | null) => {
       docOverride = fn;
     },
+    runTransaction: async (fn: (transaction: any) => Promise<any>) => {
+      const pendingUpdates: Promise<any>[] = [];
+      const transaction = {
+        get: async (ref: any) => ref.get(),
+        update: (ref: any, updates: any) => {
+          pendingUpdates.push(ref.update(updates));
+        },
+        set: (ref: any, data: any) => {
+          pendingUpdates.push(ref.set(data));
+        },
+      };
+      const result = await fn(transaction);
+      await Promise.all(pendingUpdates);
+      return result;
+    },
     collection: (colName: string) => {
       if (colName !== 'demo_bookings') {
         throw new Error(`Unexpected collection: ${colName}`);
@@ -51,8 +66,16 @@ const { bookingsStore, mockDb } = vi.hoisted(() => {
                     id,
                     data: () => ({ ...data }),
                     ref: {
+                      get: async () => {
+                        const current = bookingsStore.get(id);
+                        return {
+                          exists: !!current,
+                          data: () => (current ? { ...current } : undefined),
+                        };
+                      },
                       update: async (updates: any) => {
-                        bookingsStore.set(id, { ...data, ...updates });
+                        const current = bookingsStore.get(id);
+                        bookingsStore.set(id, { ...(current || data), ...updates });
                       },
                     },
                   });
@@ -142,6 +165,7 @@ vi.mock('./_lib/razorpay.js', async (importOriginal) => {
           id: paymentId,
           order_id: 'order_DIFFERENT',
           amount: 4000,
+          currency: 'INR',
           status: 'captured',
         };
       }
@@ -150,21 +174,52 @@ vi.mock('./_lib/razorpay.js', async (importOriginal) => {
           id: paymentId,
           order_id: 'order_test_valid',
           amount: 1000, // Expected 4000
+          currency: 'INR',
           status: 'captured',
         };
+      }
+      if (paymentId === 'pay_mismatch_currency') {
+        return {
+          id: paymentId,
+          order_id: 'order_test_valid',
+          amount: 4000,
+          currency: 'USD', // Expected INR
+          status: 'captured',
+        };
+      }
+      if (paymentId === 'pay_not_found') {
+        const notFoundErr: any = new Error('Payment not found on Razorpay');
+        notFoundErr.statusCode = 404;
+        throw notFoundErr;
       }
       if (paymentId === 'pay_failed_status') {
         return {
           id: paymentId,
           order_id: 'order_test_valid',
           amount: 4000,
+          currency: 'INR',
           status: 'failed',
         };
+      }
+      if (paymentId === 'pay_authorized_status') {
+        return {
+          id: paymentId,
+          order_id: 'order_test_valid',
+          amount: 4000,
+          currency: 'INR',
+          status: 'authorized',
+        };
+      }
+      if (paymentId === 'pay_outage_error') {
+        const outageErr: any = new Error('Razorpay gateway timeout 504');
+        outageErr.statusCode = 504;
+        throw outageErr;
       }
       return {
         id: paymentId,
         order_id: 'order_test_valid',
         amount: 4000,
+        currency: 'INR',
         status: 'captured',
       };
     }),
@@ -635,6 +690,72 @@ describe('Vercel API Routes: verifyRazorpayPayment', () => {
     expect(data.ticket.disclaimer).toBe('DEMO — NOT VALID FOR METRO TRAVEL');
   });
 
+  it('rejects payment with currency mismatch with 400 CURRENCY_MISMATCH', async () => {
+    const bookingId = 'DMRC-DEMO-TEST-CURRENCY';
+    const orderId = 'order_test_valid';
+    const paymentId = 'pay_mismatch_currency';
+
+    bookingsStore.set(bookingId, {
+      bookingId,
+      razorpayOrderId: orderId,
+      amountInPaise: 4000,
+      currency: 'INR',
+      status: 'PENDING',
+    });
+
+    const validSignature = crypto
+      .createHmac('sha256', TEST_KEY_SECRET)
+      .update(`${orderId}|${paymentId}`)
+      .digest('hex');
+
+    const { req, res, getStatusCode, getResponseData } = createMockReqRes({
+      method: 'POST',
+      body: {
+        bookingId,
+        razorpayPaymentId: paymentId,
+        razorpaySignature: validSignature,
+      },
+    });
+
+    await verifyPaymentHandler(req, res);
+    expect(getStatusCode()).toBe(400);
+    expect(getResponseData().code).toBe('CURRENCY_MISMATCH');
+    expect(bookingsStore.get(bookingId).status).toBe('PENDING');
+  });
+
+  it('rejects payment with 400 PAYMENT_NOT_FOUND when not found on Razorpay', async () => {
+    const bookingId = 'DMRC-DEMO-TEST-NOTFOUND';
+    const orderId = 'order_test_valid';
+    const paymentId = 'pay_not_found';
+
+    bookingsStore.set(bookingId, {
+      bookingId,
+      razorpayOrderId: orderId,
+      amountInPaise: 4000,
+      currency: 'INR',
+      status: 'PENDING',
+    });
+
+    const validSignature = crypto
+      .createHmac('sha256', TEST_KEY_SECRET)
+      .update(`${orderId}|${paymentId}`)
+      .digest('hex');
+
+    const { req, res, getStatusCode, getResponseData } = createMockReqRes({
+      method: 'POST',
+      body: {
+        bookingId,
+        razorpayPaymentId: paymentId,
+        razorpaySignature: validSignature,
+      },
+    });
+
+    await verifyPaymentHandler(req, res);
+    expect(getStatusCode()).toBe(400);
+    expect(getResponseData().code).toBe('PAYMENT_NOT_FOUND');
+    expect(bookingsStore.get(bookingId).status).toBe('PENDING');
+  });
+
   it('returns structured 500 DATABASE_UPDATE_ERROR when Firestore update fails after signature verification', async () => {
     const bookingId = 'DMRC-DEMO-TEST-UPDATE-FAIL';
     const orderId = 'order_test_valid';
@@ -698,6 +819,228 @@ describe('Vercel API Routes: verifyRazorpayPayment', () => {
     } finally {
       mockDb.setDocOverride(null);
     }
+  });
+
+  it('rejects authorized-but-not-captured payment with 400 PAYMENT_AUTHORIZED_PENDING_CAPTURE and does not issue ticket', async () => {
+    const bookingId = 'DMRC-DEMO-TEST-AUTHORIZED-ONLY';
+    const orderId = 'order_test_valid';
+    const paymentId = 'pay_authorized_status';
+
+    bookingsStore.set(bookingId, {
+      bookingId,
+      razorpayOrderId: orderId,
+      amountInPaise: 4000,
+      currency: 'INR',
+      status: 'PENDING',
+    });
+
+    const validSignature = crypto
+      .createHmac('sha256', TEST_KEY_SECRET)
+      .update(`${orderId}|${paymentId}`)
+      .digest('hex');
+
+    const { req, res, getStatusCode, getResponseData } = createMockReqRes({
+      method: 'POST',
+      body: {
+        bookingId,
+        razorpayPaymentId: paymentId,
+        razorpaySignature: validSignature,
+      },
+    });
+
+    await verifyPaymentHandler(req, res);
+    expect(getStatusCode()).toBe(400);
+    const data = getResponseData();
+    expect(data.code).toBe('PAYMENT_AUTHORIZED_PENDING_CAPTURE');
+    expect(data.error).toContain('Payment is authorized but not yet captured');
+    expect(bookingsStore.get(bookingId).status).toBe('PENDING');
+  });
+
+  it('rejects failed payment status with 400 PAYMENT_NOT_CAPTURED', async () => {
+    const bookingId = 'DMRC-DEMO-TEST-FAILED-STATUS';
+    const orderId = 'order_test_valid';
+    const paymentId = 'pay_failed_status';
+
+    bookingsStore.set(bookingId, {
+      bookingId,
+      razorpayOrderId: orderId,
+      amountInPaise: 4000,
+      currency: 'INR',
+      status: 'PENDING',
+    });
+
+    const validSignature = crypto
+      .createHmac('sha256', TEST_KEY_SECRET)
+      .update(`${orderId}|${paymentId}`)
+      .digest('hex');
+
+    const { req, res, getStatusCode, getResponseData } = createMockReqRes({
+      method: 'POST',
+      body: {
+        bookingId,
+        razorpayPaymentId: paymentId,
+        razorpaySignature: validSignature,
+      },
+    });
+
+    await verifyPaymentHandler(req, res);
+    expect(getStatusCode()).toBe(400);
+    const data = getResponseData();
+    expect(data.code).toBe('PAYMENT_NOT_CAPTURED');
+    expect(bookingsStore.get(bookingId).status).toBe('PENDING');
+  });
+
+  it('fails closed with 502 PROVIDER_UNAVAILABLE when Razorpay API is unreachable despite valid signature', async () => {
+    const bookingId = 'DMRC-DEMO-TEST-OUTAGE';
+    const orderId = 'order_test_valid';
+    const paymentId = 'pay_outage_error';
+
+    bookingsStore.set(bookingId, {
+      bookingId,
+      razorpayOrderId: orderId,
+      amountInPaise: 4000,
+      currency: 'INR',
+      status: 'PENDING',
+    });
+
+    const validSignature = crypto
+      .createHmac('sha256', TEST_KEY_SECRET)
+      .update(`${orderId}|${paymentId}`)
+      .digest('hex');
+
+    const { req, res, getStatusCode, getResponseData } = createMockReqRes({
+      method: 'POST',
+      body: {
+        bookingId,
+        razorpayPaymentId: paymentId,
+        razorpaySignature: validSignature,
+      },
+    });
+
+    await verifyPaymentHandler(req, res);
+    expect(getStatusCode()).toBe(502);
+    const data = getResponseData();
+    expect(data.code).toBe('PROVIDER_UNAVAILABLE');
+    expect(data.error).toContain('Payment provider verification service temporarily unavailable');
+    // Crucial check: never transitions to PAID or issues a ticket on API outage
+    expect(bookingsStore.get(bookingId).status).toBe('PENDING');
+  });
+
+  it('handles concurrent ticket issuance idempotently via transaction', async () => {
+    const bookingId = 'DMRC-DEMO-TEST-CONCURRENCY';
+    const orderId = 'order_test_valid';
+    const paymentId = 'pay_concurrency_123';
+
+    bookingsStore.set(bookingId, {
+      bookingId,
+      razorpayOrderId: orderId,
+      amountInPaise: 4000,
+      baseFare: 40,
+      totalFare: 40,
+      status: 'PENDING',
+      sourceId: 'RAJIV_CHOWK',
+      sourceName: 'Rajiv Chowk',
+      destinationId: 'HAUZ_KHAS',
+      destinationName: 'Hauz Khas',
+      passengerCount: 1,
+      ticketType: 'SINGLE',
+    });
+
+    const validSignature = crypto
+      .createHmac('sha256', TEST_KEY_SECRET)
+      .update(`${orderId}|${paymentId}`)
+      .digest('hex');
+
+    // Simulate 2 concurrent verification requests for the same booking
+    const { req: req1, res: res1, getStatusCode: getCode1, getResponseData: getData1 } = createMockReqRes({
+      method: 'POST',
+      body: { bookingId, razorpayPaymentId: paymentId, razorpaySignature: validSignature },
+    });
+    const { req: req2, res: res2, getStatusCode: getCode2, getResponseData: getData2 } = createMockReqRes({
+      method: 'POST',
+      body: { bookingId, razorpayPaymentId: paymentId, razorpaySignature: validSignature },
+    });
+
+    await Promise.all([
+      verifyPaymentHandler(req1, res1),
+      verifyPaymentHandler(req2, res2),
+    ]);
+
+    expect(getCode1()).toBe(200);
+    expect(getCode2()).toBe(200);
+    expect(getData1().status).toBe('PAID');
+    expect(getData2().status).toBe('PAID');
+    expect(getData1().ticket.id).toBe(bookingId);
+    expect(getData2().ticket.id).toBe(bookingId);
+    expect(bookingsStore.get(bookingId).status).toBe('PAID');
+  });
+
+  it('safely handles concurrent verification and webhook requests without state corruption', async () => {
+    const bookingId = 'DMRC-DEMO-TEST-CONCURRENT-WEBHOOK';
+    const orderId = 'order_test_valid';
+    const paymentId = 'pay_concurrent_hook';
+
+    bookingsStore.set(bookingId, {
+      bookingId,
+      razorpayOrderId: orderId,
+      amountInPaise: 4000,
+      baseFare: 40,
+      totalFare: 40,
+      currency: 'INR',
+      status: 'PENDING',
+      sourceId: 'RAJIV_CHOWK',
+      sourceName: 'Rajiv Chowk',
+      destinationId: 'HAUZ_KHAS',
+      destinationName: 'Hauz Khas',
+      passengerCount: 1,
+      ticketType: 'SINGLE',
+    });
+
+    const validSignature = crypto
+      .createHmac('sha256', TEST_KEY_SECRET)
+      .update(`${orderId}|${paymentId}`)
+      .digest('hex');
+
+    const webhookPayload = JSON.stringify({
+      entity: 'event',
+      event: 'payment.captured',
+      payload: {
+        payment: {
+          entity: {
+            id: paymentId,
+            order_id: orderId,
+            amount: 4000,
+            currency: 'INR',
+            status: 'captured',
+          },
+        },
+      },
+    });
+
+    const webhookSignature = crypto
+      .createHmac('sha256', TEST_WEBHOOK_SECRET)
+      .update(webhookPayload)
+      .digest('hex');
+
+    const { req: vReq, res: vRes, getStatusCode: getVCode } = createMockReqRes({
+      method: 'POST',
+      body: { bookingId, razorpayPaymentId: paymentId, razorpaySignature: validSignature },
+    });
+
+    const { req: wReq, res: wRes, getStatusCode: getWCode } = createMockReqRes({
+      method: 'POST',
+      headers: { 'x-razorpay-signature': webhookSignature },
+      body: webhookPayload,
+    });
+
+    await Promise.all([
+      verifyPaymentHandler(vReq, vRes),
+      webhookHandler(wReq, wRes),
+    ]);
+
+    expect(getVCode()).toBe(200);
+    expect(getWCode()).toBe(200);
+    expect(bookingsStore.get(bookingId).status).toBe('PAID');
   });
 });
 
@@ -848,5 +1191,148 @@ describe('Vercel API Routes: razorpayWebhook', () => {
     const updated = bookingsStore.get(bookingId);
     expect(updated.status).toBe('FAILED');
     expect(updated.failureReason).toBe('Payment was cancelled by commuter');
+  });
+
+  it('rejects webhook payment.captured with currency mismatch with 400', async () => {
+    const bookingId = 'DMRC-DEMO-TEST-WEBHOOK-CURR';
+    const orderId = 'order_webhook_curr';
+
+    bookingsStore.set(bookingId, {
+      bookingId,
+      razorpayOrderId: orderId,
+      amountInPaise: 5000,
+      currency: 'INR',
+      status: 'PENDING',
+    });
+
+    const eventPayload = {
+      event: 'payment.captured',
+      payload: {
+        payment: {
+          entity: {
+            id: 'pay_webhook_usd',
+            order_id: orderId,
+            amount: 5000,
+            currency: 'USD', // Mismatch!
+            status: 'captured',
+          },
+        },
+      },
+    };
+
+    const rawBody = JSON.stringify(eventPayload);
+    const validSignature = crypto
+      .createHmac('sha256', TEST_WEBHOOK_SECRET)
+      .update(rawBody)
+      .digest('hex');
+
+    const { req, res, getStatusCode, getResponseData } = createMockReqRes({
+      method: 'POST',
+      headers: {
+        'x-razorpay-signature': validSignature,
+      },
+      body: Buffer.from(rawBody, 'utf8'),
+    });
+
+    await webhookHandler(req, res);
+    expect(getStatusCode()).toBe(400);
+    expect(getResponseData().error).toBe('Currency mismatch');
+    expect(bookingsStore.get(bookingId).status).toBe('PENDING');
+  });
+
+  it('does not overwrite PAID booking with FAILED if delayed payment.failed event arrives', async () => {
+    const bookingId = 'DMRC-DEMO-TEST-ALREADY-PAID';
+    const orderId = 'order_already_paid_123';
+
+    bookingsStore.set(bookingId, {
+      bookingId,
+      razorpayOrderId: orderId,
+      amountInPaise: 3000,
+      currency: 'INR',
+      status: 'PAID', // Already confirmed!
+    });
+
+    const eventPayload = {
+      event: 'payment.failed',
+      payload: {
+        payment: {
+          entity: {
+            id: 'pay_failed_delayed',
+            order_id: orderId,
+            amount: 3000,
+            error_description: 'Delayed fail notification',
+          },
+        },
+      },
+    };
+
+    const rawBody = JSON.stringify(eventPayload);
+    const validSignature = crypto
+      .createHmac('sha256', TEST_WEBHOOK_SECRET)
+      .update(rawBody)
+      .digest('hex');
+
+    const { req, res, getStatusCode } = createMockReqRes({
+      method: 'POST',
+      headers: {
+        'x-razorpay-signature': validSignature,
+      },
+      body: Buffer.from(rawBody, 'utf8'),
+    });
+
+    await webhookHandler(req, res);
+    expect(getStatusCode()).toBe(200);
+
+    // Document in Firestore must remain PAID
+    const record = bookingsStore.get(bookingId);
+    expect(record.status).toBe('PAID');
+  });
+
+  it('handles payment.authorized event gracefully', async () => {
+    const bookingId = 'DMRC-DEMO-TEST-AUTH';
+    const orderId = 'order_auth_123';
+
+    bookingsStore.set(bookingId, {
+      bookingId,
+      razorpayOrderId: orderId,
+      amountInPaise: 4000,
+      status: 'PENDING',
+    });
+
+    const eventPayload = {
+      event: 'payment.authorized',
+      payload: {
+        payment: {
+          entity: {
+            id: 'pay_auth_001',
+            order_id: orderId,
+            amount: 4000,
+            currency: 'INR',
+            status: 'authorized',
+          },
+        },
+      },
+    };
+
+    const rawBody = JSON.stringify(eventPayload);
+    const validSignature = crypto
+      .createHmac('sha256', TEST_WEBHOOK_SECRET)
+      .update(rawBody)
+      .digest('hex');
+
+    const { req, res, getStatusCode } = createMockReqRes({
+      method: 'POST',
+      headers: {
+        'x-razorpay-signature': validSignature,
+      },
+      body: Buffer.from(rawBody, 'utf8'),
+    });
+
+    await webhookHandler(req, res);
+    expect(getStatusCode()).toBe(200);
+
+    const record = bookingsStore.get(bookingId);
+    expect(record.status).toBe('AUTHORIZED');
+    expect(record.razorpayPaymentId).toBe('pay_auth_001');
   });
 });
