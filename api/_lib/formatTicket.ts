@@ -16,8 +16,8 @@ export interface VerifiedTicket {
   ticketType: string;
   baseFare: number;
   totalFare: number;
-  status: 'ACTIVE' | 'EXPIRED' | 'USED';
-  paymentStatus: 'PAID';
+  status: 'ACTIVE' | 'EXPIRED' | 'USED' | 'CANCELLED';
+  paymentStatus: 'PAID' | 'REFUNDED' | 'PARTIALLY_REFUNDED';
   isDemo: boolean;
   disclaimer: string;
   razorpayOrderId?: string;
@@ -350,6 +350,13 @@ export function formatVerifiedTicket(booking: any): VerifiedTicket {
   const razorpayPaymentId = booking.razorpayPaymentId || null;
   const razorpayOrderId = booking.razorpayOrderId || null;
 
+  const isRefunded = booking.status === 'REFUNDED' || booking.status === 'PARTIALLY_REFUNDED';
+  const ticketStatus = isRefunded ? 'CANCELLED' : (booking.ticketStatus || 'ACTIVE');
+  const paymentStatus = isRefunded ? booking.status : 'PAID';
+  const disclaimer = isRefunded
+    ? 'DEMO — REFUNDED / CANCELLED — NOT VALID FOR METRO TRAVEL'
+    : (booking.disclaimer || 'DEMO — NOT VALID FOR METRO TRAVEL');
+
   const signature = signTicketPayload({
     bookingId,
     ticketId: bookingId,
@@ -361,12 +368,12 @@ export function formatVerifiedTicket(booking: any): VerifiedTicket {
     baseFare,
     totalFare,
     ticketType,
-    status: 'ACTIVE',
-    paymentStatus: 'PAID',
+    status: ticketStatus,
+    paymentStatus,
     expiresAt,
     razorpayPaymentId,
     createdAt,
-    disclaimer: 'DEMO — NOT VALID FOR METRO TRAVEL',
+    disclaimer,
     isDemo: true,
   });
 
@@ -376,9 +383,10 @@ export function formatVerifiedTicket(booking: any): VerifiedTicket {
     app: 'DELHI_METRO_NAVIGATOR',
     bookingId,
     type: 'DEMO_TICKET',
-    status: 'PAID',
+    status: paymentStatus,
+    ticketStatus,
     valid: false,
-    disclaimer: 'DEMO — NOT VALID FOR METRO TRAVEL',
+    disclaimer,
     source: { id: sourceId, name: sourceName },
     destination: { id: destinationId, name: destinationName },
     passengers: passengerCount,
@@ -402,10 +410,10 @@ export function formatVerifiedTicket(booking: any): VerifiedTicket {
     ticketType,
     baseFare,
     totalFare,
-    status: 'ACTIVE',
-    paymentStatus: 'PAID',
+    status: ticketStatus,
+    paymentStatus,
     isDemo: true,
-    disclaimer: 'DEMO — NOT VALID FOR METRO TRAVEL',
+    disclaimer,
     ...(razorpayOrderId ? { razorpayOrderId } : {}),
     ...(razorpayPaymentId ? { razorpayPaymentId } : {}),
     signatureVersion: 'v2',

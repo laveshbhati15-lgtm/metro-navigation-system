@@ -89,6 +89,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     }
 
+    // Extract Razorpay event ID for persistent deduplication
+    const rawEventId = event.id || req.headers['x-razorpay-event-id'];
+    const eventId = rawEventId ? String(Array.isArray(rawEventId) ? rawEventId[0] : rawEventId).trim() : null;
+    const eventDocRef = eventId ? db.collection('processed_webhook_events').doc(eventId) : null;
+
+    if (eventDocRef) {
+      try {
+        const existingEventSnap = await eventDocRef.get();
+        if (existingEventSnap.exists) {
+          const existingData = existingEventSnap.data() as any;
+          if (existingData?.status === 'COMPLETED') {
+            console.log(`Webhook: Event ${eventId} already processed (COMPLETED). Returning idempotent 200.`);
+            res.status(200).json({ received: true, deduplicated: true });
+            return;
+          }
+          if (existingData?.status === 'PROCESSING') {
+            const receivedAtMs = existingData.receivedAt?.toMillis
+              ? existingData.receivedAt.toMillis()
+              : existingData.receivedAtMs || Date.now();
+            if (Date.now() - receivedAtMs < 60000) {
+              console.log(`Webhook: Event ${eventId} currently PROCESSING. Returning concurrent acknowledgement.`);
+              res.status(200).json({ received: true, status: 'PROCESSING' });
+              return;
+            }
+          }
+        }
+      } catch (dedupErr: any) {
+        console.warn(`Webhook: Deduplication check encountered non-fatal error: ${dedupErr.message}`);
+      }
+    }
+
     if (
       eventType === 'payment.captured' ||
       eventType === 'order.paid' ||
@@ -301,6 +332,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
 
           if (booking.status === 'PAID') {
+            if (eventDocRef) {
+              transaction.set(
+                eventDocRef,
+                {
+                  eventId: String(eventId),
+                  eventType,
+                  status: 'COMPLETED',
+                  bookingId: booking.bookingId,
+                  completedAt: FieldValue.serverTimestamp(),
+                },
+                { merge: true }
+              );
+            }
+
             if (booking.razorpayPaymentId === verifiedPayment.id) {
               // Perfectly idempotent repeated webhook
               console.log(`Webhook: Booking ${booking.bookingId} already confirmed with payment ${verifiedPayment.id}`);
@@ -329,8 +374,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             return;
           }
 
-          // State machine invariant: only PENDING can transition to PAID
-          if (booking.status !== 'PENDING') {
+          // State machine invariant: only PENDING or FAILED can transition to PAID (terminal refund/cancelled protected)
+          if (booking.status !== 'PENDING' && booking.status !== 'FAILED') {
             console.warn(`Webhook: Cannot mark booking ${booking.bookingId} as PAID; current status is "${booking.status}".`);
             throw new Error(`INVALID_STATE_TRANSITION_${booking.status}`);
           }
@@ -355,9 +400,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
           const updateData: any = {
             status: 'PAID',
+            paymentStatus: 'PAID',
             razorpayPaymentId: verifiedPayment.id,
             paidAt: FieldValue.serverTimestamp(),
             updatedAt: FieldValue.serverTimestamp(),
+            ticket,
             qrPayload: ticket.qrPayload,
             ticketSignature: ticket.signature,
           };
@@ -368,6 +415,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
 
           transaction.update(doc.ref, updateData);
+
+          if (eventDocRef) {
+            transaction.set(
+              eventDocRef,
+              {
+                eventId: String(eventId),
+                eventType,
+                status: 'COMPLETED',
+                bookingId: booking.bookingId,
+                completedAt: FieldValue.serverTimestamp(),
+              },
+              { merge: true }
+            );
+          }
 
           console.log(`Webhook: Successfully marked booking ${booking.bookingId} as PAID with payment ${verifiedPayment.id}`);
         });
@@ -424,19 +485,199 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const freshSnap = await transaction.get(doc.ref);
             if (!freshSnap.exists) return;
             const booking = freshSnap.data() as any;
-            // Terminal state protection: PAID bookings can NEVER be marked FAILED
-            if (booking.status !== 'PAID') {
+            // Terminal state protection: PAID and REFUNDED bookings can NEVER be marked FAILED
+            if (
+              booking.status !== 'PAID' &&
+              booking.status !== 'REFUNDED' &&
+              booking.status !== 'PARTIALLY_REFUNDED'
+            ) {
+              const failedAttempt = {
+                paymentId: paymentEntity?.id || null,
+                errorDescription: paymentEntity?.error_description || 'Payment failed',
+                errorCode: paymentEntity?.error_code || null,
+                failedAt: new Date().toISOString(),
+              };
               transaction.update(doc.ref, {
                 status: 'FAILED',
                 failureReason: paymentEntity?.error_description || 'Payment failed',
+                lastPaymentError: paymentEntity?.error_description || 'Payment failed',
+                failedAttempts: FieldValue.arrayUnion(failedAttempt),
                 updatedAt: FieldValue.serverTimestamp(),
               });
-              console.log(`Webhook marked booking ${doc.id} as FAILED`);
+              console.log(`Webhook recorded payment failure attempt for booking ${doc.id}`);
             } else {
-              console.log(`Webhook ignored payment.failed for already PAID booking ${doc.id}`);
+              console.log(`Webhook ignored payment.failed for already PAID/REFUNDED booking ${doc.id}`);
+            }
+
+            if (eventDocRef) {
+              transaction.set(
+                eventDocRef,
+                {
+                  eventId: String(eventId),
+                  eventType,
+                  status: 'COMPLETED',
+                  bookingId: booking.bookingId,
+                  completedAt: FieldValue.serverTimestamp(),
+                },
+                { merge: true }
+              );
             }
           });
         }
+      }
+    } else if (
+      eventType === 'refund.processed' ||
+      eventType === 'refund.created' ||
+      eventType === 'payment.refunded'
+    ) {
+      const refundEntity = event.payload?.refund?.entity;
+      const paymentEntity = event.payload?.payment?.entity;
+      const paymentId = refundEntity?.payment_id || paymentEntity?.id;
+      const refundId = refundEntity?.id;
+      const orderId = paymentEntity?.order_id || event.payload?.order?.entity?.id;
+      const qrId = paymentEntity?.qr_code_id;
+
+      if (!paymentId && !orderId && !qrId) {
+        console.warn('Refund webhook missing paymentId, orderId, or qrId. Failing closed.');
+        res.status(400).json({ error: 'Insufficient provider data in refund webhook.' });
+        return;
+      }
+
+      // Locate booking by qrId, orderId, or paymentId
+      let queryRef: any = null;
+      if (qrId) {
+        queryRef = db.collection('demo_bookings').where('razorpayQrId', '==', qrId).limit(1);
+      } else if (orderId) {
+        queryRef = db.collection('demo_bookings').where('razorpayOrderId', '==', orderId).limit(1);
+      } else if (paymentId) {
+        queryRef = db.collection('demo_bookings').where('razorpayPaymentId', '==', paymentId).limit(1);
+      }
+
+      if (!queryRef) {
+        res.status(400).json({ error: 'Cannot query booking for refund event.' });
+        return;
+      }
+
+      const snapshot = await queryRef.get();
+      if (snapshot.empty) {
+        console.warn(`Refund webhook: No booking found for paymentId ${paymentId}, orderId ${orderId}, qrId ${qrId}`);
+        res.status(200).json({ received: true, note: 'Booking not found for refund reference' });
+        return;
+      }
+
+      const doc = snapshot.docs[0];
+      const initialBooking = doc.data() as any;
+
+      // Independently verify payment refund status with Razorpay API
+      let verifiedPayment: any = paymentEntity;
+      if (paymentId) {
+        try {
+          verifiedPayment = await fetchRazorpayPayment(paymentId);
+        } catch (fetchErr: any) {
+          console.error(`Refund webhook: Failed to fetch payment ${paymentId}: ${fetchErr.message}`);
+          res.status(502).json({ error: 'Failed to verify refund with payment provider.' });
+          return;
+        }
+      }
+
+      if (!verifiedPayment) {
+        res.status(400).json({ error: 'Missing payment record for refund event.' });
+        return;
+      }
+
+      // Verify that provider payment is actually refunded or has amount_refunded > 0
+      const amountRefunded = Number(verifiedPayment.amount_refunded || refundEntity?.amount || 0);
+      const isFullRefund =
+        verifiedPayment.status === 'refunded' ||
+        verifiedPayment.refund_status === 'full' ||
+        amountRefunded >= Number(initialBooking.amountInPaise);
+
+      const targetStatus = isFullRefund ? 'REFUNDED' : 'PARTIALLY_REFUNDED';
+      const targetRefundStatus = isFullRefund ? 'FULL' : 'PARTIAL';
+
+      const now = new Date();
+      const refundRecord = {
+        refundId: refundId || null,
+        paymentId: verifiedPayment.id,
+        amount: refundEntity?.amount || amountRefunded,
+        currency: verifiedPayment.currency || 'INR',
+        status: refundEntity?.status || 'processed',
+        recordedAt: now.toISOString(),
+      };
+
+      try {
+        await db.runTransaction(async (transaction: any) => {
+          const freshSnap = await transaction.get(doc.ref);
+          if (!freshSnap.exists) return;
+          const booking = freshSnap.data() as any;
+
+          // Idempotency: If booking is already in target status and this refund is already recorded
+          const existingRefunds = booking.refunds || [];
+          const alreadyRecorded = refundId && existingRefunds.some((r: any) => r.refundId === refundId);
+
+          if (alreadyRecorded && booking.status === targetStatus) {
+            console.log(`Refund webhook: Refund ${refundId} already applied to booking ${booking.bookingId}`);
+            if (eventDocRef) {
+              transaction.set(
+                eventDocRef,
+                {
+                  eventId: String(eventId),
+                  eventType,
+                  status: 'COMPLETED',
+                  bookingId: booking.bookingId,
+                  completedAt: FieldValue.serverTimestamp(),
+                },
+                { merge: true }
+              );
+            }
+            return;
+          }
+
+          // Generate cancelled/refunded ticket
+          const updatedBookingData = {
+            ...booking,
+            status: targetStatus,
+            refundStatus: targetRefundStatus,
+          };
+          const cancelledTicket = formatVerifiedTicket(updatedBookingData);
+
+          const updateData: any = {
+            status: targetStatus,
+            paymentStatus: targetStatus,
+            refundStatus: targetRefundStatus,
+            amountRefundedInPaise: amountRefunded,
+            refundedAt: FieldValue.serverTimestamp(),
+            updatedAt: FieldValue.serverTimestamp(),
+            ticket: cancelledTicket,
+            qrPayload: cancelledTicket.qrPayload,
+            ticketSignature: cancelledTicket.signature,
+          };
+
+          if (!alreadyRecorded) {
+            updateData.refunds = FieldValue.arrayUnion(refundRecord);
+          }
+
+          transaction.update(doc.ref, updateData);
+
+          if (eventDocRef) {
+            transaction.set(
+              eventDocRef,
+              {
+                eventId: String(eventId),
+                eventType,
+                status: 'COMPLETED',
+                bookingId: booking.bookingId,
+                completedAt: FieldValue.serverTimestamp(),
+              },
+              { merge: true }
+            );
+          }
+
+          console.log(`Refund webhook: Marked booking ${booking.bookingId} as ${targetStatus}`);
+        });
+      } catch (txErr: any) {
+        console.error('Refund transaction error:', txErr);
+        throw txErr;
       }
     }
 

@@ -20,8 +20,14 @@ import {
   verifyServerPayment,
   createPaymentQr,
   verifyServerQrPayment,
+  getPaymentDiagnostics,
+  resolvePaymentMode,
+  isDynamicQrPermitted,
+  type VerifiedPaymentMode,
+  type PaymentDiagnostics,
   type CreateOrderResponse,
   type CreateQrResponse,
+  type VerifyPaymentRequest,
 } from '@/services/paymentService';
 import { getCheckoutSession } from '@/features/checkout/checkoutSession';
 import { estimateFare, formatDuration } from '@/utils/formatters';
@@ -119,9 +125,10 @@ export function CheckoutPage() {
 
   // Flow & Payment Execution State
   const modeParam = searchParams.get('mode');
+  // Cards & NetBanking (Standard Checkout) is the primary checkout method
   const [paymentMode, setPaymentMode] = useState<'UPI_QR' | 'STANDARD'>(() => {
-    if (modeParam === 'standard' || modeParam === 'STANDARD') return 'STANDARD';
-    return 'UPI_QR';
+    if (modeParam === 'upi_qr' || modeParam === 'UPI_QR') return 'UPI_QR';
+    return 'STANDARD';
   });
   const [step, setStep] = useState<CheckoutStep>('CONFIG');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -129,6 +136,29 @@ export function CheckoutPage() {
   const [errorCategory, setErrorCategory] = useState<ErrorCategory>('GENERAL_ERROR');
   const [confirmedTicket, setConfirmedTicket] = useState<DemoTicket | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [verifiedMode, setVerifiedMode] = useState<VerifiedPaymentMode>('UNKNOWN');
+  const [paymentDiagnostics, setPaymentDiagnostics] = useState<PaymentDiagnostics | null>(null);
+  const [acknowledgedBookingKey, setAcknowledgedBookingKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    getPaymentDiagnostics()
+      .then((diag) => {
+        if (isMounted) {
+          setPaymentDiagnostics(diag);
+          setVerifiedMode(resolvePaymentMode(diag));
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setPaymentDiagnostics(null);
+          setVerifiedMode('UNKNOWN');
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Dynamic UPI QR State
   const [activeQr, setActiveQr] = useState<CreateQrResponse | null>(null);
@@ -151,6 +181,17 @@ export function CheckoutPage() {
   // In-memory guest access token (strictly never stored in localStorage or sessionStorage)
   const guestAccessTokenRef = useRef<string | null>(null);
 
+  // Current booking parameters signature
+  const currentBookingKey = `${source?.id ?? ''}:${destination?.id ?? ''}:${passengerCount}:${ticketType}`;
+  // Acknowledgement is strictly valid only when it matches the current booking signature
+  const liveAcknowledged = verifiedMode === 'LIVE' && acknowledgedBookingKey === currentBookingKey;
+
+  // Compute live mode dynamically based on server diagnostics
+  const isLiveMode = verifiedMode === 'LIVE';
+
+  // Compute whether Dynamic UPI QR is permitted by server diagnostics
+  const dynamicQrPermitted = isDynamicQrPermitted(paymentDiagnostics, verifiedMode);
+
   const stopQrPolling = useCallback(() => {
     if (qrPollingRef.current) {
       clearInterval(qrPollingRef.current);
@@ -162,6 +203,18 @@ export function CheckoutPage() {
     }
   }, []);
 
+  // Ensure an existing cached QR or order cannot be reused after payment mode becomes UNKNOWN or changes
+  const prevVerifiedModeRef = useRef<VerifiedPaymentMode>(verifiedMode);
+  useEffect(() => {
+    if (prevVerifiedModeRef.current !== verifiedMode) {
+      prevVerifiedModeRef.current = verifiedMode;
+      activeQrRef.current = null;
+      activeOrderRef.current = null;
+      setActiveQr(null);
+      stopQrPolling();
+    }
+  }, [verifiedMode, stopQrPolling]);
+
   useEffect(() => {
     return () => {
       stopQrPolling();
@@ -170,6 +223,7 @@ export function CheckoutPage() {
 
   const handlePassengerCountChange = (count: number) => {
     setPassengerCount(count);
+    setAcknowledgedBookingKey(null);
     activeOrderRef.current = null;
     activeQrRef.current = null;
     stopQrPolling();
@@ -181,6 +235,7 @@ export function CheckoutPage() {
 
   const handleTicketTypeChange = (type: TicketType) => {
     setTicketType(type);
+    setAcknowledgedBookingKey(null);
     activeOrderRef.current = null;
     activeQrRef.current = null;
     stopQrPolling();
@@ -216,6 +271,34 @@ export function CheckoutPage() {
   const handleProceedToQrPayment = useCallback(async () => {
     if (!source || !destination || !route || isSubmitting) return;
 
+    if (verifiedMode === 'UNKNOWN') {
+      setErrorCategory('API_ERROR');
+      setErrorTitle('Payment Gateway Verification Required');
+      setErrorMessage('Payment service mode is currently unverified. Please refresh or retry.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!isDynamicQrPermitted(paymentDiagnostics, verifiedMode)) {
+      setErrorCategory('API_ERROR');
+      setErrorTitle('Dynamic UPI QR Unavailable');
+      setErrorMessage(
+        verifiedMode === 'LIVE'
+          ? 'Razorpay Dynamic UPI QR in LIVE mode is currently disabled by server configuration (ENABLE_LIVE_DYNAMIC_QR=false).'
+          : 'Dynamic UPI QR is not permitted by payment server configuration.'
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (verifiedMode === 'LIVE' && !liveAcknowledged) {
+      setErrorCategory('GENERAL_ERROR');
+      setErrorTitle('Acknowledgement Required');
+      setErrorMessage('You must acknowledge that this is a live educational demonstration charge before proceeding.');
+      setIsSubmitting(false);
+      return;
+    }
+
     setIsSubmitting(true);
     setStep('CREATING_ORDER');
     setErrorMessage(null);
@@ -234,7 +317,11 @@ export function CheckoutPage() {
       const currentParamsKey = `${source.id}:${destination.id}:${passengerCount}:${ticketType}`;
       let qrData: CreateQrResponse;
 
-      if (activeQrRef.current && activeQrRef.current.paramsKey === currentParamsKey) {
+      if (
+        activeQrRef.current &&
+        activeQrRef.current.paramsKey === currentParamsKey &&
+        activeQrRef.current.qrData.paymentMode === verifiedMode
+      ) {
         qrData = activeQrRef.current.qrData;
       } else {
         qrData = await createPaymentQr({
@@ -244,6 +331,18 @@ export function CheckoutPage() {
           ticketType,
           idToken,
         });
+
+        // Strict verification of server-selected QR payment mode before storing, displaying, or polling
+        if (!qrData || !qrData.paymentMode || qrData.paymentMode !== verifiedMode) {
+          activeQrRef.current = null;
+          setActiveQr(null);
+          const mismatchErr: any = new Error(
+            `SECURITY ERROR: QR payment mode mismatch. Expected ${verifiedMode}, but server returned ${qrData?.paymentMode || 'MISSING'}. Payment aborted.`
+          );
+          mismatchErr.isSecurityMismatch = true;
+          throw mismatchErr;
+        }
+
         if (qrData.guestAccessToken) {
           guestAccessTokenRef.current = qrData.guestAccessToken;
         }
@@ -303,11 +402,21 @@ export function CheckoutPage() {
       pollBooking();
     } catch (qrErr: any) {
       stopQrPolling();
+      activeQrRef.current = null;
+      setActiveQr(null);
       setIsSubmitting(false);
       setStep('FAILED');
-      setErrorTitle('Dynamic UPI QR Unavailable');
-      setErrorCategory('API_ERROR');
-      setErrorMessage(qrErr?.message || 'Could not generate Dynamic UPI QR code.');
+
+      const msg = qrErr?.message || '';
+      if (qrErr?.isSecurityMismatch || msg.includes('SECURITY ERROR')) {
+        setErrorTitle('Security Verification Failed');
+        setErrorCategory('API_ERROR');
+        setErrorMessage(msg || 'QR payment mode mismatch. Transaction aborted for security.');
+      } else {
+        setErrorTitle('Dynamic UPI QR Unavailable');
+        setErrorCategory('API_ERROR');
+        setErrorMessage(msg || 'Could not generate Dynamic UPI QR code.');
+      }
     }
   }, [
     source,
@@ -319,11 +428,30 @@ export function CheckoutPage() {
     ticketType,
     stopQrPolling,
     saveVerifiedTicket,
+    verifiedMode,
+    liveAcknowledged,
+    paymentDiagnostics,
   ]);
 
   // Primary payment authorization handler
   const handleProceedToPayment = useCallback(async () => {
     if (!source || !destination || !route || isSubmitting) return;
+
+    if (verifiedMode === 'UNKNOWN') {
+      setErrorCategory('API_ERROR');
+      setErrorTitle('Payment Gateway Verification Required');
+      setErrorMessage('Payment service mode is currently unverified. Please refresh or retry.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (verifiedMode === 'LIVE' && !liveAcknowledged) {
+      setErrorCategory('GENERAL_ERROR');
+      setErrorTitle('Acknowledgement Required');
+      setErrorMessage('You must acknowledge that this is a live educational demonstration charge before proceeding.');
+      setIsSubmitting(false);
+      return;
+    }
 
     setIsSubmitting(true);
     setStep('CREATING_ORDER');
@@ -367,21 +495,43 @@ export function CheckoutPage() {
           ticketType,
           idToken,
         });
+        if (orderData.guestAccessToken) {
+          guestAccessTokenRef.current = orderData.guestAccessToken;
+        }
         activeOrderRef.current = {
           orderData,
           paramsKey: currentParamsKey,
         };
       }
 
+      // Strict fail-closed verification of actual order key vs verified mode
+      if (verifiedMode === 'LIVE' && !orderData.keyId.startsWith('rzp_live_')) {
+        const mismatchErr: any = new Error(
+          'SECURITY ERROR: Order key mismatch. Received non-live key in LIVE mode. Payment aborted.'
+        );
+        mismatchErr.isSecurityMismatch = true;
+        throw mismatchErr;
+      }
+      if (verifiedMode === 'TEST' && !orderData.keyId.startsWith('rzp_test_')) {
+        const mismatchErr: any = new Error(
+          'SECURITY ERROR: Order key mismatch. Received non-test key in TEST mode. Payment aborted.'
+        );
+        mismatchErr.isSecurityMismatch = true;
+        throw mismatchErr;
+      }
+
       setStep('AWAITING_PAYMENT');
 
-      // 4. Configure Razorpay Standard Checkout in TEST MODE
+      const modeLabel = verifiedMode === 'LIVE' ? 'Live Demo' : 'Test Mode';
+      const dynamicDescription = `${ticketType === 'RETURN' ? 'Return' : 'Single'} Transit Pass (${passengerCount} Passenger${passengerCount > 1 ? 's' : ''}) · ${modeLabel}`;
+
+      // 4. Configure Razorpay Standard Checkout
       const razorpayOptions = {
         key: orderData.keyId,
         amount: orderData.amount,
         currency: orderData.currency,
         name: 'Delhi Metro Navigator · MetroPay',
-        description: `${ticketType === 'RETURN' ? 'Return' : 'Single'} Transit Pass (${passengerCount} Passenger${passengerCount > 1 ? 's' : ''}) · Test Mode`,
+        description: dynamicDescription,
         order_id: orderData.orderId,
         prefill: {
           name: user?.displayName || 'Delhi Commuter',
@@ -410,11 +560,22 @@ export function CheckoutPage() {
 
           try {
             // 5. Submit cryptographic HMAC SHA256 signature to server for verification & capture confirmation
-            const verifyResult = await verifyServerPayment({
+            const verifyPayload: VerifyPaymentRequest = {
               bookingId: orderData.bookingId,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature,
-            });
+            };
+            if (guestAccessTokenRef.current) {
+              verifyPayload.guestAccessToken = guestAccessTokenRef.current;
+            }
+
+            const verifyOptions = (guestAccessTokenRef.current || idToken)
+              ? { guestAccessToken: guestAccessTokenRef.current, idToken }
+              : undefined;
+
+            const verifyResult = verifyOptions
+              ? await verifyServerPayment(verifyPayload, verifyOptions)
+              : await verifyServerPayment(verifyPayload);
 
             if (verifyResult.success && verifyResult.ticket) {
               const linesUsed: LineCode[] = Array.from(
@@ -506,6 +667,16 @@ export function CheckoutPage() {
       setStep('FAILED');
 
       const msg = orderError?.message || '';
+
+      if (orderError?.isSecurityMismatch || msg.includes('SECURITY ERROR')) {
+        setErrorCategory('API_ERROR');
+        setErrorTitle('Security Verification Failed');
+        setErrorMessage(
+          msg || 'Payment key mode mismatch. Transaction aborted for security.'
+        );
+        return;
+      }
+
       const isScriptFailure =
         orderError?.isScriptLoadError ||
         msg.includes('script could not be loaded');
@@ -558,6 +729,8 @@ export function CheckoutPage() {
     ticketType,
     farePreview,
     saveVerifiedTicket,
+    verifiedMode,
+    liveAcknowledged,
   ]);
 
   // Invalid parameters view
@@ -578,8 +751,17 @@ export function CheckoutPage() {
               <div>
                 <p className="text-sm font-bold text-[var(--mp-text-primary)] tracking-tight flex items-center gap-1.5">
                   <span>MetroPay</span>
-                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-500 border border-amber-500/30">
-                    TEST
+                  <span
+                    className={cn(
+                      'text-[10px] font-mono px-1.5 py-0.2 rounded border',
+                      verifiedMode === 'LIVE'
+                        ? 'bg-emerald-500/20 text-emerald-500 border-emerald-500/30'
+                        : verifiedMode === 'TEST'
+                        ? 'bg-amber-500/20 text-amber-500 border-amber-500/30'
+                        : 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30'
+                    )}
+                  >
+                    {verifiedMode === 'LIVE' ? 'LIVE' : verifiedMode === 'TEST' ? 'TEST' : 'UNKNOWN'}
                   </span>
                 </p>
                 <p className="text-[10px] text-[var(--mp-text-secondary)] font-mono">Transit Checkout Gateway</p>
@@ -618,7 +800,11 @@ export function CheckoutPage() {
 
         {/* Footer */}
         <footer className="metropay-footer py-4 text-center text-[11px] font-mono">
-          MetroPay · Simulated Transit Payment Portal · Razorpay Test Mode
+          {verifiedMode === 'LIVE'
+            ? 'MetroPay · Live Transit Checkout Portal · Razorpay Gateway (Educational Demo)'
+            : verifiedMode === 'TEST'
+            ? 'MetroPay · Simulated Transit Payment Portal · Razorpay Test Mode'
+            : 'MetroPay · Transit Checkout Portal · Verifying Security Mode'}
         </footer>
       </div>
     );
@@ -643,8 +829,21 @@ export function CheckoutPage() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-base font-extrabold text-[var(--mp-text-primary)] tracking-tight">MetroPay</span>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded font-semibold bg-[var(--mp-badge-bg)] text-[var(--mp-badge-text)] border border-[var(--mp-badge-border)]">
-                  SECURE TEST GATEWAY
+                <span
+                  className={cn(
+                    'text-[10px] font-mono px-1.5 py-0.5 rounded font-semibold border',
+                    verifiedMode === 'LIVE'
+                      ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                      : verifiedMode === 'TEST'
+                      ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                      : 'bg-zinc-500/20 text-zinc-400 border-zinc-500/40'
+                  )}
+                >
+                  {verifiedMode === 'LIVE'
+                    ? 'SECURE LIVE GATEWAY'
+                    : verifiedMode === 'TEST'
+                    ? 'SECURE TEST GATEWAY'
+                    : 'GATEWAY: UNKNOWN'}
                 </span>
               </div>
               <p className="text-[10px] text-[var(--mp-text-secondary)] font-mono">
@@ -671,7 +870,12 @@ export function CheckoutPage() {
         <div className="max-w-4xl mx-auto flex items-center justify-center gap-2 text-xs font-mono">
           <span className="shrink-0">⚠️</span>
           <span>
-            <strong>DEMO TICKET — NOT VALID FOR METRO TRAVEL.</strong> Test environment running via Razorpay Test Mode. Real payments will not be processed.
+            <strong>DEMO TICKET — NOT VALID FOR METRO TRAVEL.</strong>{' '}
+            {verifiedMode === 'LIVE'
+              ? 'Real funds will be charged via Razorpay Live Gateway. This website issues educational demonstration tickets only and is NOT valid for Delhi Metro transit.'
+              : verifiedMode === 'TEST'
+              ? 'Test environment running via Razorpay Test Mode. Real payments will not be processed.'
+              : 'Connecting to payment gateway... Payments are disabled until mode verification completes.'}
           </span>
         </div>
       </div>
@@ -873,8 +1077,8 @@ export function CheckoutPage() {
                   <span>Instant Demo Pass</span>
                 </div>
                 <div className="p-2.5 rounded-lg bg-[var(--mp-surface)] border border-[var(--mp-border)] flex items-center gap-2">
-                  <span className="text-amber-500">🛡️</span>
-                  <span>Razorpay Test Mode</span>
+                  <span className={isLiveMode ? 'text-emerald-400' : 'text-amber-500'}>🛡️</span>
+                  <span>{isLiveMode ? 'Razorpay Live Gateway' : 'Razorpay Test Mode'}</span>
                 </div>
               </div>
             </div>
@@ -895,8 +1099,34 @@ export function CheckoutPage() {
                     </span>
                   </div>
 
-                  {/* Payment Mode Selector: Dynamic UPI QR vs Standard Checkout */}
+                  {/* Payment Mode Selector: Cards & Netbanking Primary vs Dynamic UPI QR */}
                   <div className="grid grid-cols-2 gap-2 mt-3">
+                    <button
+                      type="button"
+                      id="opt-pay-standard"
+                      onClick={() => {
+                        setPaymentMode('STANDARD');
+                        stopQrPolling();
+                        if (step === 'AWAITING_UPI_SCAN') setStep('CONFIG');
+                      }}
+                      className={`p-2.5 rounded-xl border text-left transition-all ${
+                        paymentMode === 'STANDARD'
+                          ? 'border-emerald-500 bg-emerald-500/10 text-[var(--mp-text-primary)] ring-1 ring-emerald-500/30'
+                          : 'border-[var(--mp-border)] bg-[var(--mp-surface-subtle)] text-[var(--mp-text-secondary)] hover:border-[var(--mp-border-highlight)]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 font-bold text-xs">
+                          <span>💳</span>
+                          <span>Cards & NetBanking</span>
+                        </div>
+                        <span className="text-[9px] font-mono font-semibold px-1 rounded bg-emerald-500/20 text-emerald-400">
+                          POPULAR
+                        </span>
+                      </div>
+                      <p className="text-[10px] opacity-80 mt-0.5 font-mono">Cards, UPI & NetBanking</p>
+                    </button>
+
                     <button
                       type="button"
                       id="opt-pay-upi-qr"
@@ -914,28 +1144,7 @@ export function CheckoutPage() {
                         <span>📱</span>
                         <span>Dynamic UPI QR</span>
                       </div>
-                      <p className="text-[10px] opacity-80 mt-0.5 font-mono">Scan with GPay/PhonePe</p>
-                    </button>
-
-                    <button
-                      type="button"
-                      id="opt-pay-standard"
-                      onClick={() => {
-                        setPaymentMode('STANDARD');
-                        stopQrPolling();
-                        if (step === 'AWAITING_UPI_SCAN') setStep('CONFIG');
-                      }}
-                      className={`p-2.5 rounded-xl border text-left transition-all ${
-                        paymentMode === 'STANDARD'
-                          ? 'border-emerald-500 bg-emerald-500/10 text-[var(--mp-text-primary)] ring-1 ring-emerald-500/30'
-                          : 'border-[var(--mp-border)] bg-[var(--mp-surface-subtle)] text-[var(--mp-text-secondary)] hover:border-[var(--mp-border-highlight)]'
-                      }`}
-                    >
-                      <div className="flex items-center gap-1.5 font-bold text-xs">
-                        <span>💳</span>
-                        <span>Cards & NetBanking</span>
-                      </div>
-                      <p className="text-[10px] opacity-80 mt-0.5 font-mono">Standard Checkout</p>
+                      <p className="text-[10px] opacity-80 mt-0.5 font-mono">Scan single-use QR</p>
                     </button>
                   </div>
                 </div>
@@ -973,7 +1182,9 @@ export function CheckoutPage() {
                       <p className="text-2xl font-extrabold text-emerald-500 font-mono">
                         ₹{farePreview.total}
                       </p>
-                      <p className="text-[10px] text-[var(--mp-text-muted)] font-mono">INR (TEST MODE)</p>
+                      <p className="text-[10px] text-[var(--mp-text-muted)] font-mono">
+                        INR ({verifiedMode === 'LIVE' ? 'LIVE GATEWAY' : verifiedMode === 'TEST' ? 'TEST MODE' : 'GATEWAY UNVERIFIED'})
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -1074,40 +1285,107 @@ export function CheckoutPage() {
                   </div>
                 )}
 
+                {/* Gateway Mode Warning when UNKNOWN */}
+                {verifiedMode === 'UNKNOWN' && (
+                  <div
+                    role="status"
+                    className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs space-y-1.5"
+                  >
+                    <p className="font-bold flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                      <span>Payment Gateway Verification Required</span>
+                    </p>
+                    <p className="text-[11px] text-[var(--mp-text-secondary)] leading-relaxed">
+                      Unable to verify the payment gateway environment. Payment actions are temporarily disabled for your protection. Please retry verification.
+                    </p>
+                    <button
+                      type="button"
+                      id="btn-retry-mode"
+                      onClick={() => {
+                        getPaymentDiagnostics().then((diag) => {
+                          setPaymentDiagnostics(diag);
+                          setVerifiedMode(resolvePaymentMode(diag));
+                        });
+                      }}
+                      className="px-3 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-mono font-semibold hover:bg-amber-500/30 cursor-pointer"
+                    >
+                      Retry Gateway Verification
+                    </button>
+                  </div>
+                )}
+
+                {/* Mandatory Live Payment Acknowledgement Checkbox */}
+                {verifiedMode === 'LIVE' && (
+                  <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs space-y-2">
+                    <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        id="chk-live-ack"
+                        checked={liveAcknowledged}
+                        onChange={(e) => setAcknowledgedBookingKey(e.target.checked ? currentBookingKey : null)}
+                        className="mt-0.5 rounded border-amber-500 text-emerald-600 focus:ring-emerald-500 shrink-0"
+                      />
+                      <span className="text-[11px] leading-relaxed text-[var(--mp-text-primary)]">
+                        I understand that this transaction will charge real money. I am purchasing an educational demonstration service, not an official Delhi Metro ticket. Any generated ticket is marked <strong>DEMO — NOT VALID FOR METRO TRAVEL</strong>.
+                      </span>
+                    </label>
+                  </div>
+                )}
+
                 {/* Action Trigger */}
                 <div className="space-y-3 pt-2">
                   {paymentMode === 'UPI_QR' ? (
-                    <button
-                      type="button"
-                      id="btn-proceed-metropay"
-                      disabled={isSubmitting || step === 'CREATING_ORDER' || step === 'AWAITING_UPI_SCAN'}
-                      onClick={handleProceedToQrPayment}
-                      className="w-full py-3.5 px-4 rounded-xl metropay-btn-primary font-bold text-sm tracking-wide flex items-center justify-center gap-2 cursor-pointer shadow-lg"
-                    >
-                      {step === 'CREATING_ORDER' ? (
-                        <>
-                          <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          <span>Generating Dynamic QR...</span>
-                        </>
-                      ) : step === 'AWAITING_UPI_SCAN' ? (
-                        <>
-                          <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          <span>Awaiting UPI Payment (₹{farePreview.total})...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>📱</span>
-                          <span>Generate Dynamic UPI QR (₹{farePreview.total})</span>
-                        </>
+                    <>
+                      <button
+                        type="button"
+                        id="btn-proceed-metropay"
+                        disabled={
+                          isSubmitting ||
+                          step === 'CREATING_ORDER' ||
+                          step === 'AWAITING_UPI_SCAN' ||
+                          verifiedMode === 'UNKNOWN' ||
+                          !dynamicQrPermitted ||
+                          (verifiedMode === 'LIVE' && !liveAcknowledged)
+                        }
+                        onClick={handleProceedToQrPayment}
+                        className="w-full py-3.5 px-4 rounded-xl metropay-btn-primary font-bold text-sm tracking-wide flex items-center justify-center gap-2 cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {step === 'CREATING_ORDER' ? (
+                          <>
+                            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            <span>Generating Dynamic QR...</span>
+                          </>
+                        ) : step === 'AWAITING_UPI_SCAN' ? (
+                          <>
+                            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            <span>Awaiting UPI Payment (₹{farePreview.total})...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>📱</span>
+                            <span>Generate Dynamic UPI QR (₹{farePreview.total})</span>
+                          </>
+                        )}
+                      </button>
+                      {verifiedMode !== 'UNKNOWN' && !dynamicQrPermitted && (
+                        <p className="text-[11px] text-amber-400 font-mono text-center">
+                          ⚠️ Dynamic UPI QR is currently disabled by server configuration. Please switch to Cards & NetBanking.
+                        </p>
                       )}
-                    </button>
+                    </>
                   ) : (
                     <button
                       type="button"
                       id="btn-proceed-metropay"
-                      disabled={isSubmitting || step === 'CREATING_ORDER' || step === 'VERIFYING'}
+                      disabled={
+                        isSubmitting ||
+                        step === 'CREATING_ORDER' ||
+                        step === 'VERIFYING' ||
+                        verifiedMode === 'UNKNOWN' ||
+                        (verifiedMode === 'LIVE' && !liveAcknowledged)
+                      }
                       onClick={handleProceedToPayment}
-                      className="w-full py-3.5 px-4 rounded-xl metropay-btn-primary font-bold text-sm tracking-wide flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+                      className="w-full py-3.5 px-4 rounded-xl metropay-btn-primary font-bold text-sm tracking-wide flex items-center justify-center gap-2 cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {step === 'CREATING_ORDER' ? (
                         <>
@@ -1127,14 +1405,25 @@ export function CheckoutPage() {
                       ) : (
                         <>
                           <span>🔒</span>
-                          <span>Pay ₹{farePreview.total} with Razorpay</span>
+                          <span>
+                            Pay ₹{farePreview.total} via Razorpay{' '}
+                            {verifiedMode === 'LIVE'
+                              ? '(Live Gateway)'
+                              : verifiedMode === 'TEST'
+                              ? '(Test Mode)'
+                              : '(Connecting...)'}
+                          </span>
                         </>
                       )}
                     </button>
                   )}
 
                   <p className="text-[10px] text-center text-[var(--mp-text-muted)] font-mono leading-tight">
-                    {paymentMode === 'UPI_QR'
+                    {verifiedMode === 'LIVE'
+                      ? '⚠️ Real transaction: clicking Pay charges actual funds via Razorpay. The generated pass is an educational simulation (DEMO — NOT VALID FOR METRO TRAVEL).'
+                      : verifiedMode === 'UNKNOWN'
+                      ? 'Payment gateway mode unverified. Please retry verification to proceed.'
+                      : paymentMode === 'UPI_QR'
                       ? 'Single-use dynamic UPI QR created via Razorpay Test Mode API. Real funds will not be transferred.'
                       : 'By clicking Pay, you open Razorpay Test Mode checkout. No real currency is charged.'}
                   </p>

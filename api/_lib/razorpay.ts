@@ -346,3 +346,25 @@ export async function closeOrphanQrCode(qrCodeId: string, bookingId: string): Pr
     );
   }
 }
+
+/**
+ * Fetches refund record from Razorpay API to verify status and amount.
+ */
+export async function fetchRazorpayRefund(refundId: string): Promise<any> {
+  const client = getRazorpayClient();
+  try {
+    return await (client as any).refunds.fetch(refundId);
+  } catch (err: any) {
+    const description =
+      err?.error?.description ||
+      err?.message ||
+      'Failed to fetch refund from Razorpay servers.';
+    const code = err?.error?.code || 'RAZORPAY_REFUND_FETCH_ERROR';
+    const statusCode = err?.statusCode || 502;
+    const enhancedError: any = new Error(description);
+    enhancedError.code = code;
+    enhancedError.statusCode = statusCode;
+    enhancedError.rawError = err?.error;
+    throw enhancedError;
+  }
+}

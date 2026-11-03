@@ -64,6 +64,14 @@ function renderCheckout(initialEntry = '/checkout') {
   );
 }
 
+async function renderCheckoutReady(initialEntry = '/checkout') {
+  const result = renderCheckout(initialEntry);
+  await waitFor(() => {
+    expect(screen.queryByText('GATEWAY: UNKNOWN')).toBeNull();
+  });
+  return result;
+}
+
 describe('CheckoutPage (MetroPay Dedicated Checkout)', () => {
   beforeEach(() => {
     sessionStorage.clear();
@@ -72,6 +80,34 @@ describe('CheckoutPage (MetroPay Dedicated Checkout)', () => {
     (window as any).Razorpay = MockRazorpay;
 
     vi.spyOn(paymentService, 'loadRazorpayCheckoutScript').mockResolvedValue(true);
+    vi.spyOn(paymentService, 'getPaymentDiagnostics').mockResolvedValue({
+      status: 'ok',
+      diagnostics: {
+        razorpay: {
+          paymentMode: 'TEST',
+          keyType: 'TEST',
+          hasKeyId: true,
+          dynamicQrAllowed: true,
+          liveQrEnabled: false,
+        },
+      },
+    });
+    vi.spyOn(paymentService, 'createPaymentQr').mockResolvedValue({
+      success: true,
+      bookingId: 'DMRC-DEMO-TEST-QR-99',
+      qrId: 'qr_test_9999',
+      qrImageUrl: 'https://example.com/qr.png',
+      amount: 4000,
+      currency: 'INR',
+      fareInRupees: 40,
+      sourceName: 'Samaypur Badli',
+      destinationName: 'Rajiv Chowk',
+      passengerCount: 1,
+      ticketType: 'SINGLE',
+      expiresAt: new Date(Date.now() + 900000).toISOString(),
+      paymentMethod: 'UPI_QR',
+      paymentMode: 'TEST',
+    });
     vi.spyOn(paymentService, 'createPaymentOrder').mockResolvedValue({
       success: true,
       bookingId: 'DMRC-DEMO-TEST-BOOKING-99',
@@ -120,8 +156,8 @@ describe('CheckoutPage (MetroPay Dedicated Checkout)', () => {
     expect(screen.getByText(/No Active Booking Session/i)).toBeTruthy();
   });
 
-  it('renders complete MetroPay checkout UI with journey and fare details for valid route', () => {
-    renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
+  it('renders complete MetroPay checkout UI with journey and fare details for valid route', async () => {
+    await renderCheckoutReady('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
 
     // MetroPay branding & badges
     expect(screen.getAllByText(/MetroPay/i).length).toBeGreaterThan(0);
@@ -158,7 +194,7 @@ describe('CheckoutPage (MetroPay Dedicated Checkout)', () => {
   });
 
   it('creates order, launches Razorpay modal, and handles passenger cancellation', async () => {
-    renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
+    await renderCheckoutReady('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
 
     const payBtn = screen.getByRole('button', { name: /Pay ₹/i });
     fireEvent.click(payBtn);
@@ -189,7 +225,7 @@ describe('CheckoutPage (MetroPay Dedicated Checkout)', () => {
   });
 
   it('distinguishes checkout gateway "Load failed" from bank decline and provides ad-blocker guidance', async () => {
-    renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
+    await renderCheckoutReady('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
 
     const payBtn = screen.getByRole('button', { name: /Pay ₹/i });
     fireEvent.click(payBtn);
@@ -213,7 +249,7 @@ describe('CheckoutPage (MetroPay Dedicated Checkout)', () => {
   });
 
   it('prevents duplicate order creation when user retries after dismissal or load failure', async () => {
-    renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
+    await renderCheckoutReady('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
 
     const payBtn = screen.getByRole('button', { name: /Pay ₹/i });
     // First payment attempt
@@ -242,7 +278,7 @@ describe('CheckoutPage (MetroPay Dedicated Checkout)', () => {
   });
 
   it('invalidates cached order and requests new order if user alters journey parameters', async () => {
-    renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
+    await renderCheckoutReady('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
 
     const payBtn = screen.getByRole('button', { name: /Pay ₹/i });
     fireEvent.click(payBtn);
@@ -275,7 +311,7 @@ describe('CheckoutPage (MetroPay Dedicated Checkout)', () => {
     vi.spyOn(paymentService, 'loadRazorpayCheckoutScript').mockResolvedValue(false);
     delete (window as any).Razorpay;
 
-    renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
+    await renderCheckoutReady('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
 
     const payBtn = screen.getByRole('button', { name: /Pay ₹/i });
     fireEvent.click(payBtn);
@@ -287,7 +323,7 @@ describe('CheckoutPage (MetroPay Dedicated Checkout)', () => {
   });
 
   it('handles payment provider decline / failure safely without issuing tickets', async () => {
-    renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
+    await renderCheckoutReady('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
 
     const payBtn = screen.getByRole('button', { name: /Pay ₹/i });
     fireEvent.click(payBtn);
@@ -308,7 +344,7 @@ describe('CheckoutPage (MetroPay Dedicated Checkout)', () => {
   });
 
   it('successfully captures payment, verifies signature with server, and issues verified demo ticket', async () => {
-    renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
+    await renderCheckoutReady('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
 
     const payBtn = screen.getByRole('button', { name: /Pay ₹/i });
     fireEvent.click(payBtn);
@@ -355,7 +391,7 @@ describe('CheckoutPage (MetroPay Dedicated Checkout)', () => {
 
     vi.spyOn(paymentService, 'createPaymentOrder').mockReturnValue(pendingPromise);
 
-    renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
+    await renderCheckoutReady('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
 
     const payBtn = screen.getByRole('button', { name: /Pay ₹/i });
     fireEvent.click(payBtn);
@@ -431,6 +467,623 @@ describe('CheckoutPage (MetroPay Dedicated Checkout)', () => {
       const { container } = renderCheckout('/checkout?theme=midnight-blue');
       const checkoutEl = container.querySelector('[data-page="checkout"]');
       expect(checkoutEl?.getAttribute('data-checkout-theme')).toBe('midnight-blue');
+    });
+
+    it('dynamically displays Live Mode banner and badge when server reports LIVE mode', async () => {
+      vi.spyOn(paymentService, 'getPaymentDiagnostics').mockResolvedValue({
+        status: 'ok',
+        diagnostics: {
+          razorpay: {
+            paymentMode: 'LIVE',
+            keyType: 'LIVE',
+            hasKeyId: true,
+            dynamicQrAllowed: true,
+            liveQrEnabled: true,
+          },
+        },
+      });
+
+      renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
+
+      await waitFor(() => {
+        expect(screen.getByText('SECURE LIVE GATEWAY')).toBeTruthy();
+        expect(screen.getByText(/Real funds will be charged via Razorpay Live Gateway/i)).toBeTruthy();
+      });
+    });
+
+    it('defaults to Cards & NetBanking as primary checkout method without query param', () => {
+      const { container } = render(
+        <MemoryRouter initialEntries={['/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK']}>
+          <AuthProvider>
+            <CheckoutPage />
+          </AuthProvider>
+        </MemoryRouter>
+      );
+
+      const standardBtn = container.querySelector('#opt-pay-standard');
+      expect(standardBtn?.className).toContain('border-emerald-500');
+      expect(screen.getByRole('button', { name: /Pay ₹.*via Razorpay/i })).toBeTruthy();
+    });
+  });
+
+  describe('MetroPay Safety Corrections & Live Payment Controls', () => {
+    it('1. diagnostics returning LIVE sets live mode badges and disclaimers', async () => {
+      vi.spyOn(paymentService, 'getPaymentDiagnostics').mockResolvedValue({
+        status: 'ok',
+        diagnostics: {
+          razorpay: {
+            paymentMode: 'LIVE',
+            keyType: 'LIVE',
+            hasKeyId: true,
+            dynamicQrAllowed: true,
+            liveQrEnabled: true,
+          },
+        },
+      });
+
+      renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
+
+      await waitFor(() => {
+        expect(screen.getByText('SECURE LIVE GATEWAY')).toBeTruthy();
+        expect(screen.getByText(/Real funds will be charged via Razorpay Live Gateway/i)).toBeTruthy();
+        expect(screen.getByLabelText(/I understand that this transaction will charge real money/i)).toBeTruthy();
+      });
+    });
+
+    it('2. diagnostics returning TEST sets test mode badges and disclaimers', async () => {
+      vi.spyOn(paymentService, 'getPaymentDiagnostics').mockResolvedValue({
+        status: 'ok',
+        diagnostics: {
+          razorpay: {
+            paymentMode: 'TEST',
+            keyType: 'TEST',
+            hasKeyId: true,
+            dynamicQrAllowed: false,
+            liveQrEnabled: false,
+          },
+        },
+      });
+
+      renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
+
+      await waitFor(() => {
+        expect(screen.getByText('SECURE TEST GATEWAY')).toBeTruthy();
+        expect(screen.getByText(/Test environment running via Razorpay Test Mode/i)).toBeTruthy();
+        expect(screen.queryByLabelText(/I understand that this transaction will charge real money/i)).toBeNull();
+      });
+    });
+
+    it('3. diagnostics failing or returning UNKNOWN disables payments and shows retry guidance', async () => {
+      vi.spyOn(paymentService, 'getPaymentDiagnostics').mockResolvedValue(null);
+
+      renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
+
+      await waitFor(() => {
+        expect(screen.getByText('GATEWAY: UNKNOWN')).toBeTruthy();
+        expect(screen.getByText(/Payment Gateway Verification Required/i)).toBeTruthy();
+        expect(screen.getByRole('button', { name: /Retry Gateway Verification/i })).toBeTruthy();
+      });
+    });
+
+    it('4. payment button is disabled when in UNKNOWN mode and clicking does not call createPaymentOrder', async () => {
+      vi.spyOn(paymentService, 'getPaymentDiagnostics').mockResolvedValue(null);
+
+      renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
+
+      await waitFor(() => {
+        expect(screen.getByText('GATEWAY: UNKNOWN')).toBeTruthy();
+      });
+
+      const payBtn = screen.getByRole('button', { name: /Pay ₹.*via Razorpay/i });
+      expect(payBtn.hasAttribute('disabled')).toBe(true);
+
+      fireEvent.click(payBtn);
+      expect(paymentService.createPaymentOrder).not.toHaveBeenCalled();
+    });
+
+    it('5. in LIVE mode, payment button is disabled until acknowledgement is checked', async () => {
+      vi.spyOn(paymentService, 'getPaymentDiagnostics').mockResolvedValue({
+        status: 'ok',
+        diagnostics: {
+          razorpay: {
+            paymentMode: 'LIVE',
+            keyType: 'LIVE',
+            hasKeyId: true,
+            dynamicQrAllowed: true,
+            liveQrEnabled: true,
+          },
+        },
+      });
+
+      renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
+
+      await waitFor(() => {
+        expect(screen.getByText('SECURE LIVE GATEWAY')).toBeTruthy();
+      });
+
+      const payBtn = screen.getByRole('button', { name: /Pay ₹.*via Razorpay/i });
+      expect(payBtn.hasAttribute('disabled')).toBe(true);
+
+      fireEvent.click(payBtn);
+      expect(paymentService.createPaymentOrder).not.toHaveBeenCalled();
+    });
+
+    it('6. in LIVE mode, checking acknowledgement enables payment button and proceeding creates order', async () => {
+      vi.spyOn(paymentService, 'getPaymentDiagnostics').mockResolvedValue({
+        status: 'ok',
+        diagnostics: {
+          razorpay: {
+            paymentMode: 'LIVE',
+            keyType: 'LIVE',
+            hasKeyId: true,
+            dynamicQrAllowed: true,
+            liveQrEnabled: true,
+          },
+        },
+      });
+
+      vi.spyOn(paymentService, 'createPaymentOrder').mockResolvedValue({
+        success: true,
+        bookingId: 'DMRC-LIVE-BOOKING-1',
+        orderId: 'order_live_1',
+        amount: 4000,
+        currency: 'INR',
+        keyId: 'rzp_live_realKey123',
+        fareInRupees: 40,
+        sourceName: 'Samaypur Badli',
+        destinationName: 'Rajiv Chowk',
+        passengerCount: 1,
+        ticketType: 'SINGLE',
+      });
+
+      renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
+
+      await waitFor(() => {
+        expect(screen.getByText('SECURE LIVE GATEWAY')).toBeTruthy();
+      });
+
+      const checkbox = screen.getByRole('checkbox', {
+        name: /I understand that this transaction will charge real money/i,
+      });
+      fireEvent.click(checkbox);
+
+      const payBtn = screen.getByRole('button', { name: /Pay ₹.*via Razorpay/i });
+      expect(payBtn.hasAttribute('disabled')).toBe(false);
+
+      fireEvent.click(payBtn);
+
+      await waitFor(() => {
+        expect(paymentService.createPaymentOrder).toHaveBeenCalledTimes(1);
+        expect(MockRazorpay.instances).toHaveLength(1);
+      });
+    });
+
+    it('7. dynamic QR requires acknowledgement in LIVE mode, and parameter change resets acknowledgement', async () => {
+      vi.spyOn(paymentService, 'getPaymentDiagnostics').mockResolvedValue({
+        status: 'ok',
+        diagnostics: {
+          razorpay: {
+            paymentMode: 'LIVE',
+            keyType: 'LIVE',
+            hasKeyId: true,
+            dynamicQrAllowed: true,
+            liveQrEnabled: true,
+          },
+        },
+      });
+
+      vi.spyOn(paymentService, 'createPaymentQr').mockResolvedValue({
+        success: true,
+        bookingId: 'DMRC-QR-LIVE-1',
+        qrId: 'qr_live_1',
+        qrImageUrl: 'https://example.com/qr.png',
+        amount: 4000,
+        currency: 'INR',
+        fareInRupees: 40,
+        sourceName: 'Samaypur Badli',
+        destinationName: 'Rajiv Chowk',
+        passengerCount: 1,
+        ticketType: 'SINGLE',
+        expiresAt: new Date(Date.now() + 300000).toISOString(),
+        paymentMethod: 'UPI_QR',
+        paymentMode: 'LIVE',
+      });
+
+      renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK&mode=upi_qr');
+
+      await waitFor(() => {
+        expect(screen.getByText('SECURE LIVE GATEWAY')).toBeTruthy();
+      });
+
+      const qrBtn = screen.getByRole('button', { name: /Generate Dynamic UPI QR/i });
+      expect(qrBtn.hasAttribute('disabled')).toBe(true);
+
+      const checkbox = screen.getByRole('checkbox', {
+        name: /I understand that this transaction will charge real money/i,
+      });
+      fireEvent.click(checkbox);
+      expect(qrBtn.hasAttribute('disabled')).toBe(false);
+
+      // Parameter change (changing passenger count) must reset acknowledgement
+      const btn2 = screen.getByRole('button', { name: '2' });
+      fireEvent.click(btn2);
+
+      // Acknowledgement must be reset and button disabled again
+      expect((checkbox as HTMLInputElement).checked).toBe(false);
+      expect(qrBtn.hasAttribute('disabled')).toBe(true);
+    });
+
+    it('8. order key mismatch (LIVE mode but rzp_test_ key) throws security error and aborts payment', async () => {
+      vi.spyOn(paymentService, 'getPaymentDiagnostics').mockResolvedValue({
+        status: 'ok',
+        diagnostics: {
+          razorpay: {
+            paymentMode: 'LIVE',
+            keyType: 'LIVE',
+            hasKeyId: true,
+            dynamicQrAllowed: true,
+            liveQrEnabled: true,
+          },
+        },
+      });
+
+      // Backend accidentally returns a test key in LIVE mode
+      vi.spyOn(paymentService, 'createPaymentOrder').mockResolvedValue({
+        success: true,
+        bookingId: 'DMRC-MISMATCH-1',
+        orderId: 'order_test_mismatch',
+        amount: 4000,
+        currency: 'INR',
+        keyId: 'rzp_test_mismatchedKey',
+        fareInRupees: 40,
+        sourceName: 'Samaypur Badli',
+        destinationName: 'Rajiv Chowk',
+        passengerCount: 1,
+        ticketType: 'SINGLE',
+      });
+
+      renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
+
+      await waitFor(() => {
+        expect(screen.getByText('SECURE LIVE GATEWAY')).toBeTruthy();
+      });
+
+      const checkbox = screen.getByRole('checkbox', {
+        name: /I understand that this transaction will charge real money/i,
+      });
+      fireEvent.click(checkbox);
+
+      const payBtn = screen.getByRole('button', { name: /Pay ₹.*via Razorpay/i });
+      fireEvent.click(payBtn);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Security Verification Failed/i)).toBeTruthy();
+        expect(screen.getByText(/Order key mismatch/i)).toBeTruthy();
+      });
+
+      // Razorpay modal must NEVER be launched
+      expect(MockRazorpay.instances).toHaveLength(0);
+    });
+
+    it('8b. order key mismatch (TEST mode but rzp_live_ key) throws security error and aborts payment', async () => {
+      vi.spyOn(paymentService, 'getPaymentDiagnostics').mockResolvedValue({
+        status: 'ok',
+        diagnostics: {
+          razorpay: {
+            paymentMode: 'TEST',
+            keyType: 'TEST',
+            hasKeyId: true,
+            dynamicQrAllowed: false,
+            liveQrEnabled: false,
+          },
+        },
+      });
+
+      // Backend accidentally returns a live key in TEST mode
+      vi.spyOn(paymentService, 'createPaymentOrder').mockResolvedValue({
+        success: true,
+        bookingId: 'DMRC-MISMATCH-2',
+        orderId: 'order_live_mismatch',
+        amount: 4000,
+        currency: 'INR',
+        keyId: 'rzp_live_mismatchedKey',
+        fareInRupees: 40,
+        sourceName: 'Samaypur Badli',
+        destinationName: 'Rajiv Chowk',
+        passengerCount: 1,
+        ticketType: 'SINGLE',
+      });
+
+      renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
+
+      await waitFor(() => {
+        expect(screen.getByText('SECURE TEST GATEWAY')).toBeTruthy();
+      });
+
+      const payBtn = screen.getByRole('button', { name: /Pay ₹.*via Razorpay/i });
+      fireEvent.click(payBtn);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Security Verification Failed/i)).toBeTruthy();
+        expect(screen.getByText(/Order key mismatch/i)).toBeTruthy();
+      });
+
+      // Razorpay modal must NEVER be launched
+      expect(MockRazorpay.instances).toHaveLength(0);
+    });
+
+    it('9. Razorpay Standard Checkout description reflects verified actual mode dynamically', async () => {
+      // Test Mode description
+      vi.spyOn(paymentService, 'getPaymentDiagnostics').mockResolvedValue({
+        status: 'ok',
+        diagnostics: {
+          razorpay: {
+            paymentMode: 'TEST',
+            keyType: 'TEST',
+            hasKeyId: true,
+            dynamicQrAllowed: false,
+            liveQrEnabled: false,
+          },
+        },
+      });
+
+      renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
+
+      await waitFor(() => {
+        expect(screen.getByText('SECURE TEST GATEWAY')).toBeTruthy();
+      });
+
+      const payBtn = screen.getByRole('button', { name: /Pay ₹.*via Razorpay/i });
+      fireEvent.click(payBtn);
+
+      await waitFor(() => {
+        expect(MockRazorpay.instances).toHaveLength(1);
+      });
+
+      expect(MockRazorpay.instances[0].options.description).toBe('Single Transit Pass (1 Passenger) · Test Mode');
+    });
+
+    it('9b. Razorpay Standard Checkout description reflects Live Demo in LIVE mode', async () => {
+      vi.spyOn(paymentService, 'getPaymentDiagnostics').mockResolvedValue({
+        status: 'ok',
+        diagnostics: {
+          razorpay: {
+            paymentMode: 'LIVE',
+            keyType: 'LIVE',
+            hasKeyId: true,
+            dynamicQrAllowed: true,
+            liveQrEnabled: true,
+          },
+        },
+      });
+
+      vi.spyOn(paymentService, 'createPaymentOrder').mockResolvedValue({
+        success: true,
+        bookingId: 'DMRC-LIVE-BOOKING-9',
+        orderId: 'order_live_9',
+        amount: 4000,
+        currency: 'INR',
+        keyId: 'rzp_live_realKey999',
+        fareInRupees: 40,
+        sourceName: 'Samaypur Badli',
+        destinationName: 'Rajiv Chowk',
+        passengerCount: 1,
+        ticketType: 'SINGLE',
+      });
+
+      renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
+
+      await waitFor(() => {
+        expect(screen.getByText('SECURE LIVE GATEWAY')).toBeTruthy();
+      });
+
+      const checkbox = screen.getByRole('checkbox', {
+        name: /I understand that this transaction will charge real money/i,
+      });
+      fireEvent.click(checkbox);
+
+      const payBtn = screen.getByRole('button', { name: /Pay ₹.*via Razorpay/i });
+      fireEvent.click(payBtn);
+
+      await waitFor(() => {
+        expect(MockRazorpay.instances).toHaveLength(1);
+      });
+
+      expect(MockRazorpay.instances[0].options.description).toBe('Single Transit Pass (1 Passenger) · Live Demo');
+    });
+
+    it('10. diagnostics with status !== "ok" produces UNKNOWN mode', async () => {
+      vi.spyOn(paymentService, 'getPaymentDiagnostics').mockResolvedValue({
+        status: 'error',
+        diagnostics: {
+          razorpay: {
+            paymentMode: 'TEST',
+            keyType: 'TEST',
+            hasKeyId: true,
+            dynamicQrAllowed: true,
+            liveQrEnabled: false,
+          },
+        },
+      });
+
+      renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK');
+
+      await waitFor(() => {
+        expect(screen.getByText('GATEWAY: UNKNOWN')).toBeTruthy();
+        expect(screen.getByText(/Payment Gateway Verification Required/i)).toBeTruthy();
+      });
+    });
+
+    it('11. Dynamic QR is disabled when dynamicQrAllowed is false in server diagnostics', async () => {
+      vi.spyOn(paymentService, 'getPaymentDiagnostics').mockResolvedValue({
+        status: 'ok',
+        diagnostics: {
+          razorpay: {
+            paymentMode: 'TEST',
+            keyType: 'TEST',
+            hasKeyId: true,
+            dynamicQrAllowed: false,
+            liveQrEnabled: false,
+          },
+        },
+      });
+
+      renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK&mode=upi_qr');
+
+      await waitFor(() => {
+        expect(screen.getByText('SECURE TEST GATEWAY')).toBeTruthy();
+      });
+
+      const qrBtn = screen.getByRole('button', { name: /Generate Dynamic UPI QR/i });
+      expect(qrBtn.hasAttribute('disabled')).toBe(true);
+
+      fireEvent.click(qrBtn);
+      expect(paymentService.createPaymentQr).not.toHaveBeenCalled();
+    });
+
+    it('12. In LIVE mode, Dynamic QR is disabled when liveQrEnabled is false in server diagnostics', async () => {
+      vi.spyOn(paymentService, 'getPaymentDiagnostics').mockResolvedValue({
+        status: 'ok',
+        diagnostics: {
+          razorpay: {
+            paymentMode: 'LIVE',
+            keyType: 'LIVE',
+            hasKeyId: true,
+            dynamicQrAllowed: false,
+            liveQrEnabled: false,
+          },
+        },
+      });
+
+      renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK&mode=upi_qr');
+
+      await waitFor(() => {
+        expect(screen.getByText('SECURE LIVE GATEWAY')).toBeTruthy();
+      });
+
+      const checkbox = screen.getByRole('checkbox', {
+        name: /I understand that this transaction will charge real money/i,
+      });
+      fireEvent.click(checkbox);
+
+      const qrBtn = screen.getByRole('button', { name: /Generate Dynamic UPI QR/i });
+      expect(qrBtn.hasAttribute('disabled')).toBe(true);
+
+      fireEvent.click(qrBtn);
+      expect(paymentService.createPaymentQr).not.toHaveBeenCalled();
+    });
+
+    it('13. QR creation response with mismatched paymentMode throws security error and does not start polling or show QR', async () => {
+      vi.spyOn(paymentService, 'getPaymentDiagnostics').mockResolvedValue({
+        status: 'ok',
+        diagnostics: {
+          razorpay: {
+            paymentMode: 'TEST',
+            keyType: 'TEST',
+            hasKeyId: true,
+            dynamicQrAllowed: true,
+            liveQrEnabled: false,
+          },
+        },
+      });
+
+      // Server returns LIVE mode QR in TEST mode
+      vi.spyOn(paymentService, 'createPaymentQr').mockResolvedValue({
+        success: true,
+        bookingId: 'DMRC-QR-MISMATCH',
+        qrId: 'qr_mismatch_1',
+        qrImageUrl: 'https://example.com/qr-mismatch.png',
+        amount: 4000,
+        currency: 'INR',
+        fareInRupees: 40,
+        sourceName: 'Samaypur Badli',
+        destinationName: 'Rajiv Chowk',
+        passengerCount: 1,
+        ticketType: 'SINGLE',
+        expiresAt: new Date(Date.now() + 300000).toISOString(),
+        paymentMethod: 'UPI_QR',
+        paymentMode: 'LIVE',
+      });
+
+      const verifySpy = vi.spyOn(paymentService, 'verifyServerQrPayment');
+
+      renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK&mode=upi_qr');
+
+      await waitFor(() => {
+        expect(screen.getByText('SECURE TEST GATEWAY')).toBeTruthy();
+      });
+
+      const qrBtn = screen.getByRole('button', { name: /Generate Dynamic UPI QR/i });
+      fireEvent.click(qrBtn);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Security Verification Failed/i)).toBeTruthy();
+        expect(screen.getByText(/QR payment mode mismatch/i)).toBeTruthy();
+      });
+
+      // QR image must NOT be rendered
+      expect(screen.queryByAltText(/Razorpay Dynamic UPI QR/i)).toBeNull();
+      // Polling must NOT be initiated
+      expect(verifySpy).not.toHaveBeenCalled();
+    });
+
+    it('14. Cached QR cannot be reused after payment mode becomes UNKNOWN or changes', async () => {
+      let resolveDiagnostics: (value: any) => void;
+      const diagPromise = new Promise((res) => {
+        resolveDiagnostics = res;
+      });
+
+      vi.spyOn(paymentService, 'getPaymentDiagnostics').mockReturnValue(diagPromise as any);
+
+      vi.spyOn(paymentService, 'createPaymentQr').mockResolvedValue({
+        success: true,
+        bookingId: 'DMRC-QR-CACHE-1',
+        qrId: 'qr_cache_1',
+        qrImageUrl: 'https://example.com/qr-cache.png',
+        amount: 4000,
+        currency: 'INR',
+        fareInRupees: 40,
+        sourceName: 'Samaypur Badli',
+        destinationName: 'Rajiv Chowk',
+        passengerCount: 1,
+        ticketType: 'SINGLE',
+        expiresAt: new Date(Date.now() + 300000).toISOString(),
+        paymentMethod: 'UPI_QR',
+        paymentMode: 'TEST',
+      });
+
+      renderCheckout('/checkout?from=SAMAYPUR_BADLI&to=RAJIV_CHOWK&mode=upi_qr');
+
+      // Mode is UNKNOWN initially
+      await waitFor(() => {
+        expect(screen.getByText('GATEWAY: UNKNOWN')).toBeTruthy();
+      });
+
+      // Resolve as TEST
+      resolveDiagnostics!({
+        status: 'ok',
+        diagnostics: {
+          razorpay: {
+            paymentMode: 'TEST',
+            keyType: 'TEST',
+            hasKeyId: true,
+            dynamicQrAllowed: true,
+            liveQrEnabled: false,
+          },
+        },
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('SECURE TEST GATEWAY')).toBeTruthy();
+      });
+
+      const qrBtn = screen.getByRole('button', { name: /Generate Dynamic UPI QR/i });
+      fireEvent.click(qrBtn);
+
+      await waitFor(() => {
+        expect(paymentService.createPaymentQr).toHaveBeenCalledTimes(1);
+        expect(screen.getByAltText(/Razorpay Dynamic UPI QR/i)).toBeTruthy();
+      });
     });
   });
 });

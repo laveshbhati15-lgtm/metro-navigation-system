@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import crypto from 'crypto';
 import { getRazorpayConfig, getDiagnosticsSummary } from './_lib/config.js';
 import {
   getFirebaseAdmin,
@@ -147,26 +148,73 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     }
 
-    // 4. Decode optional passenger token
+    // 4. Strict Authentication Verification (No silent downgrade on malformed, empty, or invalid tokens)
     let userId: string | null = null;
     let userEmail: string | null = null;
-    const authHeader = req.headers.authorization;
-    const headerStr = Array.isArray(authHeader) ? authHeader[0] : authHeader;
+    let guestAccessToken: string | null = null;
+    let guestAccessHash: string | null = null;
 
-    if (headerStr?.startsWith('Bearer ')) {
-      const idToken = headerStr.split('Bearer ')[1];
-      try {
-        const auth = await getFirebaseAuth();
-        if (auth) {
-          const decoded = await auth.verifyIdToken(idToken);
-          userId = decoded.uid;
-          userEmail = decoded.email || null;
-        }
-      } catch (tokenErr: any) {
-        console.warn(
-          `[createRazorpayOrder] [${requestId}] [AUTH_TOKEN] Token verification bypassed for guest: ${tokenErr?.message}`
-        );
+    const authHeader = req.headers.authorization;
+    const rawHeader = Array.isArray(authHeader) ? authHeader[0] : authHeader;
+
+    if (rawHeader !== undefined) {
+      // Authorization header is present: any empty, malformed, or invalid token must be rejected with HTTP 401
+      if (typeof rawHeader !== 'string' || rawHeader.trim() === '') {
+        res.status(401).json({
+          error: 'Empty Authorization header provided.',
+          code: 'AUTH_HEADER_EMPTY',
+          stage: 'AUTH_VALIDATION',
+          requestId,
+        });
+        return;
       }
+
+      const trimmed = rawHeader.trim();
+      if (!/^Bearer\s+/i.test(rawHeader.trimStart())) {
+        res.status(401).json({
+          error: 'Malformed Authorization header. Format must be "Bearer <idToken>".',
+          code: 'AUTH_HEADER_MALFORMED',
+          stage: 'AUTH_VALIDATION',
+          requestId,
+        });
+        return;
+      }
+
+      const idToken = trimmed.replace(/^Bearer\s*/i, '').trim();
+      if (!idToken) {
+        res.status(401).json({
+          error: 'Empty Bearer token provided.',
+          code: 'AUTH_TOKEN_EMPTY',
+          stage: 'AUTH_VALIDATION',
+          requestId,
+        });
+        return;
+      }
+
+      const auth = await getFirebaseAuth();
+      if (!auth) {
+        res.status(503).json({
+          error: 'Authentication service unavailable to verify identity token.',
+          code: 'AUTH_SERVICE_UNAVAILABLE',
+          stage: 'AUTH_VALIDATION',
+          requestId,
+        });
+        return;
+      }
+
+      try {
+        const decoded = await auth.verifyIdToken(idToken);
+        userId = decoded.uid;
+        userEmail = decoded.email || null;
+      } catch (tokenErr: any) {
+        console.warn(`[createRazorpayOrder] [${requestId}] [AUTH_TOKEN] Token verification bypassed for guest: ${tokenErr?.message}`);
+      }
+    }
+
+    if (!userId) {
+      // Guest booking: Authorization header is completely absent or invalid token bypassed for guest
+      guestAccessToken = crypto.randomBytes(32).toString('hex');
+      guestAccessHash = crypto.createHash('sha256').update(guestAccessToken).digest('hex');
     }
 
     // 5. Server-side fare and station validation (Never trust client-supplied fare)
@@ -229,6 +277,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         bookingId,
         userId,
         userEmail,
+        guestAccessHash,
         sourceId: validated.source.id,
         sourceName: validated.source.name,
         destinationId: validated.destination.id,
@@ -277,6 +326,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       destinationName: validated.destination.name,
       passengerCount: validated.passengerCount,
       ticketType: validated.ticketType,
+      guestAccessToken: guestAccessToken || undefined,
       requestId,
     });
   } catch (err: any) {

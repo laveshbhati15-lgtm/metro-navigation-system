@@ -30,12 +30,14 @@ export interface CreateOrderResponse {
   destinationName: string;
   passengerCount: number;
   ticketType: string;
+  guestAccessToken?: string;
 }
 
 export interface VerifyPaymentRequest {
   bookingId: string;
   razorpayPaymentId: string;
   razorpaySignature: string;
+  guestAccessToken?: string;
 }
 
 export interface VerifyPaymentResponse {
@@ -60,6 +62,7 @@ export interface CreateQrResponse {
   expiresAt: string;
   closeByUnix?: number;
   paymentMethod: 'UPI_QR';
+  paymentMode?: 'TEST' | 'LIVE' | string;
   guestAccessToken?: string;
   requestId?: string;
 }
@@ -165,6 +168,91 @@ export async function verifyServerQrPayment(
   }
 
   return response.json();
+}
+
+export type VerifiedPaymentMode = 'LIVE' | 'TEST' | 'UNKNOWN';
+
+export interface PaymentDiagnostics {
+  status: string;
+  diagnostics?: {
+    razorpay?: {
+      keyType: 'TEST' | 'LIVE' | 'UNKNOWN' | 'MISSING';
+      paymentMode: 'TEST' | 'LIVE';
+      hasKeyId: boolean;
+      dynamicQrAllowed: boolean;
+      liveQrEnabled: boolean;
+    };
+    nodeEnv?: string;
+    disclaimer?: string;
+  };
+}
+
+/**
+ * Fetches lightweight payment mode diagnostics from the server to dynamically determine Test vs Live mode.
+ * Returns strictly 'LIVE', 'TEST', or 'UNKNOWN' (fail-closed).
+ */
+export async function getPaymentDiagnostics(): Promise<PaymentDiagnostics | null> {
+  try {
+    const res = await fetch(`${FUNCTIONS_BASE_URL}/createRazorpayOrder?diagnostics=1`, {
+      method: 'GET',
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch {
+    // Fail-closed fallback to null if endpoint is unreachable or network fails
+  }
+  return null;
+}
+
+/**
+ * Parses and verifies the backend payment mode fail-closed.
+ * Requires status === 'ok', and paymentMode and keyType must both agree.
+ * If diagnostics are null, missing, status is not 'ok', or unrecognized, returns strictly 'UNKNOWN'.
+ */
+export function resolvePaymentMode(diag: PaymentDiagnostics | null): VerifiedPaymentMode {
+  if (!diag || diag.status !== 'ok' || !diag.diagnostics || !diag.diagnostics.razorpay) {
+    return 'UNKNOWN';
+  }
+
+  const rzp = diag.diagnostics.razorpay;
+  const mode = rzp.paymentMode;
+  const keyType = rzp.keyType;
+
+  // Strict fail-closed verification: mode and keyType must both agree
+  if (mode === 'LIVE' && keyType === 'LIVE') {
+    return 'LIVE';
+  }
+  if (mode === 'TEST' && keyType === 'TEST') {
+    return 'TEST';
+  }
+
+  return 'UNKNOWN';
+}
+
+/**
+ * Checks whether Dynamic UPI QR is permitted by server diagnostics and active verified mode.
+ * Enforces fail-closed: requires status === 'ok', dynamicQrAllowed === true,
+ * and if operating in LIVE mode, liveQrEnabled === true.
+ */
+export function isDynamicQrPermitted(
+  diag: PaymentDiagnostics | null,
+  verifiedMode: VerifiedPaymentMode
+): boolean {
+  if (!diag || diag.status !== 'ok' || !diag.diagnostics || !diag.diagnostics.razorpay) {
+    return false;
+  }
+  if (verifiedMode === 'UNKNOWN') {
+    return false;
+  }
+  const rzp = diag.diagnostics.razorpay;
+  if (!rzp.dynamicQrAllowed) {
+    return false;
+  }
+  if (verifiedMode === 'LIVE' && !rzp.liveQrEnabled) {
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -346,15 +434,26 @@ export async function createPaymentOrder(
  * Submits payment signature to backend for cryptographic HMAC SHA256 verification.
  */
 export async function verifyServerPayment(
-  params: VerifyPaymentRequest
+  params: VerifyPaymentRequest,
+  options?: { guestAccessToken?: string | null; idToken?: string }
 ): Promise<VerifyPaymentResponse> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  const guestToken = options?.guestAccessToken || params.guestAccessToken;
+  if (guestToken) {
+    headers['x-guest-access-token'] = guestToken;
+  }
+  if (options?.idToken) {
+    headers['Authorization'] = `Bearer ${options.idToken}`;
+  }
+
   let response: Response;
   try {
     response = await fetch(`${FUNCTIONS_BASE_URL}/verifyRazorpayPayment`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(params),
     });
   } catch (netErr: any) {
