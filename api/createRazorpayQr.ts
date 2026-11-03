@@ -310,6 +310,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       expiresAt: qrExpiresAt.toISOString(),
       closeByUnix: qrResult.close_by,
       paymentMethod: 'UPI_QR',
+      paymentMode: config.paymentMode,
       guestAccessToken: guestAccessToken || undefined,
       disclaimer: 'DEMO — NOT VALID FOR METRO TRAVEL',
       requestId,

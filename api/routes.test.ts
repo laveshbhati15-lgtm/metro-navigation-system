@@ -9,8 +9,9 @@ const TEST_KEY_SECRET = 'mockSecretKey9876543210';
 const TEST_WEBHOOK_SECRET = 'mockWebhookSecret11223344';
 
 // In-memory Firestore store and mock database for test isolation
-const { bookingsStore, mockDb } = vi.hoisted(() => {
+const { bookingsStore, eventsStore, mockDb } = vi.hoisted(() => {
   const bookingsStore = new Map<string, any>();
+  const eventsStore = new Map<string, any>();
   let docOverride: ((docId: string) => any) | null = null;
 
   const defaultDoc = (docId: string) => ({
@@ -51,6 +52,27 @@ const { bookingsStore, mockDb } = vi.hoisted(() => {
       return result;
     },
     collection: (colName: string) => {
+      if (colName === 'processed_webhook_events') {
+        return {
+          doc: (docId: string) => ({
+            get: async () => {
+              const data = eventsStore.get(docId);
+              return {
+                exists: !!data,
+                data: () => (data ? { ...data } : undefined),
+              };
+            },
+            set: async (data: any, options?: any) => {
+              const existing = eventsStore.get(docId) || {};
+              eventsStore.set(docId, options?.merge ? { ...existing, ...data } : { ...data });
+            },
+            update: async (updates: any) => {
+              const existing = eventsStore.get(docId) || {};
+              eventsStore.set(docId, { ...existing, ...updates });
+            },
+          }),
+        };
+      }
       if (colName !== 'demo_bookings') {
         throw new Error(`Unexpected collection: ${colName}`);
       }
@@ -91,7 +113,7 @@ const { bookingsStore, mockDb } = vi.hoisted(() => {
       };
     },
   };
-  return { bookingsStore, mockDb };
+  return { bookingsStore, eventsStore, mockDb };
 });
 
 // Mock Firebase Admin
@@ -144,6 +166,7 @@ vi.mock('./_lib/firebaseAdmin.js', () => {
     },
     FieldValue: {
       serverTimestamp: () => 'MOCK_SERVER_TIMESTAMP',
+      arrayUnion: (...items: any[]) => items,
     },
   };
 });
@@ -283,6 +306,7 @@ describe('Vercel API Routes: createRazorpayOrder', () => {
     process.env.RAZORPAY_KEY_SECRET = TEST_KEY_SECRET;
     process.env.RAZORPAY_WEBHOOK_SECRET = TEST_WEBHOOK_SECRET;
     bookingsStore.clear();
+    eventsStore.clear();
   });
 
   afterEach(() => {
@@ -528,11 +552,15 @@ describe('Vercel API Routes: createRazorpayOrder', () => {
 });
 
 describe('Vercel API Routes: verifyRazorpayPayment', () => {
+  const TEST_GUEST_TOKEN = 'test_guest_token_routes_standard';
+  const TEST_GUEST_HASH = crypto.createHash('sha256').update(TEST_GUEST_TOKEN).digest('hex');
+
   beforeEach(() => {
     process.env.RAZORPAY_KEY_ID = TEST_KEY_ID;
     process.env.RAZORPAY_KEY_SECRET = TEST_KEY_SECRET;
     process.env.RAZORPAY_WEBHOOK_SECRET = TEST_WEBHOOK_SECRET;
     bookingsStore.clear();
+    eventsStore.clear();
   });
 
   afterEach(() => {
@@ -581,10 +609,14 @@ describe('Vercel API Routes: verifyRazorpayPayment', () => {
       destinationName: 'Hauz Khas',
       passengerCount: 1,
       ticketType: 'SINGLE',
+      guestAccessHash: TEST_GUEST_HASH,
     });
 
     const { req, res, getStatusCode, getResponseData } = createMockReqRes({
       method: 'POST',
+      headers: {
+        'x-guest-access-token': TEST_GUEST_TOKEN,
+      },
       body: {
         bookingId,
         razorpayPaymentId: 'pay_test_999',
@@ -618,6 +650,7 @@ describe('Vercel API Routes: verifyRazorpayPayment', () => {
       destinationName: 'Hauz Khas',
       passengerCount: 1,
       ticketType: 'SINGLE',
+      guestAccessHash: TEST_GUEST_HASH,
     });
 
     // Generate valid HMAC SHA256 signature
@@ -628,6 +661,9 @@ describe('Vercel API Routes: verifyRazorpayPayment', () => {
 
     const { req, res, getStatusCode, getResponseData } = createMockReqRes({
       method: 'POST',
+      headers: {
+        'x-guest-access-token': TEST_GUEST_TOKEN,
+      },
       body: {
         bookingId,
         razorpayPaymentId: paymentId,
@@ -667,12 +703,16 @@ describe('Vercel API Routes: verifyRazorpayPayment', () => {
       destinationName: 'Hauz Khas',
       passengerCount: 1,
       ticketType: 'SINGLE',
+      guestAccessHash: TEST_GUEST_HASH,
       disclaimer: 'DEMO — NOT VALID FOR METRO TRAVEL',
       qrPayload: '{"type":"DEMO_TICKET","disclaimer":"DEMO — NOT VALID FOR METRO TRAVEL"}',
     });
 
     const { req, res, getStatusCode, getResponseData } = createMockReqRes({
       method: 'POST',
+      headers: {
+        'x-guest-access-token': TEST_GUEST_TOKEN,
+      },
       body: {
         bookingId,
         razorpayPaymentId: 'pay_already_processed',
@@ -701,6 +741,7 @@ describe('Vercel API Routes: verifyRazorpayPayment', () => {
       amountInPaise: 4000,
       currency: 'INR',
       status: 'PENDING',
+      guestAccessHash: TEST_GUEST_HASH,
     });
 
     const validSignature = crypto
@@ -710,6 +751,9 @@ describe('Vercel API Routes: verifyRazorpayPayment', () => {
 
     const { req, res, getStatusCode, getResponseData } = createMockReqRes({
       method: 'POST',
+      headers: {
+        'x-guest-access-token': TEST_GUEST_TOKEN,
+      },
       body: {
         bookingId,
         razorpayPaymentId: paymentId,
@@ -734,6 +778,7 @@ describe('Vercel API Routes: verifyRazorpayPayment', () => {
       amountInPaise: 4000,
       currency: 'INR',
       status: 'PENDING',
+      guestAccessHash: TEST_GUEST_HASH,
     });
 
     const validSignature = crypto
@@ -743,6 +788,9 @@ describe('Vercel API Routes: verifyRazorpayPayment', () => {
 
     const { req, res, getStatusCode, getResponseData } = createMockReqRes({
       method: 'POST',
+      headers: {
+        'x-guest-access-token': TEST_GUEST_TOKEN,
+      },
       body: {
         bookingId,
         razorpayPaymentId: paymentId,
@@ -774,6 +822,7 @@ describe('Vercel API Routes: verifyRazorpayPayment', () => {
       destinationName: 'Hauz Khas',
       passengerCount: 1,
       ticketType: 'SINGLE',
+      guestAccessHash: TEST_GUEST_HASH,
     });
 
     const validSignature = crypto
@@ -799,6 +848,9 @@ describe('Vercel API Routes: verifyRazorpayPayment', () => {
 
     const { req, res, getStatusCode, getResponseData } = createMockReqRes({
       method: 'POST',
+      headers: {
+        'x-guest-access-token': TEST_GUEST_TOKEN,
+      },
       body: {
         bookingId,
         razorpayPaymentId: paymentId,
@@ -832,6 +884,7 @@ describe('Vercel API Routes: verifyRazorpayPayment', () => {
       amountInPaise: 4000,
       currency: 'INR',
       status: 'PENDING',
+      guestAccessHash: TEST_GUEST_HASH,
     });
 
     const validSignature = crypto
@@ -841,6 +894,9 @@ describe('Vercel API Routes: verifyRazorpayPayment', () => {
 
     const { req, res, getStatusCode, getResponseData } = createMockReqRes({
       method: 'POST',
+      headers: {
+        'x-guest-access-token': TEST_GUEST_TOKEN,
+      },
       body: {
         bookingId,
         razorpayPaymentId: paymentId,
@@ -867,6 +923,7 @@ describe('Vercel API Routes: verifyRazorpayPayment', () => {
       amountInPaise: 4000,
       currency: 'INR',
       status: 'PENDING',
+      guestAccessHash: TEST_GUEST_HASH,
     });
 
     const validSignature = crypto
@@ -876,6 +933,9 @@ describe('Vercel API Routes: verifyRazorpayPayment', () => {
 
     const { req, res, getStatusCode, getResponseData } = createMockReqRes({
       method: 'POST',
+      headers: {
+        'x-guest-access-token': TEST_GUEST_TOKEN,
+      },
       body: {
         bookingId,
         razorpayPaymentId: paymentId,
@@ -901,6 +961,7 @@ describe('Vercel API Routes: verifyRazorpayPayment', () => {
       amountInPaise: 4000,
       currency: 'INR',
       status: 'PENDING',
+      guestAccessHash: TEST_GUEST_HASH,
     });
 
     const validSignature = crypto
@@ -910,6 +971,9 @@ describe('Vercel API Routes: verifyRazorpayPayment', () => {
 
     const { req, res, getStatusCode, getResponseData } = createMockReqRes({
       method: 'POST',
+      headers: {
+        'x-guest-access-token': TEST_GUEST_TOKEN,
+      },
       body: {
         bookingId,
         razorpayPaymentId: paymentId,
@@ -944,6 +1008,7 @@ describe('Vercel API Routes: verifyRazorpayPayment', () => {
       destinationName: 'Hauz Khas',
       passengerCount: 1,
       ticketType: 'SINGLE',
+      guestAccessHash: TEST_GUEST_HASH,
     });
 
     const validSignature = crypto
@@ -954,10 +1019,16 @@ describe('Vercel API Routes: verifyRazorpayPayment', () => {
     // Simulate 2 concurrent verification requests for the same booking
     const { req: req1, res: res1, getStatusCode: getCode1, getResponseData: getData1 } = createMockReqRes({
       method: 'POST',
+      headers: {
+        'x-guest-access-token': TEST_GUEST_TOKEN,
+      },
       body: { bookingId, razorpayPaymentId: paymentId, razorpaySignature: validSignature },
     });
     const { req: req2, res: res2, getStatusCode: getCode2, getResponseData: getData2 } = createMockReqRes({
       method: 'POST',
+      headers: {
+        'x-guest-access-token': TEST_GUEST_TOKEN,
+      },
       body: { bookingId, razorpayPaymentId: paymentId, razorpaySignature: validSignature },
     });
 
@@ -994,6 +1065,7 @@ describe('Vercel API Routes: verifyRazorpayPayment', () => {
       destinationName: 'Hauz Khas',
       passengerCount: 1,
       ticketType: 'SINGLE',
+      guestAccessHash: TEST_GUEST_HASH,
     });
 
     const validSignature = crypto
@@ -1024,6 +1096,9 @@ describe('Vercel API Routes: verifyRazorpayPayment', () => {
 
     const { req: vReq, res: vRes, getStatusCode: getVCode } = createMockReqRes({
       method: 'POST',
+      headers: {
+        'x-guest-access-token': TEST_GUEST_TOKEN,
+      },
       body: { bookingId, razorpayPaymentId: paymentId, razorpaySignature: validSignature },
     });
 
@@ -1050,6 +1125,7 @@ describe('Vercel API Routes: razorpayWebhook', () => {
     process.env.RAZORPAY_KEY_SECRET = TEST_KEY_SECRET;
     process.env.RAZORPAY_WEBHOOK_SECRET = TEST_WEBHOOK_SECRET;
     bookingsStore.clear();
+    eventsStore.clear();
   });
 
   afterEach(() => {

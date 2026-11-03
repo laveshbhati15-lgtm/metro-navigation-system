@@ -1,7 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import crypto from 'crypto';
 import { getRazorpayConfig, getDiagnosticsSummary } from './_lib/config.js';
 import {
   getFirebaseAdmin,
+  getFirebaseAuth,
   probeFirestore,
   sanitizeFirestoreError,
   FieldValue,
@@ -166,7 +168,116 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const booking = docSnap.data() as any;
 
-    // Idempotency: Return existing verified ticket if already processed
+    // 1. Strict Authorization Verification (No silent fallback, reject unowned bookings)
+    const authHeader = req.headers.authorization;
+    const headerStr = (Array.isArray(authHeader) ? authHeader[0] : authHeader)?.trim();
+    const rawGuestHeader = req.headers['x-guest-access-token'];
+    const guestToken = (Array.isArray(rawGuestHeader) ? rawGuestHeader[0] : rawGuestHeader)?.trim() || body.guestAccessToken;
+
+    if (booking.userId) {
+      // Authenticated booking: requires valid Firebase ID token matching userId
+      if (!headerStr?.startsWith('Bearer ')) {
+        res.status(401).json({
+          error: 'Authentication required to access this booking.',
+          code: 'AUTH_REQUIRED',
+          stage: 'AUTHORIZATION',
+          requestId,
+        });
+        return;
+      }
+      const idToken = headerStr.slice(7).trim();
+      const auth = await getFirebaseAuth();
+      if (!auth) {
+        res.status(503).json({
+          error: 'Authentication service unavailable.',
+          code: 'AUTH_SERVICE_UNAVAILABLE',
+          stage: 'AUTHORIZATION',
+          requestId,
+        });
+        return;
+      }
+
+      try {
+        const decoded = await auth.verifyIdToken(idToken);
+        if (decoded.uid !== booking.userId) {
+          res.status(403).json({
+            error: 'You are not authorized to verify or view this booking.',
+            code: 'FORBIDDEN',
+            stage: 'AUTHORIZATION',
+            requestId,
+          });
+          return;
+        }
+      } catch (tokenErr: any) {
+        console.warn(`[verifyRazorpayPayment] [${requestId}] Auth token verification failed: ${tokenErr?.message}`);
+        res.status(401).json({
+          error: 'Invalid or expired authentication token. Please sign in again.',
+          code: 'AUTH_TOKEN_INVALID',
+          stage: 'AUTHORIZATION',
+          requestId,
+        });
+        return;
+      }
+    } else if (booking.guestAccessHash) {
+      // Guest booking: requires matching x-guest-access-token header
+      if (!guestToken) {
+        res.status(401).json({
+          error: 'Guest access credential header (x-guest-access-token) is required.',
+          code: 'GUEST_TOKEN_REQUIRED',
+          stage: 'AUTHORIZATION',
+          requestId,
+        });
+        return;
+      }
+
+      const incomingHash = crypto.createHash('sha256').update(guestToken).digest('hex');
+      const expectedHash = booking.guestAccessHash;
+
+      let isMatch = false;
+      try {
+        const bufA = Buffer.from(incomingHash, 'utf8');
+        const bufB = Buffer.from(expectedHash, 'utf8');
+        if (bufA.length === bufB.length) {
+          isMatch = crypto.timingSafeEqual(bufA, bufB);
+        }
+      } catch {
+        isMatch = false;
+      }
+
+      if (!isMatch) {
+        res.status(403).json({
+          error: 'Invalid guest access credential.',
+          code: 'GUEST_TOKEN_INVALID',
+          stage: 'AUTHORIZATION',
+          requestId,
+        });
+        return;
+      }
+    } else {
+      // Neither userId nor guestAccessHash exists -> unowned / corrupted booking
+      console.error(`[verifyRazorpayPayment] [${requestId}] Booking ${bookingId} has no ownership credentials.`);
+      res.status(403).json({
+        error: 'Booking record has no valid ownership credentials associated with it.',
+        code: 'UNOWNED_BOOKING',
+        stage: 'AUTHORIZATION',
+        requestId,
+      });
+      return;
+    }
+
+    // 2. Terminal refund check: Refunded bookings can NEVER return an active ticket
+    if (booking.status === 'REFUNDED' || booking.status === 'PARTIALLY_REFUNDED') {
+      res.status(409).json({
+        error: 'Payment for this booking has been refunded. No active ticket is available.',
+        code: 'PAYMENT_REFUNDED',
+        status: booking.status,
+        bookingId: booking.bookingId,
+        requestId,
+      });
+      return;
+    }
+
+    // 3. Idempotency: Return existing verified ticket if already processed
     if (booking.status === 'PAID') {
       res.status(200).json({
         success: true,
@@ -205,6 +316,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Verify actual payment details from Razorpay API
     try {
       const payment = await fetchRazorpayPayment(razorpayPaymentId);
+
+      // Check for refund status on fetched payment
+      if (
+        payment.status === 'refunded' ||
+        payment.refund_status === 'full' ||
+        payment.refund_status === 'partial' ||
+        (payment.amount_refunded && Number(payment.amount_refunded) > 0)
+      ) {
+        const isFull =
+          payment.status === 'refunded' ||
+          payment.refund_status === 'full' ||
+          Number(payment.amount_refunded) >= Number(booking.amountInPaise);
+        const newStatus = isFull ? 'REFUNDED' : 'PARTIALLY_REFUNDED';
+
+        try {
+          const docRef = db.collection('demo_bookings').doc(bookingId);
+          await docRef.update({
+            status: newStatus,
+            refundStatus: isFull ? 'FULL' : 'PARTIAL',
+            amountRefundedInPaise: payment.amount_refunded || payment.amount,
+            updatedAt: FieldValue.serverTimestamp(),
+          });
+        } catch (refundUpdateErr: any) {
+          console.error(`[verifyRazorpayPayment] [${requestId}] Failed to record refund status:`, refundUpdateErr);
+        }
+
+        res.status(409).json({
+          error: 'Payment for this booking has been refunded. No active ticket is available.',
+          code: 'PAYMENT_REFUNDED',
+          status: newStatus,
+          bookingId: booking.bookingId,
+          requestId,
+        });
+        return;
+      }
       if (payment.order_id !== expectedOrderId) {
         console.warn(
           `[verifyRazorpayPayment] [${requestId}] [ORDER_MISMATCH] Order ID mismatch: expected ${expectedOrderId}, got ${payment.order_id}`

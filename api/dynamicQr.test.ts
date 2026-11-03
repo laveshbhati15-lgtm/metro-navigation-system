@@ -17,8 +17,9 @@ const TEST_WEBHOOK_SECRET = 'mockWebhookSecret11223344';
 const TEST_TICKET_SECRET = 'test_ticket_signing_secret_32bytes_min';
 
 // In-memory Firestore store for test isolation
-const { bookingsStore, mockDb } = vi.hoisted(() => {
+const { bookingsStore, eventsStore, mockDb } = vi.hoisted(() => {
   const bookingsStore = new Map<string, any>();
+  const eventsStore = new Map<string, any>();
   let docOverride: ((docId: string) => any) | null = null;
 
   const defaultDoc = (docId: string) => ({
@@ -105,6 +106,27 @@ const { bookingsStore, mockDb } = vi.hoisted(() => {
       return await fn(transaction);
     },
     collection: (colName: string) => {
+      if (colName === 'processed_webhook_events') {
+        return {
+          doc: (docId: string) => ({
+            get: async () => {
+              const data = eventsStore.get(docId);
+              return {
+                exists: !!data,
+                data: () => (data ? { ...data } : undefined),
+              };
+            },
+            set: async (data: any, options?: any) => {
+              const existing = eventsStore.get(docId) || {};
+              eventsStore.set(docId, options?.merge ? { ...existing, ...data } : { ...data });
+            },
+            update: async (updates: any) => {
+              const existing = eventsStore.get(docId) || {};
+              eventsStore.set(docId, { ...existing, ...updates });
+            },
+          }),
+        };
+      }
       if (colName !== 'demo_bookings') {
         throw new Error(`Unexpected collection: ${colName}`);
       }
@@ -133,7 +155,7 @@ const { bookingsStore, mockDb } = vi.hoisted(() => {
       };
     },
   };
-  return { bookingsStore, mockDb };
+  return { bookingsStore, eventsStore, mockDb };
 });
 
 // Mock Firebase Admin
@@ -418,6 +440,7 @@ describe('Razorpay Dynamic UPI QR Security Suite (Comprehensive Hardened Audit)'
       NODE_ENV: 'test',
     };
     bookingsStore.clear();
+    eventsStore.clear();
     resetRateLimitForTesting();
   });
 
@@ -837,6 +860,7 @@ describe('Razorpay Dynamic UPI QR Security Suite (Comprehensive Hardened Audit)'
       await createQrHandler(req, res);
       expect(getStatusCode()).toBe(200);
       expect(getData().guestAccessToken).toBeDefined();
+      expect(getData().paymentMode).toBe('TEST');
     });
 
     it('rejects empty string Authorization header with HTTP 401', async () => {
@@ -3116,6 +3140,7 @@ describe('Razorpay Dynamic UPI QR Security Suite (Comprehensive Hardened Audit)'
       expect(getStatusCode()).toBe(200);
       const json = getData();
       expect(json.qrId).toBeDefined();
+      expect(json.paymentMode).toBe('LIVE');
       expect(json.disclaimer).toBe('DEMO — NOT VALID FOR METRO TRAVEL');
     });
 

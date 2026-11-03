@@ -219,6 +219,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     }
 
+    // 4b. Terminal refund check: Refunded bookings can NEVER return an active ticket
+    if (booking.status === 'REFUNDED' || booking.status === 'PARTIALLY_REFUNDED') {
+      res.status(409).json({
+        error: 'Payment for this booking has been refunded. No active ticket is available.',
+        code: 'PAYMENT_REFUNDED',
+        status: booking.status,
+        bookingId: booking.bookingId,
+        requestId,
+      });
+      return;
+    }
+
     const qrId = booking.razorpayQrId;
     if (!qrId) {
       if (booking.status === 'PAID') {
@@ -269,6 +281,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         error: 'Payment provider verification service temporarily unavailable.',
         code: 'PROVIDER_UNAVAILABLE',
         stage: 'RAZORPAY_FETCH',
+        requestId,
+      });
+      return;
+    }
+
+    // 5b. Inspect provider payments for refund status
+    const refundedPayment = (allPayments || []).find(
+      (p: any) =>
+        p &&
+        p.qr_code_id === qrId &&
+        (p.status === 'refunded' ||
+          p.refund_status === 'full' ||
+          p.refund_status === 'partial' ||
+          (p.amount_refunded && Number(p.amount_refunded) > 0))
+    );
+
+    if (refundedPayment) {
+      const isFull =
+        refundedPayment.status === 'refunded' ||
+        refundedPayment.refund_status === 'full' ||
+        Number(refundedPayment.amount_refunded) >= Number(booking.amountInPaise);
+      const newStatus = isFull ? 'REFUNDED' : 'PARTIALLY_REFUNDED';
+
+      try {
+        const docRef = db.collection('demo_bookings').doc(bookingId);
+        await docRef.update({
+          status: newStatus,
+          refundStatus: isFull ? 'FULL' : 'PARTIAL',
+          amountRefundedInPaise: refundedPayment.amount_refunded || refundedPayment.amount,
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+      } catch (refundUpdateErr: any) {
+        console.error(`[verifyRazorpayQr] [${requestId}] Failed to record refund status:`, refundUpdateErr);
+      }
+
+      res.status(409).json({
+        error: 'Payment for this booking has been refunded. No active ticket is available.',
+        code: 'PAYMENT_REFUNDED',
+        status: newStatus,
+        bookingId: booking.bookingId,
         requestId,
       });
       return;
