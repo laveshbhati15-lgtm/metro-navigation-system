@@ -45,6 +45,128 @@ export interface VerifyPaymentResponse {
   ticket: any;
 }
 
+export interface CreateQrResponse {
+  success: boolean;
+  bookingId: string;
+  qrId: string;
+  qrImageUrl: string;
+  amount: number;
+  currency: string;
+  fareInRupees: number;
+  sourceName: string;
+  destinationName: string;
+  passengerCount: number;
+  ticketType: string;
+  expiresAt: string;
+  closeByUnix?: number;
+  paymentMethod: 'UPI_QR';
+  guestAccessToken?: string;
+  requestId?: string;
+}
+
+export interface VerifyQrResponse {
+  success: boolean;
+  status: 'PENDING' | 'AUTHORIZED' | 'PAID' | 'EXPIRED';
+  bookingId: string;
+  message?: string;
+  ticket?: any;
+  paymentsReceived?: number;
+  code?: string;
+  requestId?: string;
+}
+
+/**
+ * Creates a Dynamic UPI QR on the backend for single-use, fixed-amount payment.
+ */
+export async function createPaymentQr(
+  params: CreateOrderRequest & { expiryMinutes?: number }
+): Promise<CreateQrResponse> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  if (params.idToken) {
+    headers['Authorization'] = `Bearer ${params.idToken}`;
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(`${FUNCTIONS_BASE_URL}/createRazorpayQr`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        sourceId: params.sourceId,
+        destinationId: params.destinationId,
+        passengerCount: params.passengerCount,
+        ticketType: params.ticketType,
+        expiryMinutes: params.expiryMinutes || 15,
+      }),
+    });
+  } catch (netErr: any) {
+    const isSafariLoadFailed = netErr?.message === 'Load failed';
+    const message = isSafariLoadFailed
+      ? `Network connection error while contacting payment server (${FUNCTIONS_BASE_URL}). Check internet connection.`
+      : (netErr?.message || 'Network request failed while connecting to payment server.');
+    const err: any = new Error(message);
+    err.isNetworkError = true;
+    err.code = 'NETWORK_ERROR';
+    err.originalError = netErr;
+    throw err;
+  }
+
+  if (!response.ok) {
+    throw await parseErrorResponse(response, 'Dynamic UPI QR creation failed');
+  }
+
+  return response.json();
+}
+
+/**
+ * Polls backend verification endpoint for Dynamic UPI QR payment confirmation.
+ */
+export async function verifyServerQrPayment(
+  bookingId: string,
+  options?: { guestAccessToken?: string | null; idToken?: string }
+): Promise<VerifyQrResponse> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  if (options?.idToken) {
+    headers['Authorization'] = `Bearer ${options.idToken}`;
+  }
+  if (options?.guestAccessToken) {
+    headers['x-guest-access-token'] = options.guestAccessToken;
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(`${FUNCTIONS_BASE_URL}/verifyRazorpayQr`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        bookingId,
+      }),
+    });
+  } catch (netErr: any) {
+    const isSafariLoadFailed = netErr?.message === 'Load failed';
+    const message = isSafariLoadFailed
+      ? `Network connection error while contacting payment verification server (${FUNCTIONS_BASE_URL}).`
+      : (netErr?.message || 'Network request failed while contacting verification server.');
+    const err: any = new Error(message);
+    err.isNetworkError = true;
+    err.code = 'NETWORK_ERROR';
+    err.originalError = netErr;
+    throw err;
+  }
+
+  if (!response.ok) {
+    throw await parseErrorResponse(response, 'UPI QR payment verification failed');
+  }
+
+  return response.json();
+}
+
 /**
  * Loads Razorpay Standard Checkout SDK into DOM asynchronously.
  */

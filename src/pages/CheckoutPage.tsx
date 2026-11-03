@@ -18,7 +18,10 @@ import {
   loadRazorpayCheckoutScript,
   createPaymentOrder,
   verifyServerPayment,
+  createPaymentQr,
+  verifyServerQrPayment,
   type CreateOrderResponse,
+  type CreateQrResponse,
 } from '@/services/paymentService';
 import { getCheckoutSession } from '@/features/checkout/checkoutSession';
 import { estimateFare, formatDuration } from '@/utils/formatters';
@@ -31,10 +34,12 @@ type CheckoutStep =
   | 'CONFIG'
   | 'CREATING_ORDER'
   | 'AWAITING_PAYMENT'
+  | 'AWAITING_UPI_SCAN'
   | 'VERIFYING'
   | 'CONFIRMED'
   | 'FAILED'
-  | 'CANCELLED';
+  | 'CANCELLED'
+  | 'EXPIRED';
 
 type ErrorCategory =
   | 'GATEWAY_LOAD_ERROR'
@@ -113,6 +118,11 @@ export function CheckoutPage() {
   });
 
   // Flow & Payment Execution State
+  const modeParam = searchParams.get('mode');
+  const [paymentMode, setPaymentMode] = useState<'UPI_QR' | 'STANDARD'>(() => {
+    if (modeParam === 'standard' || modeParam === 'STANDARD') return 'STANDARD';
+    return 'UPI_QR';
+  });
   const [step, setStep] = useState<CheckoutStep>('CONFIG');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [errorTitle, setErrorTitle] = useState<string>('Payment Failed or Denied');
@@ -120,16 +130,50 @@ export function CheckoutPage() {
   const [confirmedTicket, setConfirmedTicket] = useState<DemoTicket | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
+  // Dynamic UPI QR State
+  const [activeQr, setActiveQr] = useState<CreateQrResponse | null>(null);
+  const [qrSecondsRemaining, setQrSecondsRemaining] = useState<number>(0);
+  const qrPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const qrTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   // Active server-side order cache to prevent duplicate order generation on retry
   const activeOrderRef = useRef<{
     orderData: CreateOrderResponse;
     paramsKey: string;
   } | null>(null);
 
+  // Active server-side QR cache
+  const activeQrRef = useRef<{
+    qrData: CreateQrResponse;
+    paramsKey: string;
+  } | null>(null);
+
+  // In-memory guest access token (strictly never stored in localStorage or sessionStorage)
+  const guestAccessTokenRef = useRef<string | null>(null);
+
+  const stopQrPolling = useCallback(() => {
+    if (qrPollingRef.current) {
+      clearInterval(qrPollingRef.current);
+      qrPollingRef.current = null;
+    }
+    if (qrTimerRef.current) {
+      clearInterval(qrTimerRef.current);
+      qrTimerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      stopQrPolling();
+    };
+  }, [stopQrPolling]);
+
   const handlePassengerCountChange = (count: number) => {
     setPassengerCount(count);
     activeOrderRef.current = null;
-    if (step === 'FAILED' || step === 'CANCELLED') {
+    activeQrRef.current = null;
+    stopQrPolling();
+    if (step === 'FAILED' || step === 'CANCELLED' || step === 'EXPIRED') {
       setStep('CONFIG');
       setErrorMessage(null);
     }
@@ -138,16 +182,13 @@ export function CheckoutPage() {
   const handleTicketTypeChange = (type: TicketType) => {
     setTicketType(type);
     activeOrderRef.current = null;
-    if (step === 'FAILED' || step === 'CANCELLED') {
+    activeQrRef.current = null;
+    stopQrPolling();
+    if (step === 'FAILED' || step === 'CANCELLED' || step === 'EXPIRED') {
       setStep('CONFIG');
       setErrorMessage(null);
     }
   };
-
-  // Pre-load Razorpay checkout SDK
-  useEffect(() => {
-    loadRazorpayCheckoutScript().catch(() => {});
-  }, []);
 
   // Compute live authentic transit route
   const route: MetroRoute | null = useMemo(() => {
@@ -170,6 +211,115 @@ export function CheckoutPage() {
       total: tot,
     };
   }, [route, passengerCount, ticketType]);
+
+  // Dynamic UPI QR Payment Flow
+  const handleProceedToQrPayment = useCallback(async () => {
+    if (!source || !destination || !route || isSubmitting) return;
+
+    setIsSubmitting(true);
+    setStep('CREATING_ORDER');
+    setErrorMessage(null);
+    stopQrPolling();
+
+    try {
+      let idToken: string | undefined;
+      if (user) {
+        try {
+          idToken = await user.getIdToken();
+        } catch {
+          // Fallback guest
+        }
+      }
+
+      const currentParamsKey = `${source.id}:${destination.id}:${passengerCount}:${ticketType}`;
+      let qrData: CreateQrResponse;
+
+      if (activeQrRef.current && activeQrRef.current.paramsKey === currentParamsKey) {
+        qrData = activeQrRef.current.qrData;
+      } else {
+        qrData = await createPaymentQr({
+          sourceId: source.id,
+          destinationId: destination.id,
+          passengerCount,
+          ticketType,
+          idToken,
+        });
+        if (qrData.guestAccessToken) {
+          guestAccessTokenRef.current = qrData.guestAccessToken;
+        }
+        activeQrRef.current = {
+          qrData,
+          paramsKey: currentParamsKey,
+        };
+      }
+
+      setActiveQr(qrData);
+      setStep('AWAITING_UPI_SCAN');
+      setIsSubmitting(false);
+
+      // Start Countdown Timer
+      const expiryDate = new Date(qrData.expiresAt);
+      const initialRemaining = Math.max(Math.floor((expiryDate.getTime() - Date.now()) / 1000), 0);
+      setQrSecondsRemaining(initialRemaining);
+
+      qrTimerRef.current = setInterval(() => {
+        setQrSecondsRemaining((prev) => {
+          if (prev <= 1) {
+            stopQrPolling();
+            setStep('EXPIRED');
+            setErrorMessage('This Dynamic UPI QR has expired. Please generate a new pass.');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      // Start Polling Verification
+      const pollBooking = async () => {
+        try {
+          const verifyResult = await verifyServerQrPayment(qrData.bookingId, {
+            guestAccessToken: guestAccessTokenRef.current,
+            idToken,
+          });
+          if (verifyResult.status === 'PAID' && verifyResult.ticket) {
+            stopQrPolling();
+            saveVerifiedTicket(verifyResult.ticket);
+            setConfirmedTicket(verifyResult.ticket);
+            setStep('CONFIRMED');
+          } else if (verifyResult.status === 'EXPIRED') {
+            stopQrPolling();
+            setStep('EXPIRED');
+            setErrorMessage('This Dynamic UPI QR has expired.');
+          }
+        } catch (pollErr: any) {
+          // Log transient error without breaking polling loop
+          console.warn('[QR Polling Error]', pollErr?.message);
+        }
+      };
+
+      // Poll every 3 seconds
+      qrPollingRef.current = setInterval(pollBooking, 3000);
+      // Run once immediately
+      pollBooking();
+    } catch (qrErr: any) {
+      stopQrPolling();
+      setIsSubmitting(false);
+      setStep('FAILED');
+      setErrorTitle('Dynamic UPI QR Unavailable');
+      setErrorCategory('API_ERROR');
+      setErrorMessage(qrErr?.message || 'Could not generate Dynamic UPI QR code.');
+    }
+  }, [
+    source,
+    destination,
+    route,
+    isSubmitting,
+    user,
+    passengerCount,
+    ticketType,
+    stopQrPolling,
+    saveVerifiedTicket,
+  ]);
 
   // Primary payment authorization handler
   const handleProceedToPayment = useCallback(async () => {
@@ -733,10 +883,61 @@ export function CheckoutPage() {
             <div className="lg:col-span-5 space-y-4">
               <div className="metropay-card p-5 sm:p-6 space-y-5 sticky top-24">
                 <div className="pb-3 border-b border-[var(--mp-border-subtle)]">
-                  <h3 className="text-sm font-bold text-[var(--mp-text-primary)] uppercase tracking-wider font-mono">
-                    Payment Breakdown
-                  </h3>
-                  <p className="text-xs text-[var(--mp-text-secondary)]">Official DMRC Fare Schedule</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-bold text-[var(--mp-text-primary)] uppercase tracking-wider font-mono">
+                        Payment Breakdown
+                      </h3>
+                      <p className="text-xs text-[var(--mp-text-secondary)]">Choose method & verify fare</p>
+                    </div>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 border border-emerald-500/30">
+                      SECURE
+                    </span>
+                  </div>
+
+                  {/* Payment Mode Selector: Dynamic UPI QR vs Standard Checkout */}
+                  <div className="grid grid-cols-2 gap-2 mt-3">
+                    <button
+                      type="button"
+                      id="opt-pay-upi-qr"
+                      onClick={() => {
+                        setPaymentMode('UPI_QR');
+                        if (step === 'AWAITING_PAYMENT') setStep('CONFIG');
+                      }}
+                      className={`p-2.5 rounded-xl border text-left transition-all ${
+                        paymentMode === 'UPI_QR'
+                          ? 'border-emerald-500 bg-emerald-500/10 text-[var(--mp-text-primary)] ring-1 ring-emerald-500/30'
+                          : 'border-[var(--mp-border)] bg-[var(--mp-surface-subtle)] text-[var(--mp-text-secondary)] hover:border-[var(--mp-border-highlight)]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 font-bold text-xs">
+                        <span>📱</span>
+                        <span>Dynamic UPI QR</span>
+                      </div>
+                      <p className="text-[10px] opacity-80 mt-0.5 font-mono">Scan with GPay/PhonePe</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      id="opt-pay-standard"
+                      onClick={() => {
+                        setPaymentMode('STANDARD');
+                        stopQrPolling();
+                        if (step === 'AWAITING_UPI_SCAN') setStep('CONFIG');
+                      }}
+                      className={`p-2.5 rounded-xl border text-left transition-all ${
+                        paymentMode === 'STANDARD'
+                          ? 'border-emerald-500 bg-emerald-500/10 text-[var(--mp-text-primary)] ring-1 ring-emerald-500/30'
+                          : 'border-[var(--mp-border)] bg-[var(--mp-surface-subtle)] text-[var(--mp-text-secondary)] hover:border-[var(--mp-border-highlight)]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 font-bold text-xs">
+                        <span>💳</span>
+                        <span>Cards & NetBanking</span>
+                      </div>
+                      <p className="text-[10px] opacity-80 mt-0.5 font-mono">Standard Checkout</p>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Line Item Breakdown */}
@@ -776,6 +977,63 @@ export function CheckoutPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Dynamic UPI QR Display Card */}
+                {step === 'AWAITING_UPI_SCAN' && activeQr && (
+                  <div className="p-4 rounded-xl border border-emerald-500/40 bg-emerald-500/5 space-y-3 text-center animate-fade-in">
+                    <div className="flex items-center justify-between text-xs font-mono">
+                      <span className="font-bold text-[var(--mp-text-primary)] flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span>Dynamic UPI QR Active</span>
+                      </span>
+                      <span className="text-amber-500 font-semibold px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">
+                        ⏱️ {Math.floor(qrSecondsRemaining / 60)}:{String(qrSecondsRemaining % 60).padStart(2, '0')}
+                      </span>
+                    </div>
+
+                    <div className="p-3 bg-white rounded-xl shadow-inner inline-block mx-auto border-2 border-emerald-500/20">
+                      <img
+                        src={activeQr.qrImageUrl}
+                        alt="Razorpay Dynamic UPI QR"
+                        className="w-48 h-48 object-contain mx-auto"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <p className="text-xs font-bold text-[var(--mp-text-primary)]">
+                        Scan & Pay ₹{farePreview.total} using any UPI App
+                      </p>
+                      <p className="text-[10px] text-[var(--mp-text-muted)] font-mono">
+                        Single-use fixed-amount QR · Auto-verifying in background...
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-center gap-2 pt-1 text-[11px] font-mono text-[var(--mp-text-secondary)]">
+                      <span className="w-3.5 h-3.5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                      <span>Listening for UPI confirmation...</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Expired Banner */}
+                {step === 'EXPIRED' && (
+                  <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-500 text-xs space-y-2">
+                    <p className="font-bold flex items-center gap-1.5">
+                      <span>⏱️</span>
+                      <span>UPI QR Expired</span>
+                    </p>
+                    <p className="text-[11px] leading-relaxed font-mono">
+                      The single-use Dynamic UPI QR code has expired. Click below to generate a new QR.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleProceedToQrPayment}
+                      className="px-3 py-1.5 rounded-lg bg-amber-500 text-black font-bold text-xs cursor-pointer"
+                    >
+                      Regenerate UPI QR
+                    </button>
+                  </div>
+                )}
 
                 {/* Error Banner */}
                 {step === 'FAILED' && errorMessage && (
@@ -818,38 +1076,67 @@ export function CheckoutPage() {
 
                 {/* Action Trigger */}
                 <div className="space-y-3 pt-2">
-                  <button
-                    type="button"
-                    id="btn-proceed-metropay"
-                    disabled={isSubmitting || step === 'CREATING_ORDER' || step === 'VERIFYING'}
-                    onClick={handleProceedToPayment}
-                    className="w-full py-3.5 px-4 rounded-xl metropay-btn-primary font-bold text-sm tracking-wide flex items-center justify-center gap-2 cursor-pointer shadow-lg"
-                  >
-                    {step === 'CREATING_ORDER' ? (
-                      <>
-                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        <span>Creating Order...</span>
-                      </>
-                    ) : step === 'AWAITING_PAYMENT' ? (
-                      <>
-                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        <span>Awaiting Authorization...</span>
-                      </>
-                    ) : step === 'VERIFYING' ? (
-                      <>
-                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        <span>Verifying Capture...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>🔒</span>
-                        <span>Pay ₹{farePreview.total} with Razorpay</span>
-                      </>
-                    )}
-                  </button>
+                  {paymentMode === 'UPI_QR' ? (
+                    <button
+                      type="button"
+                      id="btn-proceed-metropay"
+                      disabled={isSubmitting || step === 'CREATING_ORDER' || step === 'AWAITING_UPI_SCAN'}
+                      onClick={handleProceedToQrPayment}
+                      className="w-full py-3.5 px-4 rounded-xl metropay-btn-primary font-bold text-sm tracking-wide flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+                    >
+                      {step === 'CREATING_ORDER' ? (
+                        <>
+                          <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Generating Dynamic QR...</span>
+                        </>
+                      ) : step === 'AWAITING_UPI_SCAN' ? (
+                        <>
+                          <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Awaiting UPI Payment (₹{farePreview.total})...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>📱</span>
+                          <span>Generate Dynamic UPI QR (₹{farePreview.total})</span>
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      id="btn-proceed-metropay"
+                      disabled={isSubmitting || step === 'CREATING_ORDER' || step === 'VERIFYING'}
+                      onClick={handleProceedToPayment}
+                      className="w-full py-3.5 px-4 rounded-xl metropay-btn-primary font-bold text-sm tracking-wide flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+                    >
+                      {step === 'CREATING_ORDER' ? (
+                        <>
+                          <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Creating Order...</span>
+                        </>
+                      ) : step === 'AWAITING_PAYMENT' ? (
+                        <>
+                          <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Awaiting Authorization...</span>
+                        </>
+                      ) : step === 'VERIFYING' ? (
+                        <>
+                          <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Verifying Capture...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>🔒</span>
+                          <span>Pay ₹{farePreview.total} with Razorpay</span>
+                        </>
+                      )}
+                    </button>
+                  )}
 
                   <p className="text-[10px] text-center text-[var(--mp-text-muted)] font-mono leading-tight">
-                    By clicking Pay, you open Razorpay Test Mode checkout. No real currency is charged.
+                    {paymentMode === 'UPI_QR'
+                      ? 'Single-use dynamic UPI QR created via Razorpay Test Mode API. Real funds will not be transferred.'
+                      : 'By clicking Pay, you open Razorpay Test Mode checkout. No real currency is charged.'}
                   </p>
                 </div>
               </div>

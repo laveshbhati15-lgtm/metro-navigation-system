@@ -52,8 +52,11 @@ class MockRazorpay {
 }
 
 function renderCheckout(initialEntry = '/checkout') {
+  const url = initialEntry.includes('?')
+    ? (initialEntry.includes('mode=') ? initialEntry : `${initialEntry}&mode=standard`)
+    : `${initialEntry}?mode=standard`;
   return render(
-    <MemoryRouter initialEntries={[initialEntry]}>
+    <MemoryRouter initialEntries={[url]}>
       <AuthProvider>
         <CheckoutPage />
       </AuthProvider>
