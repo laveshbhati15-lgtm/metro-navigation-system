@@ -3,6 +3,7 @@ import {
   sanitizeFirestoreError,
   probeFirestore,
   getFirebaseAdmin,
+  getFirebaseAuth,
 } from './_lib/firebaseAdmin.js';
 
 describe('Firebase Admin Utilities & Firestore Error Handling', () => {
@@ -154,6 +155,40 @@ describe('Firebase Admin Utilities & Firestore Error Handling', () => {
       const admin = getFirebaseAdmin();
       expect(admin.isConfigured).toBe(false);
       expect(admin.initError).toContain('missing required service account fields');
+    });
+  });
+
+  describe('getFirebaseAuth & Node 20 runtime compatibility', () => {
+    it('returns null safely when Firebase Admin is not configured', async () => {
+      delete process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+      delete process.env.FIRESTORE_EMULATOR_HOST;
+
+      const auth = await getFirebaseAuth();
+      expect(auth).toBeNull();
+    });
+
+    it('successfully loads jwks-rsa and jose in CommonJS without ERR_REQUIRE_ESM', () => {
+      // Verifies that jwks-rsa resolves to a version using jose@4 with CommonJS support
+      const jwks = require('jwks-rsa');
+      expect(jwks).toBeDefined();
+      expect(typeof jwks).toBe('function');
+
+      const jose = require('jose');
+      expect(jose).toBeDefined();
+      expect(typeof jose).toBe('object');
+    });
+
+    it('initializes Auth instance when emulator host is provided', async () => {
+      process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
+      process.env.FIREBASE_PROJECT_ID = 'test-emulator-project';
+
+      const admin = getFirebaseAdmin();
+      expect(admin.isConfigured).toBe(true);
+      expect(admin.auth).toBeDefined();
+
+      const auth = await getFirebaseAuth();
+      expect(auth).toBeDefined();
+      expect(auth).toBe(admin.auth);
     });
   });
 });

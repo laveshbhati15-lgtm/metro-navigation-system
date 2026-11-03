@@ -1,6 +1,6 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import type { Auth } from 'firebase-admin/auth';
+import { getAuth, type Auth } from 'firebase-admin/auth';
 
 let dbInstance: FirebaseFirestore.Firestore | null = null;
 let authInstance: Auth | null = null;
@@ -115,21 +115,23 @@ export async function probeFirestore(db: FirebaseFirestore.Firestore | null): Pr
 }
 
 /**
- * Lazily loads Firebase Auth SDK to prevent module-level ERR_REQUIRE_ESM crashes.
+ * Returns the initialized Firebase Admin Auth instance.
+ * Ensures the Firebase Admin singleton is initialized.
  */
 export async function getFirebaseAuth(app?: any): Promise<Auth | null> {
   if (authInstance) return authInstance;
-  try {
-    const authModule = await import('firebase-admin/auth');
-    const existingApps = getApps();
-    const targetApp = app || (existingApps.length > 0 ? existingApps[0] : undefined);
-    if (!targetApp) return null;
-    authInstance = authModule.getAuth(targetApp);
-    return authInstance;
-  } catch (err: any) {
-    console.warn('Firebase Admin Auth lazy-load notice:', err?.message);
-    return null;
+  const targetApp = app || (getApps().length > 0 ? getApps()[0] : undefined);
+  if (targetApp) {
+    try {
+      authInstance = getAuth(targetApp);
+      return authInstance;
+    } catch (err: any) {
+      console.error('Firebase Admin Auth initialization error:', err?.message);
+      return null;
+    }
   }
+  const admin = getFirebaseAdmin();
+  return admin.auth;
 }
 
 /**
@@ -143,7 +145,7 @@ export function getFirebaseAdmin(): {
   initError: string | null;
   metadata: FirebaseAdminMetadata;
 } {
-  if (getApps().length > 0 && dbInstance) {
+  if (getApps().length > 0 && dbInstance && authInstance) {
     return {
       db: dbInstance,
       auth: authInstance,
@@ -212,12 +214,14 @@ export function getFirebaseAdmin(): {
           });
 
       dbInstance = getFirestore(app);
+      authInstance = getAuth(app);
       isConfigured = true;
       lastInitError = null;
     } else if (process.env.FIRESTORE_EMULATOR_HOST) {
       const existingApps = getApps();
       const app = existingApps.length > 0 ? existingApps[0] : initializeApp({ projectId });
       dbInstance = getFirestore(app);
+      authInstance = getAuth(app);
       isConfigured = true;
       lastInitError = null;
       configMetadata = {
